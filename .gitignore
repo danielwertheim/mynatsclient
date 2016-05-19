@@ -1,0 +1,42 @@
+# node
+node_modules/
+
+# vs
+.vs/
+[Aa]pp_[Dd]ata/
+[Bb]in/
+[D]ebug/
+[Aa]rtifacts/
+[Oo]bj/
+[Tt]est[Rr]esult/
+[Tt]emp/
+*.user
+*.vspscc
+*.vssscc
+*.suo
+*.cache
+
+# deploy
+src/build/artifacts/
+src/build/node_modules/
+src/build/tools/
+!src/build/tools/packages.config
+
+# misc
+*~
+*.swp
+*.sdf
+*.orig
+*.pfx
+
+# nuget
+[Pp]ackages/
+
+# resharper
+_ReSharper.*
+*.resharper*
+*.[Rr]e[Ss]harper.user
+*.DotSettings.user
+
+#windows stuff
+Thumbs.db
