@@ -204,34 +204,10 @@ namespace NatsFun
 
             _consumerCancellation = new CancellationTokenSource();
             _consumer = Task.Factory.StartNew(
-                ConsumeStream,
+                Consumer,
                 _consumerCancellation.Token,
                 TaskCreationOptions.LongRunning,
-                TaskScheduler.Default).ContinueWith(t =>
-                {
-                    if (!t.IsFaulted && t.Result == null)
-                        return;
-
-                    DoDisconnect(DisconnectReason.DueToFailure);
-
-                    if (t.IsFaulted)
-                    {
-                        var ex = t.Exception?.GetBaseException();
-                        if (ex == null)
-                            return;
-
-                        Logger.Fatal("Consumer exception.", ex);
-                        OnFailed(ex);
-                    }
-                    else
-                    {
-                        var errOp = t.Result;
-                        if (errOp == null)
-                            return;
-
-                        _opMediator.Dispatch(errOp);
-                    }
-                });
+                TaskScheduler.Default).ContinueWith(OnConsumerCompleted);
 
             return true;
         }
@@ -255,7 +231,7 @@ namespace NatsFun
             return sb.ToString();
         }
 
-        private ErrOp ConsumeStream()
+        private ErrOp Consumer()
         {
             ErrOp errOp = null;
 
@@ -300,6 +276,32 @@ namespace NatsFun
             }
 
             return errOp;
+        }
+
+        private void OnConsumerCompleted(Task<ErrOp> t)
+        {
+            if (!t.IsFaulted && t.Result == null)
+                return;
+
+            DoDisconnect(DisconnectReason.DueToFailure);
+
+            if (t.IsFaulted)
+            {
+                var ex = t.Exception?.GetBaseException();
+                if (ex == null)
+                    return;
+
+                Logger.Fatal("Consumer exception.", ex);
+                OnFailed(ex);
+            }
+            else
+            {
+                var errOp = t.Result;
+                if (errOp == null)
+                    return;
+
+                _opMediator.Dispatch(errOp);
+            }
         }
 
         private void Release()
