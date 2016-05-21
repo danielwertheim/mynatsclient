@@ -259,6 +259,8 @@ namespace NatsFun
         {
             ErrOp errOp = null;
 
+            var noDataCount = 0;
+
             while (_socketIsConnected() && !_consumerIsCancelled() && errOp == null)
             {
                 SpinWait.SpinUntil(() => !_socketIsConnected() || _consumerIsCancelled() || _hasData(), ConsumerMaxSpinWaitMs);
@@ -270,9 +272,19 @@ namespace NatsFun
 
                 if (!_hasData())
                 {
+                    noDataCount += 1;
+
+                    if (noDataCount >= 5)
+                    {
+                        Ping();
+                        continue;
+                    }
+
                     Thread.Sleep(ConsumerIfNoDataWaitForMs);
                     continue;
                 }
+
+                noDataCount = 0;
 
                 foreach (var op in _reader.ReadOp())
                 {
@@ -281,7 +293,7 @@ namespace NatsFun
 
                     errOp = op as ErrOp;
                     if (errOp != null)
-                        break;
+                        continue;
 
                     _opMediator.Dispatch(op);
                 }
