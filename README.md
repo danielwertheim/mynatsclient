@@ -34,10 +34,18 @@ using (var client = new NatsClient(connectionInfo))
 {
     //You can subscribe to dispatched client events
     //to react on something that happened to the client
-    client.Events.OfType<ClientFailed>().Subscribe(ev =>
+    client.Events.OfType<ClientConnected>().Subscribe(ev =>
     {
-        Console.WriteLine("Client failed!");
+        Console.WriteLine("Client connected!");
+        ev.Client.Sub("foo", "s1");
+        ev.Client.Sub("bar", "s2");
+
+        //Make it automatically unsub after two messages
+        ev.Client.UnSub("s2", 2);
     });
+    
+    client.Events.OfType<ClientFailed>().Subscribe(ev
+        => Console.WriteLine($"Client failed with Exception: '{ev.Exception}'.");
 
     //Disconnect, either by client.Disconnect() call
     //or caused by fail.
@@ -49,8 +57,7 @@ using (var client = new NatsClient(connectionInfo))
         if (ev.Reason != DisconnectReason.DueToFailure)
             return;
 
-        ev.Client.Connect();
-        ev.Client.Sub("foo", "s1");
+        ev.Client.Connect();        
     });
 
     //Subscribe to IncomingOps All or e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
@@ -82,17 +89,11 @@ using (var client = new NatsClient(connectionInfo))
         }
     });
 
-    //Connect and subscribe to one or more topics
     client.Connect();
-    client.Sub("foo", "s1");
-    client.Sub("bar", "s2");
 
-    //Make it automatically unsub after two messages
-    //client.UnSub("s1", 2);
-
-    Console.WriteLine("Hit key to UnSub from bar.");
+    Console.WriteLine("Hit key to UnSub from foo.");
     Console.ReadKey();
-    client.UnSub("s2");
+    client.UnSub("s1");
 
     Console.WriteLine("Hit key to Disconnect.");
     Console.ReadKey();
@@ -101,7 +102,6 @@ using (var client = new NatsClient(connectionInfo))
     Console.WriteLine("Hit key to Connect.");
     Console.ReadKey();
     client.Connect();
-    client.Sub("foo", "s3");
 
     Console.WriteLine("Hit key to Shutdown.");
     Console.ReadKey();
