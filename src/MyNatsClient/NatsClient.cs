@@ -117,8 +117,8 @@ namespace NatsFun
         private void OnDisconnected(DisconnectReason reason)
             => _eventMediator.Dispatch(new ClientDisconnected(this, reason));
 
-        private void OnFailed(ErrOp op)
-            => _eventMediator.Dispatch(new ClientFailed(this, op));
+        private void OnFailed(Exception ex)
+            => _eventMediator.Dispatch(new ClientFailed(this, ex));
 
         public void Connect()
         {
@@ -207,13 +207,28 @@ namespace NatsFun
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default).ContinueWith(t =>
                 {
-                    var errOp = t.Result;
-                    if (errOp == null)
+                    if (!t.IsFaulted && t.Result == null)
                         return;
 
                     DoDisconnect(DisconnectReason.DueToFailure);
-                    _opMediator.Dispatch(errOp);
-                    OnFailed(errOp);
+
+                    if (t.IsFaulted)
+                    {
+                        var ex = t.Exception?.GetBaseException();
+                        if (ex == null)
+                            return;
+
+                        Logger.Fatal("Consumer exception.", ex);
+                        OnFailed(ex);
+                    }
+                    else
+                    {
+                        var errOp = t.Result;
+                        if (errOp == null)
+                            return;
+
+                        _opMediator.Dispatch(errOp);
+                    }
                 });
 
             return true;

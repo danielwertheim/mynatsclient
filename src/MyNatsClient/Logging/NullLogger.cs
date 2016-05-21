@@ -1,3 +1,5 @@
+using System;
+
 namespace NatsFun.Logging
 {
     public class NullLogger : ILogger
@@ -8,5 +10,6 @@ namespace NatsFun.Logging
 
         public void Info(string message) { }
         public void Error(string message) { }
+        public void Fatal(string message, Exception ex) { }
     }
 }

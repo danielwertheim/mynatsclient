@@ -1,16 +1,16 @@
-using NatsFun.Ops;
+using System;
 
 namespace NatsFun.Events
 {
     public class ClientFailed : IClientEvent
     {
         public INatsClient Client { get; }
-        public ErrOp ErrOp { get; }
+        public Exception Exception { get; }
 
-        public ClientFailed(INatsClient client, ErrOp errOp)
+        public ClientFailed(INatsClient client, Exception exception)
         {
             Client = client;
-            ErrOp = errOp;
+            Exception = exception;
         }
     }
 }
