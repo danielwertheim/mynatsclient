@@ -374,6 +374,13 @@ namespace NatsFun
             DoSend($"SUB {subject} {subscriptionId}@{Id}{Crlf}");
         }
 
+        public void Sub(string subject, string queueGroup, string subscriptionId)
+        {
+            ThrowIfDisposed();
+
+            DoSend($"SUB {subject} {queueGroup} {subscriptionId}@{Id}{Crlf}");
+        }
+
         public void UnSub(string subscriptionId, int? maxMessages = null)
         {
             ThrowIfDisposed();
