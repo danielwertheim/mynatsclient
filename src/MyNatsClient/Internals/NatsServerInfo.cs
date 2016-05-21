@@ -1,11 +1,13 @@
 using Jil;
-using NatsFun.Internals;
 using NatsFun.Ops;
 
-namespace NatsFun
+namespace NatsFun.Internals
 {
-    public class NatsServerInfo
+    internal class NatsServerInfo
     {
+        [JilDirective("auth_required")]
+        public bool AuthRequired { get; set; }
+
         [JilDirective("max_payload")]
         public long MaxPayload { get; set; }
 

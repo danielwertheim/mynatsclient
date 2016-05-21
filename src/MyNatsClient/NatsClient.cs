@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -142,7 +141,7 @@ namespace NatsFun
                     var hosts = new Queue<Host>(_connectionInfo.Hosts.GetRandomized());
                     while (hosts.Any())
                     {
-                        if (TryConnectTo(hosts.Dequeue()))
+                        if (ConnectTo(hosts.Dequeue()))
                             break;
                     }
 
@@ -151,20 +150,22 @@ namespace NatsFun
 
                     State = NatsClientState.Connected;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     Release();
                     State = NatsClientState.Disconnected;
-                    throw;
+
+                    throw NatsException.NoConnectionCouldBeMade(ex);
                 }
             }
 
             OnConnected();
         }
 
-        private bool TryConnectTo(Host host)
+        //TODO: SSL
+        //TODO: Use async connect
+        private bool ConnectTo(Host host)
         {
-            //TODO: Use async connect
             _socket = _socket ?? SocketFactory.Create();
             _socket.Connect(host.Address, host.Port);
             _readStream = new NetworkStream(_socket, FileAccess.Read, false);
@@ -173,28 +174,29 @@ namespace NatsFun
             var op = TryGetInitialOp();
             if (op == null)
             {
-                Logger.Error("Error while connecting. Expected to get INFO after connection. Got nothing in timely fashion.");
+                Logger.Error($"Error while connecting to {host}. Expected to get INFO after connection. Got nothing.");
                 return false;
             }
 
             var infoOp = op as InfoOp;
             if (infoOp == null)
             {
-                Logger.Error($"Expected to get INFO after connection. Got {op.GetAsString()}.");
+                Logger.Error($"Error while connecting to {host}. Expected to get INFO after connection. Got {op.GetAsString()}.");
                 return false;
             }
 
             _serverInfo = NatsServerInfo.Parse(infoOp);
 
+            if (_serverInfo.AuthRequired && _connectionInfo.Credentials == Credentials.Empty)
+                throw new NatsException("Error while connecting to {host}. Server requires credentials to be passed. None was specified.");
+
             _opMediator.Dispatch(infoOp);
 
-            //TODO: Auth...
-            //TODO: SSL
-            _socket.SendUtf8($"CONNECT {{\"lang\":\"csharp\",\"verbose\": {_connectionInfo.Verbose.ToString().ToLower()}}}{Crlf}");
+            _socket.SendUtf8(GenerateConnectionOpString());
 
             if (!_socket.Connected)
             {
-                Logger.Error("No connection could be established with server.");
+                Logger.Error($"Error while connecting to {host}. No connection could be established.");
                 return false;
             }
 
@@ -206,14 +208,34 @@ namespace NatsFun
                 TaskScheduler.Default).ContinueWith(t =>
                 {
                     var errOp = t.Result;
-                    if (errOp != null)
-                    {
-                        DoDisconnect(DisconnectReason.DueToFailure);
-                        OnFailed(errOp);
-                    }
+                    if (errOp == null)
+                        return;
+
+                    DoDisconnect(DisconnectReason.DueToFailure);
+                    _opMediator.Dispatch(errOp);
+                    OnFailed(errOp);
                 });
 
             return true;
+        }
+
+        private string GenerateConnectionOpString()
+        {
+            var sb = new StringBuilder();
+            sb.Append("CONNECT {\"lang\":\"csharp\",\"verbose\":");
+            sb.Append(_connectionInfo.Verbose.ToString().ToLower());
+
+            if (_connectionInfo.Credentials != Credentials.Empty)
+            {
+                sb.Append(",\"user\":");
+                sb.Append(_connectionInfo.Credentials.User);
+                sb.Append(",\"pass\":");
+                sb.Append(_connectionInfo.Credentials.Pass);
+            }
+            sb.Append("}");
+            sb.Append(Crlf);
+
+            return sb.ToString();
         }
 
         private IOp TryGetInitialOp()
@@ -255,6 +277,9 @@ namespace NatsFun
                         Pong();
 
                     errOp = op as ErrOp;
+                    if (errOp != null)
+                        break;
+
                     _opMediator.Dispatch(op);
                 }
             }

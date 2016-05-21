@@ -48,6 +48,7 @@
     <Compile Include="..\GlobalAssemblyInfo.cs">
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Credentials.cs" />
     <Compile Include="Events\ClientConnected.cs" />
     <Compile Include="Events\ClientFailed.cs" />
     <Compile Include="Events\ClientDisconnected.cs" />
@@ -70,7 +71,7 @@
     <Compile Include="NatsClient.cs" />
     <Compile Include="NatsClientState.cs" />
     <Compile Include="NatsException.cs" />
-    <Compile Include="NatsServerInfo.cs" />
+    <Compile Include="Internals\NatsServerInfo.cs" />
     <Compile Include="NatsOpMediator.cs" />
     <Compile Include="Logging\NullLogger.cs" />
     <Compile Include="Ops\OkOp.cs" />

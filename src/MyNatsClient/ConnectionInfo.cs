@@ -6,8 +6,9 @@ namespace NatsFun
     {
         public string ClientId { get; }
         public Host[] Hosts { get; }
-        public bool Verbose { get; set; }
         public bool AutoRespondToPing { get; set; } = true;
+        public Credentials Credentials { get; set; } = Credentials.Empty;
+        public bool Verbose { get; set; }
 
         public ConnectionInfo(string clientId, Host[] hosts)
         {
@@ -24,6 +25,7 @@ namespace NatsFun
             return new ConnectionInfo(ClientId, hosts)
             {
                 AutoRespondToPing = AutoRespondToPing,
+                Credentials = Credentials,
                 Verbose = Verbose
             };
         }
