@@ -31,8 +31,10 @@ namespace Consumer
                 //to react on something that happened to the client
                 client.Events.OfType<ClientConnected>().Subscribe(ev =>
                 {
+                    Console.WriteLine("Client connected");
                     ev.Client.Sub("foo", "s1");
-                    ev.Client.Sub("bar", "s2");
+                    ev.Client.Sub("foo", "s2");
+                    ev.Client.Sub("bar", "s3");
 
                     //Make it automatically unsub after two messages
                     //client.UnSub("s1", 2);
@@ -81,7 +83,7 @@ namespace Consumer
                 });
 
                 client.Connect();
-                
+
                 Console.WriteLine("Hit key to UnSub from foo.");
                 Console.ReadKey();
                 client.UnSub("s1");
