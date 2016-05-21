@@ -57,6 +57,7 @@
     <Compile Include="IClientEvent.cs" />
     <Compile Include="INatsClient.cs" />
     <Compile Include="Internals\JilOptions.cs" />
+    <Compile Include="Internals\Retry.cs" />
     <Compile Include="NatsClientEventMediator.cs" />
     <Compile Include="Ops\ErrOp.cs" />
     <Compile Include="Internals\Extensions\ArrayExtensions.cs" />

@@ -20,6 +20,8 @@ namespace NatsFun
         private const string Crlf = "\r\n";
         private const int ConsumerMaxSpinWaitMs = 500;
         private const int ConsumerIfNoDataWaitForMs = 100;
+        private const int TryConnectMaxCycleDelayMs = 200;
+        private const int TryConnectMaxDurationMs = 2000;
 
         private readonly object _sync;
         private readonly ConnectionInfo _connectionInfo;
@@ -171,7 +173,7 @@ namespace NatsFun
             _readStream = new NetworkStream(_socket, FileAccess.Read, false);
             _reader = new NatsOpStreamReader(_readStream, _hasData);
 
-            var op = TryGetInitialOp();
+            var op = Retry.This(() => _reader.ReadOp().FirstOrDefault(), TryConnectMaxCycleDelayMs, TryConnectMaxDurationMs);
             if (op == null)
             {
                 Logger.Error($"Error while connecting to {host}. Expected to get INFO after connection. Got nothing.");
@@ -253,20 +255,6 @@ namespace NatsFun
             return sb.ToString();
         }
 
-        private IOp TryGetInitialOp()
-        {
-            //TODO: Make pretty and use ConnectionInfo to determine how long time to try
-            IOp op = null;
-            for (var i = 0; i < 20; i++)
-            {
-                op = _reader.ReadOp().FirstOrDefault();
-                if (op != null)
-                    break;
-                Thread.Sleep(100);
-            }
-            return op;
-        }
-
         private ErrOp ConsumeStream()
         {
             ErrOp errOp = null;
@@ -334,8 +322,15 @@ namespace NatsFun
                     },
                     () =>
                     {
-                        _socket?.Shutdown(SocketShutdown.Both);
-                        _socket?.Close();
+                        if (_socket == null)
+                            return;
+
+                        if (_socket.Connected)
+                        {
+                            _socket?.Shutdown(SocketShutdown.Both);
+                            _socket?.Close();
+                        }
+
                         _socket?.Dispose();
                         _socket = null;
                     });
