@@ -29,15 +29,15 @@ namespace Consumer
             {
                 //You can subscribe to dispatched client events
                 //to react on something that happened to the client
-                client.Events.OfType<ClientConnected>().Subscribe(ev =>
+                client.Events.OfType<ClientConnected>().Subscribe(async ev =>
                 {
                     Console.WriteLine("Client connected");
-                    ev.Client.Sub("foo", "s1");
-                    ev.Client.Sub("foo", "s2");
-                    ev.Client.Sub("bar", "s3");
+                    await ev.Client.SubAsync("foo", "s1");
+                    await ev.Client.SubAsync("foo", "s2");
+                    await ev.Client.SubAsync("bar", "s3");
 
                     //Make it automatically unsub after two messages
-                    //client.UnSub("s1", 2);
+                    await ev.Client.UnSubAsync("s2", 2);
                 });
 
                 client.Events.OfType<ClientFailed>().Subscribe(
@@ -64,10 +64,10 @@ namespace Consumer
                     Console.WriteLine($"OpCount: {client.Stats.OpCount}");
                 });
 
-                client.IncomingOps.OfType<PingOp>().Subscribe(ping =>
+                client.IncomingOps.OfType<PingOp>().Subscribe(async ping =>
                 {
                     if (!connectionInfo.AutoRespondToPing)
-                        client.Pong();
+                        await client.PongAsync();
                 });
 
                 client.IncomingOps.OfType<MsgOp>().Subscribe(msg =>

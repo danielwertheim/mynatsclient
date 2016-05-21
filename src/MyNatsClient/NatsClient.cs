@@ -22,6 +22,7 @@ namespace NatsFun
         private const int ConsumerIfNoDataWaitForMs = 100;
         private const int TryConnectMaxCycleDelayMs = 200;
         private const int TryConnectMaxDurationMs = 2000;
+        private const int WriteBufferSize = 512;
 
         private readonly object _sync;
         private readonly ConnectionInfo _connectionInfo;
@@ -35,7 +36,7 @@ namespace NatsFun
         private NetworkStream _writeStream;
         private NatsOpStreamReader _reader;
         private Task _consumer;
-        private CancellationTokenSource _consumerCancellation;
+        private CancellationTokenSource _cancellation;
         private NatsServerInfo _serverInfo;
         private bool _isDisposed;
 
@@ -53,7 +54,7 @@ namespace NatsFun
             _opMediator = new NatsOpMediator();
 
             _socketIsConnected = () => _socket != null && _socket.Connected;
-            _consumerIsCancelled = () => _consumerCancellation == null || _consumerCancellation.IsCancellationRequested;
+            _consumerIsCancelled = () => _cancellation == null || _cancellation.IsCancellationRequested;
             _hasData = () =>
                     _socketIsConnected() &&
                     _readStream != null &&
@@ -87,6 +88,12 @@ namespace NatsFun
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(GetType().Name);
+        }
+
+        private void ThrowIfNotConnected()
+        {
+            if (State != NatsClientState.Connected)
+                throw new InvalidOperationException($"Can not send. Client is not {NatsClientState.Connected}");
         }
 
         public void Disconnect()
@@ -204,10 +211,10 @@ namespace NatsFun
                 return false;
             }
 
-            _consumerCancellation = new CancellationTokenSource();
+            _cancellation = new CancellationTokenSource();
             _consumer = Task.Factory.StartNew(
                 Consumer,
-                _consumerCancellation.Token,
+                _cancellation.Token,
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default).ContinueWith(OnConsumerCompleted);
 
@@ -313,9 +320,9 @@ namespace NatsFun
                 Try.All(
                     () =>
                     {
-                        _consumerCancellation?.Cancel();
-                        _consumerCancellation?.Dispose();
-                        _consumerCancellation = null;
+                        _cancellation?.Cancel();
+                        _cancellation?.Dispose();
+                        _cancellation = null;
                     },
                     () =>
                     {
@@ -361,46 +368,18 @@ namespace NatsFun
             }
         }
 
-        public void Pub(string subject, string data)
-        {
-            ThrowIfDisposed();
-
-            DoSend($"PUB {subject} {data.Length}{Crlf}{data}{Crlf}");
-        }
-
-        public void Pub(string subject, string replyTo, string data)
-        {
-            ThrowIfDisposed();
-
-            DoSend($"PUB {subject} {replyTo} {data.Length}{Crlf}{data}{Crlf}");
-        }
-
-        public void Sub(string subject, string subscriptionId)
-        {
-            ThrowIfDisposed();
-
-            DoSend($"SUB {subject} {subscriptionId}@{Id}{Crlf}");
-        }
-
-        public void Sub(string subject, string queueGroup, string subscriptionId)
-        {
-            ThrowIfDisposed();
-
-            DoSend($"SUB {subject} {queueGroup} {subscriptionId}@{Id}{Crlf}");
-        }
-
-        public void UnSub(string subscriptionId, int? maxMessages = null)
-        {
-            ThrowIfDisposed();
-
-            DoSend($"UNSUB {subscriptionId}@{Id} {maxMessages}{Crlf}");
-        }
-
         public void Ping()
         {
             ThrowIfDisposed();
 
             DoSend($"PING{Crlf}");
+        }
+
+        public Task PingAsync()
+        {
+            ThrowIfDisposed();
+
+            return DoSendAsync($"PING{Crlf}");
         }
 
         public void Pong()
@@ -410,6 +389,87 @@ namespace NatsFun
             DoSend($"PONG{Crlf}");
         }
 
+        public Task PongAsync()
+        {
+            ThrowIfDisposed();
+
+            return DoSendAsync($"PONG{Crlf}");
+        }
+
+        public void Pub(string subject, string data)
+        {
+            ThrowIfDisposed();
+
+            DoSend($"PUB {subject} {data.Length}{Crlf}{data}{Crlf}");
+        }
+
+        public Task PubAsync(string subject, string data)
+        {
+            ThrowIfDisposed();
+
+            return DoSendAsync($"PUB {subject} {data.Length}{Crlf}{data}{Crlf}");
+        }
+
+        public void Pub(string subject, string replyTo, string data)
+        {
+            ThrowIfDisposed();
+
+            DoSend($"PUB {subject} {replyTo} {data.Length}{Crlf}{data}{Crlf}");
+        }
+
+        public Task PubAsync(string subject, string replyTo, string data)
+        {
+            ThrowIfDisposed();
+
+            return DoSendAsync($"PUB {subject} {replyTo} {data.Length}{Crlf}{data}{Crlf}");
+        }
+
+        public void Sub(string subject, string subscriptionId)
+        {
+            ThrowIfDisposed();
+
+            DoSend($"SUB {subject} {subscriptionId}@{Id}{Crlf}");
+        }
+
+        public Task SubAsync(string subject, string subscriptionId)
+        {
+            ThrowIfDisposed();
+
+            return DoSendAsync($"SUB {subject} {subscriptionId}@{Id}{Crlf}");
+        }
+
+        public void Sub(string subject, string queueGroup, string subscriptionId)
+        {
+            ThrowIfDisposed();
+
+            DoSend($"SUB {subject} {queueGroup} {subscriptionId}@{Id}{Crlf}");
+        }
+
+        public Task SubAsync(string subject, string queueGroup, string subscriptionId)
+        {
+            ThrowIfDisposed();
+
+            return DoSendAsync($"SUB {subject} {queueGroup} {subscriptionId}@{Id}{Crlf}");
+        }
+
+        public void UnSub(string subscriptionId, int? maxMessages = null)
+        {
+            ThrowIfDisposed();
+
+            var s = maxMessages.HasValue ? " " : string.Empty;
+
+            DoSend($"UNSUB {subscriptionId}@{Id}{s}{maxMessages}{Crlf}");
+        }
+
+        public Task UnSubAsync(string subscriptionId, int? maxMessages = null)
+        {
+            ThrowIfDisposed();
+
+            var s = maxMessages.HasValue ? " " : string.Empty;
+
+            return DoSendAsync($"UNSUB {subscriptionId}@{Id}{s}{maxMessages}{Crlf}");
+        }
+
         public void Send(string data)
         {
             ThrowIfDisposed();
@@ -417,28 +477,51 @@ namespace NatsFun
             DoSend(data);
         }
 
-        private void DoSend(string data)
-        {
-            if (State != NatsClientState.Connected)
-                throw new InvalidOperationException($"Can not send. Client is not {NatsClientState.Connected}");
-
-            //TODO: Have a write stream as we do have a read stream.
-            //That way we could flush after the first few bytes since the nats server terminates as soon as it understands it's an invalid command.
-
-            var buffer = Encoding.UTF8.GetBytes(data);
-            if (buffer.Length > _serverInfo.MaxPayload)
-                throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, buffer.LongLength);
-
-            _writeStream.Write(buffer, 0, buffer.Length);
-            _writeStream.Flush();
-            //_socket.Send(buffer);
-        }
-
-        public void Fail()
+        public Task SendAsync(string data)
         {
             ThrowIfDisposed();
 
-            DoSend($"FAIL{Crlf}");
+            return DoSendAsync(data);
         }
+
+        private void DoSend(string data)
+        {
+            ThrowIfNotConnected();
+
+            var buffer = Encoding.UTF8.GetBytes(data);
+            if (buffer.Length > _serverInfo.MaxPayload)
+                throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, buffer.Length);
+
+            _writeStream.Write(buffer, 0, buffer.Length);
+            _writeStream.Flush();
+        }
+
+        private async Task DoSendAsync(string data)
+        {
+            ThrowIfNotConnected();
+
+            var buffer = Encoding.UTF8.GetBytes(data);
+            if (buffer.Length > _serverInfo.MaxPayload)
+                throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, buffer.Length);
+
+            await _writeStream.WriteAsync(buffer, 0, buffer.Length, _cancellation.Token);
+            await _writeStream.FlushAsync(_cancellation.Token);
+        }
+
+        //private async Task DoSendAsync(Stream data)
+        //{
+        //    ThrowIfNotConnected();
+
+        //    if (data.Length > _serverInfo.MaxPayload)
+        //        throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, data.Length);
+
+        //    var buff = new byte[data.Length < WriteBufferSize ? data.Length : WriteBufferSize];
+        //    var read = await data.ReadAsync(buff, 0, buff.Length, _cancellation.Token).ForAwait();
+        //    while (read > 0)
+        //    {
+        //        await _writeStream.WriteAsync(buff, 0, read, _cancellation.Token).ForAwait();
+        //        await _writeStream.FlushAsync(_cancellation.Token);
+        //    }
+        //}
     }
 }

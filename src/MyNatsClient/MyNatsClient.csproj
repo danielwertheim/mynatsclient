@@ -83,6 +83,7 @@
     <Compile Include="Internals\SocketFactory.cs" />
     <Compile Include="Internals\SubscriptionOf.cs" />
     <Compile Include="Internals\Try.cs" />
+    <Compile Include="Internals\Extensions\TaskExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
