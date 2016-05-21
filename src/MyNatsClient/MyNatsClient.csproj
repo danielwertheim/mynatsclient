@@ -48,6 +48,7 @@
     <Compile Include="..\GlobalAssemblyInfo.cs">
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Events\ClientConnected.cs" />
     <Compile Include="Events\ClientFailed.cs" />
     <Compile Include="Events\ClientDisconnected.cs" />
     <Compile Include="ConnectionInfo.cs" />

@@ -29,6 +29,15 @@ namespace Consumer
             {
                 //You can subscribe to dispatched client events
                 //to react on something that happened to the client
+                client.Events.OfType<ClientConnected>().Subscribe(ev =>
+                {
+                    ev.Client.Sub("foo", "s1");
+                    ev.Client.Sub("bar", "s2");
+
+                    //Make it automatically unsub after two messages
+                    //client.UnSub("s1", 2);
+                });
+
                 client.Events.OfType<ClientFailed>().Subscribe(ev =>
                 {
                     Console.WriteLine("Client failed!");
@@ -45,7 +54,6 @@ namespace Consumer
                         return;
 
                     ev.Client.Connect();
-                    ev.Client.Sub("foo", "s1");
                 });
 
                 //Subscribe to IncomingOps All or e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
@@ -71,22 +79,14 @@ namespace Consumer
                     Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
 
                     if (Encoding.UTF8.GetString(msg.Payload) == "FAIL")
-                    {
                         client.Send("FAIL");
-                    }
                 });
 
-                //Connect and subscribe to one or more topics
                 client.Connect();
-                client.Sub("foo", "s1");
-                client.Sub("bar", "s2");
-
-                //Make it automatically unsub after two messages
-                //client.UnSub("s1", 2);
-
-                Console.WriteLine("Hit key to UnSub from bar.");
+                
+                Console.WriteLine("Hit key to UnSub from foo.");
                 Console.ReadKey();
-                client.UnSub("s2");
+                client.UnSub("s1");
 
                 Console.WriteLine("Hit key to Disconnect.");
                 Console.ReadKey();
@@ -95,7 +95,6 @@ namespace Consumer
                 Console.WriteLine("Hit key to Connect.");
                 Console.ReadKey();
                 client.Connect();
-                client.Sub("foo", "s3");
 
                 Console.WriteLine("Hit key to Shutdown.");
                 Console.ReadKey();

@@ -112,15 +112,14 @@ namespace NatsFun
             OnDisconnected(reason);
         }
 
+        private void OnConnected()
+            => _eventMediator.Dispatch(new ClientConnected(this));
+
         private void OnDisconnected(DisconnectReason reason)
-        {
-            _eventMediator.Dispatch(new ClientDisconnected(this, reason));
-        }
+            => _eventMediator.Dispatch(new ClientDisconnected(this, reason));
 
         private void OnFailed(ErrOp op)
-        {
-            _eventMediator.Dispatch(new ClientFailed(this, op));
-        }
+            => _eventMediator.Dispatch(new ClientFailed(this, op));
 
         public void Connect()
         {
@@ -159,6 +158,8 @@ namespace NatsFun
                     throw;
                 }
             }
+
+            OnConnected();
         }
 
         private bool TryConnectTo(Host host)
