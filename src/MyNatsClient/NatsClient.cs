@@ -239,7 +239,7 @@ namespace NatsFun
         private string GenerateConnectionOpString()
         {
             var sb = new StringBuilder();
-            sb.Append("CONNECT {\"lang\":\"csharp\",\"verbose\":");
+            sb.Append("CONNECT {\"name\":\"mynatsclient\",\"lang\":\"csharp\",\"verbose\":");
             sb.Append(_connectionInfo.Verbose.ToString().ToLower());
 
             if (_connectionInfo.Credentials != Credentials.Empty)
