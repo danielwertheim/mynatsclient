@@ -396,60 +396,40 @@ namespace NatsFun
             return DoSendAsync($"PONG{Crlf}");
         }
 
-        public void Pub(string subject, string data)
+        public void Pub(string subject, string data, string replyTo = null)
         {
             ThrowIfDisposed();
 
-            DoSend($"PUB {subject} {data.Length}{Crlf}{data}{Crlf}");
+            var s = replyTo != null ? " " : string.Empty;
+
+            DoSend($"PUB {subject}{s}{replyTo} {data.Length}{Crlf}{data}{Crlf}");
         }
 
-        public Task PubAsync(string subject, string data)
+        public Task PubAsync(string subject, string data, string replyTo = null)
         {
             ThrowIfDisposed();
 
-            return DoSendAsync($"PUB {subject} {data.Length}{Crlf}{data}{Crlf}");
+            var s = replyTo != null ? " " : string.Empty;
+
+            return DoSendAsync($"PUB {subject}{s}{replyTo} {data.Length}{Crlf}{data}{Crlf}");
         }
 
-        public void Pub(string subject, string replyTo, string data)
+        public void Sub(string subject, string subscriptionId, string queueGroup = null)
         {
             ThrowIfDisposed();
 
-            DoSend($"PUB {subject} {replyTo} {data.Length}{Crlf}{data}{Crlf}");
+            var s = queueGroup != null ? " " : string.Empty;
+
+            DoSend($"SUB {subject}{s}{queueGroup} {subscriptionId}@{Id}{Crlf}");
         }
 
-        public Task PubAsync(string subject, string replyTo, string data)
+        public Task SubAsync(string subject, string subscriptionId, string queueGroup = null)
         {
             ThrowIfDisposed();
 
-            return DoSendAsync($"PUB {subject} {replyTo} {data.Length}{Crlf}{data}{Crlf}");
-        }
+            var s = queueGroup != null ? " " : string.Empty;
 
-        public void Sub(string subject, string subscriptionId)
-        {
-            ThrowIfDisposed();
-
-            DoSend($"SUB {subject} {subscriptionId}@{Id}{Crlf}");
-        }
-
-        public Task SubAsync(string subject, string subscriptionId)
-        {
-            ThrowIfDisposed();
-
-            return DoSendAsync($"SUB {subject} {subscriptionId}@{Id}{Crlf}");
-        }
-
-        public void Sub(string subject, string queueGroup, string subscriptionId)
-        {
-            ThrowIfDisposed();
-
-            DoSend($"SUB {subject} {queueGroup} {subscriptionId}@{Id}{Crlf}");
-        }
-
-        public Task SubAsync(string subject, string queueGroup, string subscriptionId)
-        {
-            ThrowIfDisposed();
-
-            return DoSendAsync($"SUB {subject} {queueGroup} {subscriptionId}@{Id}{Crlf}");
+            return DoSendAsync($"SUB {subject}{s}{queueGroup} {subscriptionId}@{Id}{Crlf}");
         }
 
         public void UnSub(string subscriptionId, int? maxMessages = null)

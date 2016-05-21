@@ -20,17 +20,11 @@ namespace NatsFun
         void Pong();
         Task PongAsync();
 
-        void Pub(string subject, string data);
-        Task PubAsync(string subject, string data);
+        void Pub(string subject, string data, string replyTo);
+        Task PubAsync(string subject, string data, string replyTo);
 
-        void Pub(string subject, string replyTo, string data);
-        Task PubAsync(string subject, string replyTo, string data);
-
-        void Sub(string subject, string subscriptionId);
-        Task SubAsync(string subject, string subscriptionId);
-
-        void Sub(string subject, string queueGroup, string subscriptionId);
-        Task SubAsync(string subject, string queueGroup, string subscriptionId);
+        void Sub(string subject, string subscriptionId, string queueGroup = null);
+        Task SubAsync(string subject, string subscriptionId, string queueGroup = null);
 
         void UnSub(string subscriptionId, int? maxMessages = null);
         Task UnSubAsync(string subscriptionId, int? maxMessages = null);
