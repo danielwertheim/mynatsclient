@@ -32,6 +32,7 @@ namespace NatsFun
         private NatsOpMediator _opMediator;
         private Socket _socket;
         private NetworkStream _readStream;
+        private NetworkStream _writeStream;
         private NatsOpStreamReader _reader;
         private Task _consumer;
         private CancellationTokenSource _consumerCancellation;
@@ -170,6 +171,7 @@ namespace NatsFun
         {
             _socket = _socket ?? SocketFactory.Create();
             _socket.Connect(host.Address, host.Port);
+            _writeStream = new NetworkStream(_socket, FileAccess.Write, false);
             _readStream = new NetworkStream(_socket, FileAccess.Read, false);
             _reader = new NatsOpStreamReader(_readStream, _hasData);
 
@@ -317,6 +319,12 @@ namespace NatsFun
                     },
                     () =>
                     {
+                        _writeStream?.Close();
+                        _writeStream?.Dispose();
+                        _writeStream = null;
+                    },
+                    () =>
+                    {
                         if (_consumer == null || !_consumer.IsCompleted)
                             return;
 
@@ -421,7 +429,9 @@ namespace NatsFun
             if (buffer.Length > _serverInfo.MaxPayload)
                 throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, buffer.LongLength);
 
-            _socket.Send(buffer);
+            _writeStream.Write(buffer, 0, buffer.Length);
+            _writeStream.Flush();
+            //_socket.Send(buffer);
         }
 
         public void Fail()
