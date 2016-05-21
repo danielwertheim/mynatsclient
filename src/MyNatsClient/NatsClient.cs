@@ -355,11 +355,16 @@ namespace NatsFun
 
         public void Pub(string subject, string data)
         {
-            //TODO: provide overload for other then string as data
-
             ThrowIfDisposed();
 
             DoSend($"PUB {subject} {data.Length}{Crlf}{data}{Crlf}");
+        }
+
+        public void Pub(string subject, string replyTo, string data)
+        {
+            ThrowIfDisposed();
+
+            DoSend($"PUB {subject} {replyTo} {data.Length}{Crlf}{data}{Crlf}");
         }
 
         public void Sub(string subject, string subscriptionId)
