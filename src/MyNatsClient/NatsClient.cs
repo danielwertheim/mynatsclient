@@ -34,6 +34,7 @@ namespace NatsFun
         private Socket _socket;
         private NetworkStream _readStream;
         private NetworkStream _writeStream;
+        private SemaphoreSlim _writeStreamSync;
         private NatsOpStreamReader _reader;
         private Task _consumer;
         private CancellationTokenSource _cancellation;
@@ -49,6 +50,7 @@ namespace NatsFun
         public NatsClient(ConnectionInfo connectionInfo)
         {
             _sync = new object();
+            _writeStreamSync = new SemaphoreSlim(1, 1);
             _connectionInfo = connectionInfo.Clone();
             _eventMediator = new NatsClientEventMediator();
             _opMediator = new NatsOpMediator();
@@ -76,6 +78,9 @@ namespace NatsFun
                 return;
 
             Release();
+
+            _writeStreamSync?.Dispose();
+            _writeStreamSync = null;
 
             _eventMediator?.Dispose();
             _eventMediator = null;
@@ -454,40 +459,42 @@ namespace NatsFun
         {
             ThrowIfNotConnected();
 
-            var buffer = Encoding.UTF8.GetBytes(data);
-            if (buffer.Length > _serverInfo.MaxPayload)
-                throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, buffer.Length);
+            try
+            {
+                _writeStreamSync.Wait(_cancellation.Token);
 
-            _writeStream.Write(buffer, 0, buffer.Length);
-            _writeStream.Flush();
+                var buffer = Encoding.UTF8.GetBytes(data);
+                if (buffer.Length > _serverInfo.MaxPayload)
+                    throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, buffer.Length);
+
+                _writeStream.Write(buffer, 0, buffer.Length);
+                _writeStream.Flush();
+            }
+            finally
+            {
+                _writeStreamSync.Release();
+            }
         }
 
         private async Task DoSendAsync(string data)
         {
             ThrowIfNotConnected();
 
-            var buffer = Encoding.UTF8.GetBytes(data);
-            if (buffer.Length > _serverInfo.MaxPayload)
-                throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, buffer.Length);
+            try
+            {
+                await _writeStreamSync.WaitAsync(_cancellation.Token).ForAwait();
 
-            await _writeStream.WriteAsync(buffer, 0, buffer.Length, _cancellation.Token);
-            await _writeStream.FlushAsync(_cancellation.Token);
+                var buffer = Encoding.UTF8.GetBytes(data);
+                if (buffer.Length > _serverInfo.MaxPayload)
+                    throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, buffer.Length);
+
+                await _writeStream.WriteAsync(buffer, 0, buffer.Length, _cancellation.Token).ForAwait();
+                await _writeStream.FlushAsync(_cancellation.Token).ForAwait();
+            }
+            finally
+            {
+                _writeStreamSync.Release();
+            }
         }
-
-        //private async Task DoSendAsync(Stream data)
-        //{
-        //    ThrowIfNotConnected();
-
-        //    if (data.Length > _serverInfo.MaxPayload)
-        //        throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, data.Length);
-
-        //    var buff = new byte[data.Length < WriteBufferSize ? data.Length : WriteBufferSize];
-        //    var read = await data.ReadAsync(buff, 0, buff.Length, _cancellation.Token).ForAwait();
-        //    while (read > 0)
-        //    {
-        //        await _writeStream.WriteAsync(buff, 0, read, _cancellation.Token).ForAwait();
-        //        await _writeStream.FlushAsync(_cancellation.Token);
-        //    }
-        //}
     }
 }
