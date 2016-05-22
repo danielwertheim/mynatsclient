@@ -450,20 +450,6 @@ namespace NatsFun
             return DoSendAsync($"UNSUB {subscriptionId}@{Id}{s}{maxMessages}{Crlf}");
         }
 
-        public void Send(string data)
-        {
-            ThrowIfDisposed();
-
-            DoSend(data);
-        }
-
-        public Task SendAsync(string data)
-        {
-            ThrowIfDisposed();
-
-            return DoSendAsync(data);
-        }
-
         private void DoSend(string data)
         {
             ThrowIfNotConnected();

@@ -28,8 +28,5 @@ namespace NatsFun
 
         void UnSub(string subscriptionId, int? maxMessages = null);
         Task UnSubAsync(string subscriptionId, int? maxMessages = null);
-
-        void Send(string data);
-        Task SendAsync(string data);
     }
 }

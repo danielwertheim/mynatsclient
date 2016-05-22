@@ -77,9 +77,6 @@ namespace Consumer
                     Console.WriteLine($"QueueGroup: {msg.QueueGroup}");
                     Console.WriteLine($"SubscriptionId: {msg.SubscriptionId}");
                     Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
-
-                    if (Encoding.UTF8.GetString(msg.Payload) == "FAIL")
-                        client.Send("FAIL");
                 });
 
                 client.Connect();
