@@ -28,36 +28,102 @@ namespace Sender
                 client.Connect();
                 client.IncomingOps.OfType<PingOp>().Subscribe(ping => client.Pong());
 
-                while (true)
+                var cancellation = new CancellationTokenSource();
+
+                Task.Run(async () =>
                 {
-                    Console.WriteLine("cmd[q,s]:>>");
-                    var c = Console.ReadKey();
-                    if (c.KeyChar == 'q')
-                        break;
-
-                    Console.WriteLine();
-                    if (c.KeyChar == 's')
+                    var i = 0;
+                    while (!cancellation.IsCancellationRequested)
                     {
-                        var run = true;
-                        var t = Task.Run(() =>
-                        {
-                            var n = 0;
-
-                            while (run)
-                            {
-                                n += 1;
-                                var msg = $"Test{n}";
-                                Console.WriteLine($"Publishing '{msg}' to 'foo'");
-                                client.Pub("foo", msg);
-                                Thread.Sleep(Rnd.Next(500, 2500));
-                            }
-                        });
-                        Console.WriteLine("Hit key to stop.");
-                        Console.ReadKey();
-                        run = false;
-                        t.Wait();
+                        await client.PubAsync("foo", $"async1.{i}").ConfigureAwait(false);
+                        await Task.Delay(Rnd.Next(10, 100), cancellation.Token).ConfigureAwait(false);
+                        i += 1;
                     }
-                }
+                }, cancellation.Token).ContinueWith(t =>
+                {
+                    if (t.Exception != null)
+                        Console.WriteLine(t.Exception.GetBaseException());
+                }, cancellation.Token);
+
+                Task.Run(async () =>
+                {
+                    var i = 0;
+                    while (!cancellation.IsCancellationRequested)
+                    {
+                        await client.PubAsync("foo", $"async2.{i}").ConfigureAwait(false);
+                        await Task.Delay(Rnd.Next(10, 100), cancellation.Token).ConfigureAwait(false);
+                        i += 1;
+                    }
+                }, cancellation.Token).ContinueWith(t =>
+                {
+                    if (t.Exception != null)
+                        Console.WriteLine(t.Exception.GetBaseException());
+                }, cancellation.Token);
+
+                Task.Run(() =>
+                {
+                    var i = 0;
+                    while (!cancellation.IsCancellationRequested)
+                    {
+                        client.Pub("foo", $"sync1.{i}");
+                        Thread.Sleep(Rnd.Next(10, 100));
+                        i += 1;
+                    }
+                }, cancellation.Token).ContinueWith(t =>
+                {
+                    if (t.Exception != null)
+                        Console.WriteLine(t.Exception.GetBaseException());
+                }, cancellation.Token);
+
+                Task.Run(() =>
+                {
+                    var i = 0;
+                    while (!cancellation.IsCancellationRequested)
+                    {
+                        client.Pub("foo", $"sync2.{i}");
+                        Thread.Sleep(Rnd.Next(10, 100));
+                        i += 1;
+                    }
+                }, cancellation.Token).ContinueWith(t =>
+                {
+                    if (t.Exception != null)
+                        Console.WriteLine(t.Exception.GetBaseException());
+                }, cancellation.Token);
+
+                Console.ReadKey();
+                cancellation.Cancel();
+                Console.ReadKey();
+                //while (true)
+                //{
+                //    Console.WriteLine("cmd[q,s]:>>");
+                //    var c = Console.ReadKey();
+                //    if (c.KeyChar == 'q')
+                //        break;
+
+                //    Console.WriteLine();
+                //    if (c.KeyChar == 's')
+                //    {
+                //        var run = true;
+                //        var t = Task.Run(() =>
+                //        {
+                //            var n = 0;
+
+                //            while (run)
+                //            {
+                //                n += 1;
+                //                var msg = $"Test{n}\r\nwith two lines!!!";
+                //                Console.WriteLine($"Publishing '{msg}' to 'foo'");
+                //                client.Pub("foo", msg);
+                //                Thread.Sleep(Rnd.Next(500, 2500));
+                //            }
+                //        });
+
+                //        Console.WriteLine("Hit key to stop.");
+                //        Console.ReadKey();
+                //        run = false;
+                //        t.Wait();
+                //    }
+                //}
             }
         }
     }
