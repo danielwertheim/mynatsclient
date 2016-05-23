@@ -1,21 +1,21 @@
-using Jil;
 using MyNatsClient.Ops;
+using Newtonsoft.Json;
 
 namespace MyNatsClient.Internals
 {
     internal class NatsServerInfo
     {
-        [JilDirective("auth_required")]
+        [JsonProperty("auth_required")]
         public bool AuthRequired { get; set; }
 
-        [JilDirective("max_payload")]
+        [JsonProperty("max_payload")]
         public long MaxPayload { get; set; }
 
         private NatsServerInfo() { }
 
         public static NatsServerInfo Parse(InfoOp op)
         {
-            return JSON.Deserialize<NatsServerInfo>(op.Message, JilOptions.Instance);
+            return JsonConvert.DeserializeObject<NatsServerInfo>(op.Message, JsonOptions.Instance);
         }
     }
 }
