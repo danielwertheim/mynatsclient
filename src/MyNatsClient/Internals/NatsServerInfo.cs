@@ -1,7 +1,7 @@
 using Jil;
-using NatsFun.Ops;
+using MyNatsClient.Ops;
 
-namespace NatsFun.Internals
+namespace MyNatsClient.Internals
 {
     internal class NatsServerInfo
     {

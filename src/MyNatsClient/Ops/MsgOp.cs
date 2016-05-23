@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace NatsFun.Ops
+namespace MyNatsClient.Ops
 {
     public class MsgOp : IOp
     {

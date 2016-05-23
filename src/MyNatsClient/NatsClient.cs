@@ -6,12 +6,12 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NatsFun.Events;
-using NatsFun.Internals;
-using NatsFun.Internals.Extensions;
-using NatsFun.Ops;
+using MyNatsClient.Events;
+using MyNatsClient.Internals;
+using MyNatsClient.Internals.Extensions;
+using MyNatsClient.Ops;
 
-namespace NatsFun
+namespace MyNatsClient
 {
     public class NatsClient : INatsClient, IDisposable
     {

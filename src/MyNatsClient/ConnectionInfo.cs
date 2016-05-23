@@ -1,6 +1,6 @@
 using System.Linq;
 
-namespace NatsFun
+namespace MyNatsClient
 {
     public class ConnectionInfo
     {

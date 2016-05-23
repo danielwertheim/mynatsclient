@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace NatsFun
+namespace MyNatsClient
 {
     public interface INatsClient
     {

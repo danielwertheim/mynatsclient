@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using NatsFun.Internals;
+using MyNatsClient.Internals;
 
-namespace NatsFun
+namespace MyNatsClient
 {
     public class NatsClientEventMediator : IObservable<IClientEvent>, IDisposable
     {

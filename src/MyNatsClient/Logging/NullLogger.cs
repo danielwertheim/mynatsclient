@@ -1,6 +1,6 @@
 using System;
 
-namespace NatsFun.Logging
+namespace MyNatsClient.Logging
 {
     public class NullLogger : ILogger
     {

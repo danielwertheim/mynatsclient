@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NatsFun
+namespace MyNatsClient
 {
     public interface ILogger
     {

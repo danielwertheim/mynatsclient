@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace NatsFun.Internals.Extensions
+namespace MyNatsClient.Internals.Extensions
 {
     internal static class ArrayExtensions
     {

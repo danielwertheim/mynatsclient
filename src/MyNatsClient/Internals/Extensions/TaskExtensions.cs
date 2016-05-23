@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace NatsFun.Internals.Extensions
+namespace MyNatsClient.Internals.Extensions
 {
     internal static class TaskExtensions
     {

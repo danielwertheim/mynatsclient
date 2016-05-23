@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 
-namespace NatsFun.Internals
+namespace MyNatsClient.Internals
 {
     internal static class Retry
     {

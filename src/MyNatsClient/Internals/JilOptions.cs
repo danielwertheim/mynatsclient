@@ -1,6 +1,6 @@
 ﻿using Jil;
 
-namespace NatsFun.Internals
+namespace MyNatsClient.Internals
 {
     internal class JilOptions
     {

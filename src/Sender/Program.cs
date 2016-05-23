@@ -2,8 +2,8 @@
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NatsFun;
-using NatsFun.Ops;
+using MyNatsClient;
+using MyNatsClient.Ops;
 
 namespace Sender
 {

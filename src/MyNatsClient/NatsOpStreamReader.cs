@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NatsFun.Ops;
+using MyNatsClient.Ops;
 
-namespace NatsFun
+namespace MyNatsClient
 {
     //TODO: Should support white space delimiter \t not only empty
     public class NatsOpStreamReader : IDisposable

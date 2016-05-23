@@ -1,4 +1,4 @@
-namespace NatsFun.Ops
+namespace MyNatsClient.Ops
 {
     public class OkOp : IOp
     {

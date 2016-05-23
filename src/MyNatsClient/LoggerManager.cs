@@ -1,7 +1,7 @@
 ﻿using System;
-using NatsFun.Logging;
+using MyNatsClient.Logging;
 
-namespace NatsFun
+namespace MyNatsClient
 {
     public static class LoggerManager
     {

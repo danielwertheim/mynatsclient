@@ -1,6 +1,6 @@
 ﻿using System.Net.Sockets;
 
-namespace NatsFun.Internals
+namespace MyNatsClient.Internals
 {
     internal static class SocketFactory
     {

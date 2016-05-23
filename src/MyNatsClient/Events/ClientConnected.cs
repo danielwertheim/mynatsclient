@@ -1,4 +1,4 @@
-namespace NatsFun.Events
+namespace MyNatsClient.Events
 {
     public class ClientConnected : IClientEvent
     {

@@ -7,8 +7,8 @@
     <ProjectGuid>{4BC58C54-3C9E-4A26-A7E0-E8BA0B29D6EC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NatsFun</RootNamespace>
-    <AssemblyName>NatsFun</AssemblyName>
+    <RootNamespace>MyNatsClient</RootNamespace>
+    <AssemblyName>MyNatsClient</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />

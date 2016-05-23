@@ -1,7 +1,7 @@
 ﻿using System.Net.Sockets;
 using System.Text;
 
-namespace NatsFun.Internals.Extensions
+namespace MyNatsClient.Internals.Extensions
 {
     internal static class SocketExtensions
     {

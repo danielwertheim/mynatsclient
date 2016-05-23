@@ -1,4 +1,4 @@
-namespace NatsFun
+namespace MyNatsClient
 {
     public interface IOp
     {

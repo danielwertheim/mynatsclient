@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace NatsFun.Internals
+namespace MyNatsClient.Internals
 {
     internal static class Try
     {

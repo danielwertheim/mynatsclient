@@ -1,6 +1,6 @@
 using System;
 
-namespace NatsFun.Internals
+namespace MyNatsClient.Internals
 {
     internal class SubscriptionOf<T> : IDisposable
     {

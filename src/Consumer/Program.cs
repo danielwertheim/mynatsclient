@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Reactive.Linq;
 using System.Text;
-using NatsFun;
-using NatsFun.Events;
-using NatsFun.Ops;
+using MyNatsClient;
+using MyNatsClient.Events;
+using MyNatsClient.Ops;
 
 namespace Consumer
 {
