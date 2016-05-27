@@ -7,10 +7,15 @@ My .Net client for NATS. Which is the result of me starting to looking into and 
 * [Continuing with C# and Nats, now looking at NatsObservable](http://danielwertheim.se/continuing-with-c-and-nats-now-looking-at-natsobservable/)
 * [Time to construct a bundled NatsClient for C#](http://danielwertheim.se/time-to-construct-a-bundled-natsclient-for-csharp/)
 
-The code is currently to be seen as a **labs project** (POC, proof of concept). But there's an offical client located here: https://github.com/nats-io/csnats
+## Why a new one when there's an offical project?
+Because I wanted to base mine around `IObservable<>` so that you could use ReactiveExtensions to consume incoming `Ops` from the server. And I also created this client as a way to learn about NATS itself.
 
-## Why a new one?
-Because that's how I learn and I wanted to base mine around `IObservable<>` so that you could use ReactiveExtensions to consume incoming `Ops` from the server.
+For the official client, look here: https://github.com/nats-io/csnats
+
+## .NET Core
+MyNatsClient can, in its current shape, be compiled and distributed for .NET Core. MyNatsClient in itself does not have any dependencies on ReactiveExtensions. But your client will (if you want to use it). And to get that to work with a core project, you have to explicit import it as a dependency on a portable profile that RX currently supports.
+
+The first releases will how-ever be distributed over NuGet for .NET 4.5 and soon .NET Core.
 
 ## Simple Consumer sample
 Just some simple code showing usage.
