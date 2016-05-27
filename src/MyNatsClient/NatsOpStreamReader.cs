@@ -7,11 +7,11 @@ using MyNatsClient.Ops;
 
 namespace MyNatsClient
 {
-    //TODO: Should support white space delimiter \t not only empty
     public class NatsOpStreamReader : IDisposable
     {
         private static readonly Dictionary<string, Func<BinaryReader, IOp>> Ops;
-        private const char DelimMarker = ' ';
+        private const char DelimMarker1 = ' ';
+        private const char DelimMarker2 = '\t';
         private const char Cr = '\r';
         private const char Lf = '\n';
 
@@ -72,11 +72,14 @@ namespace MyNatsClient
             while (_hasData())
             {
                 var c = _reader.ReadChar();
-                if (c != DelimMarker && c != Cr)
+                if (!IsDelimMarker(c) && c != Cr && c != Lf)
                 {
                     opMarkerChars.Add(c);
                     continue;
                 }
+
+                if (!opMarkerChars.Any())
+                    continue;
 
                 var op = new string(opMarkerChars.ToArray());
                 opMarkerChars.Clear();
@@ -180,7 +183,7 @@ namespace MyNatsClient
                     break;
                 }
 
-                if (c != DelimMarker)
+                if (!IsDelimMarker(c))
                     segment.Add(c);
                 else
                 {
@@ -205,5 +208,7 @@ namespace MyNatsClient
 
             return msg;
         }
+
+        private static bool IsDelimMarker(char c) => c == DelimMarker1 || c == DelimMarker2;
     }
 }

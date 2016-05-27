@@ -10,9 +10,6 @@ namespace MyNatsClient.Ops
             Message = message;
         }
 
-        public string GetAsString()
-        {
-            return $"INFO {Message}\r\n";
-        }
+        public string GetAsString() => $"INFO {Message}";
     }
 }

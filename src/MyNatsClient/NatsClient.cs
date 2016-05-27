@@ -22,14 +22,13 @@ namespace MyNatsClient
         private const int ConsumerIfNoDataWaitForMs = 100;
         private const int TryConnectMaxCycleDelayMs = 200;
         private const int TryConnectMaxDurationMs = 2000;
-        private const int WriteBufferSize = 512;
 
         private readonly object _sync;
         private readonly ConnectionInfo _connectionInfo;
         private readonly Func<bool> _socketIsConnected;
         private readonly Func<bool> _consumerIsCancelled;
         private readonly Func<bool> _hasData;
-        private NatsClientEventMediator _eventMediator;
+        private ObservableOf<IClientEvent> _eventMediator;
         private NatsOpMediator _opMediator;
         private Socket _socket;
         private NetworkStream _readStream;
@@ -41,18 +40,18 @@ namespace MyNatsClient
         private NatsServerInfo _serverInfo;
         private bool _isDisposed;
 
-        public string Id => _connectionInfo.ClientId;
+        public string Id { get; }
         public IObservable<IClientEvent> Events => _eventMediator;
         public IObservable<IOp> IncomingOps => _opMediator;
         public INatsClientStats Stats => _opMediator;
         public NatsClientState State { get; private set; }
 
-        public NatsClient(ConnectionInfo connectionInfo)
+        public NatsClient(string id, ConnectionInfo connectionInfo)
         {
             _sync = new object();
             _writeStreamSync = new SemaphoreSlim(1, 1);
             _connectionInfo = connectionInfo.Clone();
-            _eventMediator = new NatsClientEventMediator();
+            _eventMediator = new ObservableOf<IClientEvent>();
             _opMediator = new NatsOpMediator();
 
             _socketIsConnected = () => _socket != null && _socket.Connected;
@@ -62,6 +61,7 @@ namespace MyNatsClient
                     _readStream != null &&
                     _readStream.CanRead &&
                     _readStream.DataAvailable;
+            Id = id;
             State = NatsClientState.Disconnected;
         }
 
@@ -264,6 +264,7 @@ namespace MyNatsClient
                 {
                     noDataCount += 1;
 
+                    //TODO: Use Stats.LastOpReceivedAt to see if we should force disconnect
                     if (noDataCount >= 5)
                     {
                         Ping();
@@ -380,11 +381,11 @@ namespace MyNatsClient
             DoSend($"PING{Crlf}");
         }
 
-        public Task PingAsync()
+        public async Task PingAsync()
         {
             ThrowIfDisposed();
 
-            return DoSendAsync($"PING{Crlf}");
+            await DoSendAsync($"PING{Crlf}").ForAwait();
         }
 
         public void Pong()
@@ -394,11 +395,11 @@ namespace MyNatsClient
             DoSend($"PONG{Crlf}");
         }
 
-        public Task PongAsync()
+        public async Task PongAsync()
         {
             ThrowIfDisposed();
 
-            return DoSendAsync($"PONG{Crlf}");
+            await DoSendAsync($"PONG{Crlf}").ForAwait();
         }
 
         public void Pub(string subject, string data, string replyTo = null)
@@ -410,13 +411,13 @@ namespace MyNatsClient
             DoSend($"PUB {subject}{s}{replyTo} {data.Length}{Crlf}{data}{Crlf}");
         }
 
-        public Task PubAsync(string subject, string data, string replyTo = null)
+        public async Task PubAsync(string subject, string data, string replyTo = null)
         {
             ThrowIfDisposed();
 
             var s = replyTo != null ? " " : string.Empty;
 
-            return DoSendAsync($"PUB {subject}{s}{replyTo} {data.Length}{Crlf}{data}{Crlf}");
+            await DoSendAsync($"PUB {subject}{s}{replyTo} {data.Length}{Crlf}{data}{Crlf}").ForAwait();
         }
 
         public void Sub(string subject, string subscriptionId, string queueGroup = null)
@@ -428,13 +429,13 @@ namespace MyNatsClient
             DoSend($"SUB {subject}{s}{queueGroup} {subscriptionId}@{Id}{Crlf}");
         }
 
-        public Task SubAsync(string subject, string subscriptionId, string queueGroup = null)
+        public async Task SubAsync(string subject, string subscriptionId, string queueGroup = null)
         {
             ThrowIfDisposed();
 
             var s = queueGroup != null ? " " : string.Empty;
 
-            return DoSendAsync($"SUB {subject}{s}{queueGroup} {subscriptionId}@{Id}{Crlf}");
+            await DoSendAsync($"SUB {subject}{s}{queueGroup} {subscriptionId}@{Id}{Crlf}").ForAwait();
         }
 
         public void UnSub(string subscriptionId, int? maxMessages = null)
@@ -446,13 +447,13 @@ namespace MyNatsClient
             DoSend($"UNSUB {subscriptionId}@{Id}{s}{maxMessages}{Crlf}");
         }
 
-        public Task UnSubAsync(string subscriptionId, int? maxMessages = null)
+        public async Task UnSubAsync(string subscriptionId, int? maxMessages = null)
         {
             ThrowIfDisposed();
 
             var s = maxMessages.HasValue ? " " : string.Empty;
 
-            return DoSendAsync($"UNSUB {subscriptionId}@{Id}{s}{maxMessages}{Crlf}");
+            await DoSendAsync($"UNSUB {subscriptionId}@{Id}{s}{maxMessages}{Crlf}").ForAwait();
         }
 
         private void DoSend(string data)

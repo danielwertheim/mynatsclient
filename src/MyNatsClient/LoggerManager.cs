@@ -5,6 +5,6 @@ namespace MyNatsClient
 {
     public static class LoggerManager
     {
-        public static Func<Type, ILogger> Resolve { get; } = t => NullLogger.Instance;
+        public static Func<Type, ILogger> Resolve { get; set; } = t => NullLogger.Instance;
     }
 }

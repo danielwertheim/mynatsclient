@@ -54,7 +54,7 @@
     <Compile Include="INatsClient.cs" />
     <Compile Include="Internals\JsonOptions.cs" />
     <Compile Include="Internals\Retry.cs" />
-    <Compile Include="NatsClientEventMediator.cs" />
+    <Compile Include="ObservableOf.cs" />
     <Compile Include="Ops\ErrOp.cs" />
     <Compile Include="Internals\Extensions\ArrayExtensions.cs" />
     <Compile Include="Internals\Extensions\SocketExtensions.cs" />

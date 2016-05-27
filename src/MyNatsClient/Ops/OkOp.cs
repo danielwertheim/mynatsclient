@@ -8,6 +8,6 @@ namespace MyNatsClient.Ops
 
         private OkOp() { }
 
-        public string GetAsString() => "+OK\r\n";
+        public string GetAsString() => Code;
     }
 }

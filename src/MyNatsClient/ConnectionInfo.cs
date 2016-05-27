@@ -4,15 +4,15 @@ namespace MyNatsClient
 {
     public class ConnectionInfo
     {
-        public string ClientId { get; }
         public Host[] Hosts { get; }
         public bool AutoRespondToPing { get; set; } = true;
         public Credentials Credentials { get; set; } = Credentials.Empty;
         public bool Verbose { get; set; }
 
-        public ConnectionInfo(string clientId, Host[] hosts)
+        public ConnectionInfo(Host host) : this(new[] { host }) { }
+
+        public ConnectionInfo(Host[] hosts)
         {
-            ClientId = clientId;
             Hosts = hosts;
         }
 
@@ -22,7 +22,7 @@ namespace MyNatsClient
                 .Select(i => new Host(i.Address, i.Port))
                 .ToArray();
 
-            return new ConnectionInfo(ClientId, hosts)
+            return new ConnectionInfo(hosts)
             {
                 AutoRespondToPing = AutoRespondToPing,
                 Credentials = Credentials,

@@ -7,7 +7,7 @@ namespace MyNatsClient
 
         private readonly string _toString;
 
-        public Host(string address, int port)
+        public Host(string address, int port = 4222)
         {
             Address = address;
             Port = port;

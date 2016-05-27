@@ -58,7 +58,6 @@ namespace MyNatsClient.Ops
             sb.Append(Payload.Length);
             sb.Append("\r\n");
             sb.Append(GetPayloadAsString());
-            sb.Append("\r\n");
 
             return sb.ToString();
         }

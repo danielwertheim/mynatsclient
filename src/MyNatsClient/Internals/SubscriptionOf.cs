@@ -29,6 +29,7 @@ namespace MyNatsClient.Internals
         internal void OnError(Exception ex)
         {
             _observer.OnError(ex);
+            Dispose();
         }
 
         internal void OnCompleted()

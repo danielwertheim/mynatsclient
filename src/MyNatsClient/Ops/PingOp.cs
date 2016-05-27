@@ -8,9 +8,6 @@ namespace MyNatsClient.Ops
 
         private PingOp() { }
 
-        public string GetAsString()
-        {
-            return "PING\r\n";
-        }
+        public string GetAsString() => Code;
     }
 }

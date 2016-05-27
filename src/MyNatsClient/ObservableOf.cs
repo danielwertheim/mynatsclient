@@ -5,12 +5,12 @@ using MyNatsClient.Internals;
 
 namespace MyNatsClient
 {
-    public class NatsClientEventMediator : IObservable<IClientEvent>, IDisposable
+    public class ObservableOf<T> : IObservable<T>, IDisposable
     {
-        private readonly ConcurrentDictionary<Guid, SubscriptionOf<IClientEvent>> _subscriptions = new ConcurrentDictionary<Guid, SubscriptionOf<IClientEvent>>();
+        private readonly ConcurrentDictionary<Guid, SubscriptionOf<T>> _subscriptions = new ConcurrentDictionary<Guid, SubscriptionOf<T>>();
         private bool _isDisposed;
 
-        public void Dispatch(IClientEvent ev)
+        public virtual void Dispatch(T ev)
         {
             foreach (var subscription in _subscriptions.Values)
             {
@@ -25,11 +25,11 @@ namespace MyNatsClient
             }
         }
 
-        public IDisposable Subscribe(IObserver<IClientEvent> observer)
+        public virtual IDisposable Subscribe(IObserver<T> observer)
         {
             ThrowIfDisposed();
 
-            var subscription = new SubscriptionOf<IClientEvent>(observer, s =>
+            var subscription = new SubscriptionOf<T>(observer, s =>
             {
                 if (_subscriptions.TryRemove(s.Id, out s))
                     s.OnCompleted();

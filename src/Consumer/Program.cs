@@ -12,8 +12,6 @@ namespace Consumer
         static void Main(string[] args)
         {
             var connectionInfo = new ConnectionInfo(
-                //Client id (becomes part of subscription id)
-                "myconsumer1",
                 //Hosts to use. When connecting, will randomize the list
                 //and try to connect. First successful will be used.
                 new[]
@@ -25,7 +23,7 @@ namespace Consumer
                 Verbose = true
             };
 
-            using (var client = new NatsClient(connectionInfo))
+            using (var client = new NatsClient("myconsumer1", connectionInfo))
             {
                 //You can subscribe to dispatched client events
                 //to react on something that happened to the client
@@ -60,7 +58,7 @@ namespace Consumer
                 client.IncomingOps.Subscribe(op =>
                 {
                     Console.WriteLine("===== RECEIVED =====");
-                    Console.Write(op.GetAsString());
+                    Console.WriteLine(op.GetAsString());
                     Console.WriteLine($"OpCount: {client.Stats.OpCount}");
                 });
 
