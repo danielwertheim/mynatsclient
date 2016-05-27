@@ -17,8 +17,6 @@ Just some simple code showing usage.
 
 ```csharp
 var connectionInfo = new ConnectionInfo(
-    //Client id (becomes part of subscription id)
-    "myconsumer1",
     //Hosts to use. When connecting, will randomize the list
     //and try to connect. First successful will be used.
     new[]
@@ -30,7 +28,8 @@ var connectionInfo = new ConnectionInfo(
     Verbose = true
 };
 
-using (var client = new NatsClient(connectionInfo))
+//Client id (becomes part of subscription id)
+using (var client = new NatsClient("myClientId", connectionInfo))
 {
     //You can subscribe to dispatched client events
     //to react on something that happened to the client
