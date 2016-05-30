@@ -20,8 +20,10 @@ namespace MyNatsClient
         void Pong();
         Task PongAsync();
 
-        void Pub(string subject, string data, string replyTo);
-        Task PubAsync(string subject, string data, string replyTo);
+        void Pub(string subject, string body, string replyTo);
+        void Pub(string subject, byte[] body, string replyTo);
+        Task PubAsync(string subject, string body, string replyTo);
+        Task PubAsync(string subject, byte[] body, string replyTo);
 
         void Sub(string subject, string subscriptionId, string queueGroup = null);
         Task SubAsync(string subject, string subscriptionId, string queueGroup = null);

@@ -1,4 +1,5 @@
 using System.Text;
+using MyNatsClient.Internals;
 
 namespace MyNatsClient.Ops
 {
@@ -37,7 +38,7 @@ namespace MyNatsClient.Ops
 
         public string GetPayloadAsString()
         {
-            return Encoding.UTF8.GetString(Payload);
+            return NatsEncoder.GetString(Payload);
         }
 
         public string GetAsString()

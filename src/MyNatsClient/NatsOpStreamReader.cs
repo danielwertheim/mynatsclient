@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using MyNatsClient.Internals;
 using MyNatsClient.Ops;
 
 namespace MyNatsClient
@@ -35,7 +36,7 @@ namespace MyNatsClient
         public NatsOpStreamReader(Stream stream, Func<bool> hasData)
         {
             _hasData = hasData;
-            _reader = new BinaryReader(stream, Encoding.UTF8, true);
+            _reader = new BinaryReader(stream, NatsEncoder.Encoding, true);
         }
 
         public void Dispose()

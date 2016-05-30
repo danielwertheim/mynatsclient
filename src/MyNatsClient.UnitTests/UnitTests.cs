@@ -9,7 +9,7 @@ namespace MyNatsClient.UnitTests
         protected T UnitUnderTest { get; set; }
 
         [TearDown]
-        private void Clean()
+        protected void Clean()
         {
             (UnitUnderTest as IDisposable)?.Dispose();
         }

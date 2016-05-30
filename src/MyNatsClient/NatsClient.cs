@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MyNatsClient.Events;
 using MyNatsClient.Internals;
+using MyNatsClient.Internals.Commands;
 using MyNatsClient.Internals.Extensions;
 using MyNatsClient.Ops;
 
@@ -17,7 +18,6 @@ namespace MyNatsClient
     {
         private static readonly ILogger Logger = LoggerManager.Resolve(typeof(NatsClient));
 
-        private const string Crlf = "\r\n";
         private const int ConsumerMaxSpinWaitMs = 500;
         private const int ConsumerIfNoDataWaitForMs = 100;
         private const int TryConnectMaxCycleDelayMs = 200;
@@ -208,7 +208,7 @@ namespace MyNatsClient
 
             _opMediator.Dispatch(infoOp);
 
-            _socket.SendUtf8(GenerateConnectionOpString());
+            _socket.Send(NatsEncoder.GetBytes(GenerateConnectionOpString()));
 
             if (!_socket.Connected)
             {
@@ -240,7 +240,7 @@ namespace MyNatsClient
                 sb.Append(_connectionInfo.Credentials.Pass);
             }
             sb.Append("}");
-            sb.Append(Crlf);
+            sb.Append(NatsEncoder.Crlf);
 
             return sb.ToString();
         }
@@ -378,97 +378,97 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
-            DoSend($"PING{Crlf}");
+            DoSend(PingCmd.Generate());
         }
 
         public async Task PingAsync()
         {
             ThrowIfDisposed();
 
-            await DoSendAsync($"PING{Crlf}").ForAwait();
+            await DoSendAsync(PingCmd.Generate()).ForAwait();
         }
 
         public void Pong()
         {
             ThrowIfDisposed();
 
-            DoSend($"PONG{Crlf}");
+            DoSend(PongCmd.Generate());
         }
 
         public async Task PongAsync()
         {
             ThrowIfDisposed();
 
-            await DoSendAsync($"PONG{Crlf}").ForAwait();
+            await DoSendAsync(PongCmd.Generate()).ForAwait();
         }
 
-        public void Pub(string subject, string data, string replyTo = null)
+        public void Pub(string subject, string body, string replyTo = null)
         {
             ThrowIfDisposed();
 
-            var s = replyTo != null ? " " : string.Empty;
-
-            DoSend($"PUB {subject}{s}{replyTo} {data.Length}{Crlf}{data}{Crlf}");
+            DoSend(PubCmd.Generate(subject, body, replyTo));
         }
 
-        public async Task PubAsync(string subject, string data, string replyTo = null)
+        public void Pub(string subject, byte[] body, string replyTo = null)
         {
             ThrowIfDisposed();
 
-            var s = replyTo != null ? " " : string.Empty;
+            DoSend(PubCmd.Generate(subject, body, replyTo));
+        }
 
-            await DoSendAsync($"PUB {subject}{s}{replyTo} {data.Length}{Crlf}{data}{Crlf}").ForAwait();
+        public async Task PubAsync(string subject, byte[] body, string replyTo = null)
+        {
+            ThrowIfDisposed();
+
+            await DoSendAsync(PubCmd.Generate(subject, body, replyTo)).ForAwait();
+        }
+
+        public async Task PubAsync(string subject, string body, string replyTo = null)
+        {
+            ThrowIfDisposed();
+
+            await DoSendAsync(PubCmd.Generate(subject, body, replyTo)).ForAwait();
         }
 
         public void Sub(string subject, string subscriptionId, string queueGroup = null)
         {
             ThrowIfDisposed();
 
-            var s = queueGroup != null ? " " : string.Empty;
-
-            DoSend($"SUB {subject}{s}{queueGroup} {subscriptionId}@{Id}{Crlf}");
+            DoSend(SubCmd.Generate(subject, subscriptionId, queueGroup));
         }
 
         public async Task SubAsync(string subject, string subscriptionId, string queueGroup = null)
         {
             ThrowIfDisposed();
 
-            var s = queueGroup != null ? " " : string.Empty;
-
-            await DoSendAsync($"SUB {subject}{s}{queueGroup} {subscriptionId}@{Id}{Crlf}").ForAwait();
+            await DoSendAsync(SubCmd.Generate(subject, subscriptionId, queueGroup)).ForAwait();
         }
 
         public void UnSub(string subscriptionId, int? maxMessages = null)
         {
             ThrowIfDisposed();
 
-            var s = maxMessages.HasValue ? " " : string.Empty;
-
-            DoSend($"UNSUB {subscriptionId}@{Id}{s}{maxMessages}{Crlf}");
+            DoSend(UnSubCmd.Generate(subscriptionId, maxMessages));
         }
 
         public async Task UnSubAsync(string subscriptionId, int? maxMessages = null)
         {
             ThrowIfDisposed();
 
-            var s = maxMessages.HasValue ? " " : string.Empty;
-
-            await DoSendAsync($"UNSUB {subscriptionId}@{Id}{s}{maxMessages}{Crlf}").ForAwait();
+            await DoSendAsync(UnSubCmd.Generate(subscriptionId, maxMessages)).ForAwait();
         }
 
-        private void DoSend(string data)
+        private void DoSend(byte[] data)
         {
             ThrowIfNotConnected();
+
+            if (data.Length > _serverInfo.MaxPayload)
+                throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, data.Length);
 
             try
             {
                 _writeStreamSync.Wait(_cancellation.Token);
-
-                var buffer = Encoding.UTF8.GetBytes(data);
-                if (buffer.Length > _serverInfo.MaxPayload)
-                    throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, buffer.Length);
-
-                _writeStream.Write(buffer, 0, buffer.Length);
+                _writeStream.Write(data, 0, data.Length);
                 _writeStream.Flush();
             }
             finally
@@ -477,19 +477,17 @@ namespace MyNatsClient
             }
         }
 
-        private async Task DoSendAsync(string data)
+        private async Task DoSendAsync(byte[] data)
         {
             ThrowIfNotConnected();
+
+            if (data.Length > _serverInfo.MaxPayload)
+                throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, data.Length);
 
             try
             {
                 await _writeStreamSync.WaitAsync(_cancellation.Token).ForAwait();
-
-                var buffer = Encoding.UTF8.GetBytes(data);
-                if (buffer.Length > _serverInfo.MaxPayload)
-                    throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, buffer.Length);
-
-                await _writeStream.WriteAsync(buffer, 0, buffer.Length, _cancellation.Token).ForAwait();
+                await _writeStream.WriteAsync(data, 0, data.Length, _cancellation.Token).ForAwait();
                 await _writeStream.FlushAsync(_cancellation.Token).ForAwait();
             }
             finally

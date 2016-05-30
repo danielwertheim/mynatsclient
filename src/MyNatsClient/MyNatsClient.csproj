@@ -52,12 +52,17 @@
     <Compile Include="DisconnectReason.cs" />
     <Compile Include="IClientEvent.cs" />
     <Compile Include="INatsClient.cs" />
+    <Compile Include="Internals\Commands\PingCmd.cs" />
+    <Compile Include="Internals\Commands\PongCmd.cs" />
+    <Compile Include="Internals\Commands\SubCmd.cs" />
+    <Compile Include="Internals\Commands\UnSubCmd.cs" />
+    <Compile Include="Internals\Extensions\EnumerableExtensions.cs" />
     <Compile Include="Internals\JsonOptions.cs" />
     <Compile Include="Internals\Retry.cs" />
+    <Compile Include="Internals\NatsEncoder.cs" />
     <Compile Include="ObservableOf.cs" />
     <Compile Include="Ops\ErrOp.cs" />
     <Compile Include="Internals\Extensions\ArrayExtensions.cs" />
-    <Compile Include="Internals\Extensions\SocketExtensions.cs" />
     <Compile Include="Host.cs" />
     <Compile Include="INatsClientStats.cs" />
     <Compile Include="Ops\InfoOp.cs" />
@@ -80,6 +85,7 @@
     <Compile Include="Internals\SubscriptionOf.cs" />
     <Compile Include="Internals\Try.cs" />
     <Compile Include="Internals\Extensions\TaskExtensions.cs" />
+    <Compile Include="Internals\Commands\PubCmd.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
