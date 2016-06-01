@@ -30,10 +30,10 @@ var connectionInfo = new ConnectionInfo(
     })
 {
     AutoRespondToPing = true,
-    Verbose = true
+    Verbose = true,
+    Credentials = new Credentials("testuser", "p@ssword1234")
 };
 
-//Client id (becomes part of subscription id)
 using (var client = new NatsClient("myClientId", connectionInfo))
 {
     //You can subscribe to dispatched client events
@@ -85,12 +85,6 @@ using (var client = new NatsClient("myClientId", connectionInfo))
         Console.WriteLine($"QueueGroup: {msg.QueueGroup}");
         Console.WriteLine($"SubscriptionId: {msg.SubscriptionId}");
         Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
-
-        //For demo purpose, force a fail
-        if (Encoding.UTF8.GetString(msg.Payload) == "FAIL")
-        {
-            client.Send("FAIL");
-        }
     });
 
     client.Connect();
@@ -110,4 +104,33 @@ using (var client = new NatsClient("myClientId", connectionInfo))
     Console.WriteLine("Hit key to Shutdown.");
     Console.ReadKey();
 }
+```
+
+## Auth
+You specify credentials on the `ConnectionInfo` object:
+
+```csharp
+var cnInfo = new ConnectionInfo(...)
+{
+    Credentials = new Credentials("test", "p@ssword1234")
+};
+```
+
+If the server is configured to require `user` and `pass`, you will get an exception if you have not provided credentials. It will look something like:
+
+```
+NatsException : No connection could be established against any of the specified servers.
+```
+
+With an inner exception of:
+
+```
+Error while connecting to ubuntu01:4223. Server requires credentials to be passed. None was specified.
+```
+
+## SocketFactory
+If you like to tweak socket options, you inject your custom implementation of `ISocketFactory` on the client:
+
+```csharp
+client.SocketFactory = new MyMonoOptimizedSocketFactory();
 ```
