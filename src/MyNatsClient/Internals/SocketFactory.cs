@@ -2,12 +2,20 @@
 
 namespace MyNatsClient.Internals
 {
-    internal static class SocketFactory
+    internal class SocketFactory : ISocketFactory
     {
-        internal static Socket Create()
+        private const int DefaultReceiveBufferSize = 32768 * 2;
+        private const int DefaultSendBufferSize = 32768;
+
+        public Socket Create()
         {
-            //TODO: Tweaks for timeouts, buffer sizes etc
-            return new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+            {
+                ReceiveBufferSize = DefaultReceiveBufferSize,
+                SendBufferSize = DefaultSendBufferSize
+            };
+
+            return socket;
         }
     }
 }

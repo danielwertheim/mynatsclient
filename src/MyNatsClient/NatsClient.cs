@@ -45,6 +45,7 @@ namespace MyNatsClient
         public IObservable<IOp> IncomingOps => _opMediator;
         public INatsClientStats Stats => _opMediator;
         public NatsClientState State { get; private set; }
+        public ISocketFactory SocketFactory { private get; set; }
 
         public NatsClient(string id, ConnectionInfo connectionInfo)
         {
@@ -63,6 +64,7 @@ namespace MyNatsClient
                     _readStream.DataAvailable;
             Id = id;
             State = NatsClientState.Disconnected;
+            SocketFactory = new SocketFactory();
         }
 
         public void Dispose()

@@ -60,6 +60,7 @@
     <Compile Include="Internals\JsonOptions.cs" />
     <Compile Include="Internals\Retry.cs" />
     <Compile Include="Internals\NatsEncoder.cs" />
+    <Compile Include="ISocketFactory.cs" />
     <Compile Include="ObservableOf.cs" />
     <Compile Include="Ops\ErrOp.cs" />
     <Compile Include="Internals\Extensions\ArrayExtensions.cs" />
