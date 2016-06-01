@@ -25,7 +25,7 @@ namespace MyNatsClient
             return new ConnectionInfo(hosts)
             {
                 AutoRespondToPing = AutoRespondToPing,
-                Credentials = Credentials,
+                Credentials = new Credentials(Credentials.User, Credentials.Pass),
                 Verbose = Verbose
             };
         }
