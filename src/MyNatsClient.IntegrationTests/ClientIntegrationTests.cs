@@ -14,10 +14,11 @@ namespace MyNatsClient.IntegrationTests
 
         protected ClientIntegrationTests()
         {
-            ConnectionInfo = new ConnectionInfo(new Host("ubuntu01"))
+            ConnectionInfo = new ConnectionInfo(new Host("ubuntu01", 4223))
             {
                 AutoRespondToPing = false,
-                Verbose = false
+                Verbose = false,
+                Credentials = new Credentials("test", "p@ssword1234")
             };
         }
 
