@@ -207,6 +207,28 @@ When creating the `ConnectionInfo` you can specify one or more `hosts`. It will 
 ## Reads and Writes
 The client uses one `Socket` but two `NetworkStreams`. One stream for writes and one for reads. The client only locks on writes.
 
+## Synchronous and Asynchronous
+The Client has both synchronous and asynchronous methods. They are pure versions and **NOT sync over async**. All async versions uses `ConfigureAwait(false)`.
+
+```csharp
+void Ping();
+Task PingAsync();
+
+void Pong();
+Task PongAsync();
+
+void Pub(string subject, string body, string replyTo);
+void Pub(string subject, byte[] body, string replyTo);
+Task PubAsync(string subject, string body, string replyTo);
+Task PubAsync(string subject, byte[] body, string replyTo);
+
+void Sub(string subject, string subscriptionId, string queueGroup = null);
+Task SubAsync(string subject, string subscriptionId, string queueGroup = null);
+
+void UnSub(string subscriptionId, int? maxMessages = null);
+Task UnSubAsync(string subscriptionId, int? maxMessages = null);
+```
+
 ## The Consumer
 The Consumer is the part that consumes the readstream. It tries to parse the incoming data to `IOp` implementations: `ErrOp`, `InfoOp`, `MsgOp`, `PingOp`, `PongOp`; which you consume via `client.IncomingOps.Subscribe`. The Sample client is using [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) and with this in place, you can do stuff like:
 
