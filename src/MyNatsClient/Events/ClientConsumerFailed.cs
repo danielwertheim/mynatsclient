@@ -2,12 +2,12 @@ using System;
 
 namespace MyNatsClient.Events
 {
-    public class ClientFailed : IClientEvent
+    public class ClientConsumerFailed : IClientEvent
     {
         public INatsClient Client { get; }
         public Exception Exception { get; }
 
-        public ClientFailed(INatsClient client, Exception exception)
+        public ClientConsumerFailed(INatsClient client, Exception exception)
         {
             Client = client;
             Exception = exception;

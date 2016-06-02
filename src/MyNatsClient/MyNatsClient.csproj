@@ -46,7 +46,7 @@
     </Compile>
     <Compile Include="Credentials.cs" />
     <Compile Include="Events\ClientConnected.cs" />
-    <Compile Include="Events\ClientFailed.cs" />
+    <Compile Include="Events\ClientConsumerFailed.cs" />
     <Compile Include="Events\ClientDisconnected.cs" />
     <Compile Include="ConnectionInfo.cs" />
     <Compile Include="DisconnectReason.cs" />

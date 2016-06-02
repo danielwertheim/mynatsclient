@@ -38,8 +38,8 @@ namespace Consumer
                     await ev.Client.UnSubAsync("s2", 2);
                 });
 
-                client.Events.OfType<ClientFailed>().Subscribe(
-                    ev => Console.WriteLine("Client failed!"));
+                client.Events.OfType<ClientConsumerFailed>().Subscribe(
+                    ev => Console.WriteLine("Client consumer failed!"));
 
                 //Disconnect, either by client.Disconnect() call
                 //or caused by fail.

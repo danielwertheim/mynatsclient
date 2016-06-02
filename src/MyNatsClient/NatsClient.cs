@@ -134,8 +134,8 @@ namespace MyNatsClient
         private void OnDisconnected(DisconnectReason reason)
             => _eventMediator.Dispatch(new ClientDisconnected(this, reason));
 
-        private void OnFailed(Exception ex)
-            => _eventMediator.Dispatch(new ClientFailed(this, ex));
+        private void OnConsumerFailed(Exception ex)
+            => _eventMediator.Dispatch(new ClientConsumerFailed(this, ex));
 
         public void Connect()
         {
