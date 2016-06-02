@@ -172,6 +172,8 @@ namespace MyNatsClient
                     Release();
                     State = NatsClientState.Disconnected;
 
+                    Logger.Error("Exception while connecting.", ex);
+
                     throw NatsException.NoConnectionCouldBeMade(ex);
                 }
             }
@@ -180,7 +182,6 @@ namespace MyNatsClient
         }
 
         //TODO: SSL
-        //TODO: Use async connect
         private bool ConnectTo(Host host)
         {
             _socket = _socket ?? SocketFactory.Create();
@@ -188,8 +189,9 @@ namespace MyNatsClient
             _writeStream = new NetworkStream(_socket, FileAccess.Write, false);
             _readStream = new NetworkStream(_socket, FileAccess.Read, false);
             _reader = new NatsOpStreamReader(_readStream, _hasData);
+            Func<IOp> readOne = () => Retry.This(() => _reader.ReadOp().FirstOrDefault(), TryConnectMaxCycleDelayMs, TryConnectMaxDurationMs);
 
-            var op = Retry.This(() => _reader.ReadOp().FirstOrDefault(), TryConnectMaxCycleDelayMs, TryConnectMaxDurationMs);
+            var op = readOne();
             if (op == null)
             {
                 Logger.Error($"Error while connecting to {host}. Expected to get INFO after connection. Got nothing.");
@@ -204,7 +206,6 @@ namespace MyNatsClient
             }
 
             _serverInfo = NatsServerInfo.Parse(infoOp);
-
             if (_serverInfo.AuthRequired && _connectionInfo.Credentials == Credentials.Empty)
                 throw new NatsException($"Error while connecting to {host}. Server requires credentials to be passed. None was specified.");
 
@@ -212,11 +213,10 @@ namespace MyNatsClient
 
             _socket.Send(NatsEncoder.GetBytes(GenerateConnectionOpString()));
 
-            if (!_socket.Connected)
-            {
-                Logger.Error($"Error while connecting to {host}. No connection could be established.");
+            if (!VerifyConnectedOk(host, readOne, ref op))
                 return false;
-            }
+
+            _opMediator.Dispatch(op);
 
             _cancellation = new CancellationTokenSource();
             _consumer = Task.Factory.StartNew(
@@ -226,6 +226,36 @@ namespace MyNatsClient
                 TaskScheduler.Default).ContinueWith(OnConsumerCompleted);
 
             return true;
+        }
+
+        private bool VerifyConnectedOk(Host host, Func<IOp> readOne, ref IOp op)
+        {
+            if (!_socket.Connected)
+            {
+                Logger.Error($"Error while connecting to {host}. No connection could be established.");
+                return false;
+            }
+
+            _socket.Send(PingCmd.Generate());
+
+            op = readOne();
+            if (op == null)
+            {
+                Logger.Error($"Error while connecting to {host}. Expected to get INFO after connection. Got nothing.");
+                return false;
+            }
+
+            if (op is ErrOp)
+            {
+                Logger.Error($"Error while connecting to {host}. Expected to get PONG after sending CONNECT and PING. Got {op.GetAsString()}.");
+                return false;
+            }
+
+            if (_socket.Connected)
+                return true;
+
+            Logger.Error($"Error while connecting to {host}. No connection could be established.");
+            return false;
         }
 
         private string GenerateConnectionOpString()
@@ -309,8 +339,8 @@ namespace MyNatsClient
                 if (ex == null)
                     return;
 
-                Logger.Fatal("Consumer exception.", ex);
-                OnFailed(ex);
+                Logger.Error("Consumer exception.", ex);
+                OnConsumerFailed(ex);
             }
             else
             {

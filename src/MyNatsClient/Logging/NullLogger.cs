@@ -8,8 +8,9 @@ namespace MyNatsClient.Logging
 
         private NullLogger() { }
 
+        public void Debug(string message) { }
         public void Info(string message) { }
         public void Error(string message) { }
-        public void Fatal(string message, Exception ex) { }
+        public void Error(string message, Exception ex) { }
     }
 }
