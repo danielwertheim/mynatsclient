@@ -152,3 +152,41 @@ LoggerManager.Resolve = loggerForType => new MyLogger();
 ```
 
 The `loggerForType` being passed could be used for passing to NLog to get Logger per class etc.
+
+## Client.Events
+The events aren't normal events, the events are distributed via `client.Events` which is an `IObservable<IClientEvent>`. The events are:
+
+* ClientConnected
+* ClientDisconnected
+* ClientConsumerFailed
+
+### ClientConnected
+Signals that the client is connected and ready for use. You can react on this to subscribe to `subjects`:
+
+```csharp
+client.Events.OfType<ClientConnected>().Subscribe(async ev =>
+{
+    await ev.Client.SubAsync("foo", "s1");
+    await ev.Client.SubAsync("foo", "s2");
+    await ev.Client.SubAsync("bar", "s3");
+
+    //Make it automatically unsub after two messages
+    await ev.Client.UnSubAsync("s2", 2);
+});
+```
+
+### ClientDisconnected
+You can use the `ClientDisconnected.Reason` to see if you manually should reconnect the client:
+
+```csharp
+client.Events.OfType<ClientDisconnected>().Subscribe(ev =>
+{
+    if (ev.Reason != DisconnectReason.DueToFailure)
+        return;
+
+    ev.Client.Connect();
+});
+```
+
+### ClientConsumerFailed
+This would be dispatched from the client, if the `Consumer` (internal part that continuously reads from server and dispatches messages) gets an `ErrOp` or if there's an `Exception`. E.g. if there's an unhandled exception from one of your subscribers.
