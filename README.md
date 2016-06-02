@@ -134,3 +134,21 @@ If you like to tweak socket options, you inject your custom implementation of `I
 ```csharp
 client.SocketFactory = new MyMonoOptimizedSocketFactory();
 ```
+
+## Logging
+Some information is passed to a logger, e.g. Errors while trying to connect to a host. By default there's a `NullLogger` hooked in. To add a logger of choice, you would implement `ILogger` and assign a new resolver to `LoggerManager.Resolve`.
+
+```csharp
+public class MyLogger : ILogger {
+    public void Debug(string message) {}
+    public void Info(string message) {}
+    public void Error(string message) {}
+    public void Error(string message, Exception ex) {}
+}
+```
+
+```csharp
+LoggerManager.Resolve = loggerForType => new MyLogger();
+```
+
+The `loggerForType` being passed could be used for passing to NLog to get Logger per class etc.
