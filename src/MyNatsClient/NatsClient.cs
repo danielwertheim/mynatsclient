@@ -19,7 +19,9 @@ namespace MyNatsClient
         private static readonly ILogger Logger = LoggerManager.Resolve(typeof(NatsClient));
 
         private const int ConsumerMaxSpinWaitMs = 500;
-        private const int ConsumerIfNoDataWaitForMs = 100;
+        private const int ConsumerIfNoDataWaitForMs = 250;
+        private const int ConsumerPingAfterMsSilenceFromServer = 20000;
+        private const int ConsumerMaxMsSilenceFromServer = 60000;
         private const int TryConnectMaxCycleDelayMs = 200;
         private const int TryConnectMaxDurationMs = 2000;
 
@@ -154,7 +156,6 @@ namespace MyNatsClient
 
                 try
                 {
-                    //TODO: Potentially track ping times and/or use statistical endpoints of each node to pick best suited
                     var hosts = new Queue<Host>(_connectionInfo.Hosts.GetRandomized());
                     while (hosts.Any())
                     {
@@ -281,8 +282,7 @@ namespace MyNatsClient
         private ErrOp Consumer()
         {
             ErrOp errOp = null;
-
-            var noDataCount = 0;
+            var pingCount = 0;
 
             while (_socketIsConnected() && !_consumerIsCancelled() && errOp == null)
             {
@@ -295,21 +295,21 @@ namespace MyNatsClient
 
                 if (!_hasData())
                 {
-                    noDataCount += 1;
+                    var silenceDeltaMs = DateTime.UtcNow.Subtract(Stats.LastOpReceivedAt).TotalMilliseconds;
+                    if (silenceDeltaMs >= ConsumerMaxMsSilenceFromServer)
+                        throw NatsException.NoDataReceivedFromServer();
 
-                    //TODO: Use Stats.LastOpReceivedAt to see if we should force disconnect
-                    if (noDataCount >= 5)
+                    if (silenceDeltaMs >= ConsumerPingAfterMsSilenceFromServer)
                     {
                         Ping();
-                        continue;
+                        pingCount++;
                     }
 
                     Thread.Sleep(ConsumerIfNoDataWaitForMs);
                     continue;
                 }
 
-                noDataCount = 0;
-
+                pingCount = 0;
                 foreach (var op in _reader.ReadOp())
                 {
                     if (_connectionInfo.AutoRespondToPing && op is PingOp)

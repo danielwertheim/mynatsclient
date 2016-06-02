@@ -11,5 +11,8 @@ namespace MyNatsClient
 
         internal static NatsException ExceededMaxPayload(long maxPayload, long bufferLength)
             => new NatsException($"Server indicated max payload of {maxPayload} bytes. Current dispatch is {bufferLength} bytes.");
+
+        public static NatsException NoDataReceivedFromServer()
+            => new NatsException("Have not received any data from server lately.");
     }
 }
