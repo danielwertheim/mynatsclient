@@ -282,7 +282,6 @@ namespace MyNatsClient
         private ErrOp Consumer()
         {
             ErrOp errOp = null;
-            var pingCount = 0;
 
             while (_socketIsConnected() && !_consumerIsCancelled() && errOp == null)
             {
@@ -300,16 +299,12 @@ namespace MyNatsClient
                         throw NatsException.NoDataReceivedFromServer();
 
                     if (silenceDeltaMs >= ConsumerPingAfterMsSilenceFromServer)
-                    {
                         Ping();
-                        pingCount++;
-                    }
 
                     Thread.Sleep(ConsumerIfNoDataWaitForMs);
                     continue;
                 }
 
-                pingCount = 0;
                 foreach (var op in _reader.ReadOp())
                 {
                     if (_connectionInfo.AutoRespondToPing && op is PingOp)
