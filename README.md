@@ -13,11 +13,19 @@ Because I wanted to base mine around `IObservable<>` so that you could use React
 For the official client, look here: https://github.com/nats-io/csnats
 
 ## .NET Core
-MyNatsClient can, in its current shape, be compiled and distributed for .NET Core. MyNatsClient in itself does not have any dependencies on ReactiveExtensions. But your client will (if you want to use it). And to get that to work with a core project, you have to explicit import it as a dependency on a portable profile that RX currently supports.
+MyNatsClient can, in its current shape, be compiled and distributed for .NET Core. MyNatsClient in itself does not have any dependencies on [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET). But your client will (if you want to use it). And to get that to work with a core project, you have to explicit import it as a dependency on a portable profile that RX currently supports.
 
 The first releases will how-ever be distributed over NuGet for .NET 4.5 and soon .NET Core.
 
-## Simple Consumer sample
+## License
+Have fun using it ;-) [MIT](https://github.com/danielwertheim/mynatsclient/blob/master/LICENSE.txt)
+
+## Issues, Questoins etc.
+Found any Issues? Cool, then someone is using it. Just report them under Issues.
+
+Have any questions? Awesome. Ping me on Twitter @danielwertheim.
+
+## Consumer sample
 Just some simple code showing usage.
 
 ```csharp
@@ -30,10 +38,12 @@ var connectionInfo = new ConnectionInfo(
     })
 {
     AutoRespondToPing = true,
-    Verbose = true,
+    Verbose = false,
     Credentials = new Credentials("testuser", "p@ssword1234")
 };
 
+//The ClientId is not really used. Something you can use to look at
+//if you have many clients running and same event handlers or something.
 using (var client = new NatsClient("myClientId", connectionInfo))
 {
     //You can subscribe to dispatched client events
@@ -190,3 +200,55 @@ client.Events.OfType<ClientDisconnected>().Subscribe(ev =>
 
 ### ClientConsumerFailed
 This would be dispatched from the client, if the `Consumer` (internal part that continuously reads from server and dispatches messages) gets an `ErrOp` or if there's an `Exception`. E.g. if there's an unhandled exception from one of your subscribers.
+
+## Connection behaviour
+When creating the `ConnectionInfo` you can specify one or more `hosts`. It will try to get a connection to one of the servers. This is picked randomly and if no connection can be established to any of the hosts, an `NatsException` will be thrown.
+
+## Reads and Writes
+The client uses one `Socket` but two `NetworkStreams`. One stream for writes and one for reads. The client only locks on writes.
+
+## The Consumer
+The Consumer is the part that consumes the readstream. It tries to parse the incoming data to `IOp` implementations: `ErrOp`, `InfoOp`, `MsgOp`, `PingOp`, `PongOp`; which you consume via `client.IncomingOps.Subscribe`. The Sample client is using [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) and with this in place, you can do stuff like:
+
+```csharp
+//Subscribe to IncomingOps All or e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
+client.IncomingOps.Subscribe(op =>
+{
+    Console.WriteLine("===== RECEIVED =====");
+    Console.Write(op.GetAsString());
+    Console.WriteLine($"OpCount: {client.Stats.OpCount}");
+});
+
+//Also proccess PingOp explicitly
+client.IncomingOps.OfType<PingOp>().Subscribe(ping =>
+{
+    if (!connectionInfo.AutoRespondToPing)
+        client.Pong();
+});
+
+//Also proccess MsgOp explicitly
+client.IncomingOps.OfType<MsgOp>().Subscribe(msg =>
+{
+    Console.WriteLine("===== MSG =====");
+    Console.WriteLine($"Subject: {msg.Subject}");
+    Console.WriteLine($"QueueGroup: {msg.QueueGroup}");
+    Console.WriteLine($"SubscriptionId: {msg.SubscriptionId}");
+    Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
+});
+```
+
+### InProcess subscribtions vs NATS subsriptions
+The above is `in process subscribers` and you will not get any `IOp` dispatched to your handlers, unless you have told the client to subscribe to a NATS subject.
+
+```csharp
+client.Subscribe("subject", "subId");
+//OR
+await client.SubscribeAsync("subject", "subId");
+```
+
+### Consumer pings and stuff
+The Consumer looks at `client.Stats.LastOpReceivedAt` to see if it has taken to long time since it heard from the server.
+
+If `ConsumerPingAfterMsSilenceFromServer` (20000ms) has passed, it will start to `PING` the server.
+
+If `ConsumerMaxMsSilenceFromServer` (60000ms) has passed, it will cause an exception and you will get notified via a `ClientConsumerFailed` event dispatched via `client.Events`. You can use this to reconnect.
