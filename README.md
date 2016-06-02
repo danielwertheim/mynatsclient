@@ -8,7 +8,7 @@ My .Net client for NATS. Which is the result of me starting to looking into and 
 * [Time to construct a bundled NatsClient for C#](http://danielwertheim.se/time-to-construct-a-bundled-natsclient-for-csharp/)
 
 ## Why a new one when there's an offical project?
-Because I wanted to base mine around `IObservable<>` so that you could use ReactiveExtensions to consume incoming `Ops` from the server. And I also created this client as a way to learn about NATS itself.
+Because I wanted to base mine around `IObservable<>` so that you could use [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) to consume incoming `Ops` from the server. And I also created this client as a way to learn about NATS itself.
 
 For the official client, look here: https://github.com/nats-io/csnats
 
