@@ -16,9 +16,10 @@ namespace Consumer
                 //and try to connect. First successful will be used.
                 new[]
                 {
-                    new Host("192.168.1.176", 4222)
+                    new Host("ubuntu01", 4223)
                 })
             {
+                Credentials = new Credentials("test", "p@ssword1234"),
                 AutoRespondToPing = true,
                 Verbose = true
             };
