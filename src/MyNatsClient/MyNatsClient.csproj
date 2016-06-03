@@ -52,6 +52,7 @@
     <Compile Include="DisconnectReason.cs" />
     <Compile Include="IClientEvent.cs" />
     <Compile Include="INatsClient.cs" />
+    <Compile Include="Internals\Commands\ConnectCmd.cs" />
     <Compile Include="Internals\Commands\PingCmd.cs" />
     <Compile Include="Internals\Commands\PongCmd.cs" />
     <Compile Include="Internals\Commands\SubCmd.cs" />

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MyNatsClient.Events;
@@ -212,7 +211,7 @@ namespace MyNatsClient
 
             _opMediator.Dispatch(infoOp);
 
-            _socket.Send(NatsEncoder.GetBytes(GenerateConnectionOpString()));
+            _socket.Send(ConnectCmd.Generate(_connectionInfo));
 
             if (!VerifyConnectedOk(host, readOne, ref op))
                 return false;
@@ -257,26 +256,6 @@ namespace MyNatsClient
 
             Logger.Error($"Error while connecting to {host}. No connection could be established.");
             return false;
-        }
-
-        private string GenerateConnectionOpString()
-        {
-            var sb = new StringBuilder();
-            sb.Append("CONNECT {\"name\":\"mynatsclient\",\"lang\":\"csharp\",\"verbose\":");
-            sb.Append(_connectionInfo.Verbose.ToString().ToLower());
-
-            if (_connectionInfo.Credentials != Credentials.Empty)
-            {
-                sb.Append(",\"user\":\"");
-                sb.Append(_connectionInfo.Credentials.User);
-                sb.Append("\",\"pass\":\"");
-                sb.Append(_connectionInfo.Credentials.Pass);
-                sb.Append("\"");
-            }
-            sb.Append("}");
-            sb.Append(NatsEncoder.Crlf);
-
-            return sb.ToString();
         }
 
         private ErrOp Consumer()
