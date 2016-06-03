@@ -8,7 +8,11 @@ My .Net client for NATS. Which is the result of me starting to looking into and 
 * [Time to construct a bundled NatsClient for C#](http://danielwertheim.se/time-to-construct-a-bundled-natsclient-for-csharp/)
 
 ## Why a new one when there's an offical project?
-Because I wanted to base mine around `IObservable<>` so that you could use ReactiveExtensions to consume incoming `Ops` from the server. And I also created this client as a way to learn about NATS itself.
+Because I wanted to base mine around `IObservable<>` so that you could use ReactiveExtensions to consume incoming `Ops` from the server.
+
+And I also wanted to keep as much of the domain language of NATS but not necesarily follow APIs of other NATS client, but instead offer one that fits the .NET domain.
+
+Finally, I also created this client as a way to learn about NATS itself.
 
 For the official client, look here: https://github.com/nats-io/csnats
 
@@ -74,7 +78,7 @@ using (var client = new NatsClient("myClientId", connectionInfo))
         ev.Client.Connect();        
     });
 
-    //Subscribe to OpStream All or e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
+    //Subscribe to OpStream to get ALL ops e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
     client.OpStream.Subscribe(op =>
     {
         Console.WriteLine("===== RECEIVED =====");
@@ -82,6 +86,7 @@ using (var client = new NatsClient("myClientId", connectionInfo))
         Console.WriteLine($"OpCount: {client.Stats.OpCount}");
     });
 
+    //Filter for specific types
     client.OpStream.OfType<PingOp>().Subscribe(ping =>
     {
         if (!connectionInfo.AutoRespondToPing)
@@ -89,6 +94,16 @@ using (var client = new NatsClient("myClientId", connectionInfo))
     });
 
     client.OpStream.OfType<MsgOp>().Subscribe(msg =>
+    {
+        Console.WriteLine("===== MSG =====");
+        Console.WriteLine($"Subject: {msg.Subject}");
+        Console.WriteLine($"QueueGroup: {msg.QueueGroup}");
+        Console.WriteLine($"SubscriptionId: {msg.SubscriptionId}");
+        Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
+    });
+
+    //Use the MsgOpStream, which ONLY will contain MsgOps, hence no filtering needed.
+    client.MsgOpStream.Subscribe(msg =>
     {
         Console.WriteLine("===== MSG =====");
         Console.WriteLine($"Subject: {msg.Subject}");
@@ -230,10 +245,10 @@ Task UnSubAsync(string subscriptionId, int? maxMessages = null);
 ```
 
 ## The Consumer
-The Consumer is the part that consumes the readstream. It tries to parse the incoming data to `IOp` implementations: `ErrOp`, `InfoOp`, `MsgOp`, `PingOp`, `PongOp`; which you consume via `client.OpStream.Subscribe`. The Sample client is using [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) and with this in place, you can do stuff like:
+The Consumer is the part that consumes the readstream. It tries to parse the incoming data to `IOp` implementations: `ErrOp`, `InfoOp`, `MsgOp`, `PingOp`, `PongOp`; which you consume via `client.OpStream.Subscribe(...)` or for `MsgOp`ONLY, use the `client.MsgOpStream.Subscribe(...)`. The Sample client is using [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) and with this in place, you can do stuff like:
 
 ```csharp
-//Subscribe to OpStream All or e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
+//Subscribe to OpStream ALL ops e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
 client.OpStream.Subscribe(op =>
 {
     Console.WriteLine("===== RECEIVED =====");
@@ -248,7 +263,7 @@ client.OpStream.OfType<PingOp>().Subscribe(ping =>
         client.Pong();
 });
 
-//Also proccess MsgOp explicitly
+//Also proccess MsgOp explicitly via filter on ALL OpStream
 client.OpStream.OfType<MsgOp>().Subscribe(msg =>
 {
     Console.WriteLine("===== MSG =====");
@@ -257,7 +272,20 @@ client.OpStream.OfType<MsgOp>().Subscribe(msg =>
     Console.WriteLine($"SubscriptionId: {msg.SubscriptionId}");
     Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
 });
+
+//Also proccess MsgOp explicitly via explicit MsgOpStream.
+client.MsgOpStream.Subscribe(msg =>
+{
+    Console.WriteLine("===== MSG =====");
+    Console.WriteLine($"Subject: {msg.Subject}");
+    Console.WriteLine($"QueueGroup: {msg.QueueGroup}");
+    Console.WriteLine($"SubscriptionId: {msg.SubscriptionId}");
+    Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
+});
 ```
+
+### OpStream vs MsgOpStream
+Why two, you confuse me? Well, in 99% of the cases you probably just care about `MsgOp`. Then instead of bothering about filtering etc. you just use the `MsgOpStream`. More efficient and simpler to use.
 
 ### InProcess subscribtions vs NATS subsriptions
 The above is `in process subscribers` and you will not get any `IOp` dispatched to your handlers, unless you have told the client to subscribe to a NATS subject.
