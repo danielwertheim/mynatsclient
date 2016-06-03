@@ -10,24 +10,10 @@ namespace MyNatsClient
 {
     public class NatsOpStreamReader : IDisposable
     {
-        private static readonly Dictionary<string, Func<BinaryReader, IOp>> Ops;
         private const char DelimMarker1 = ' ';
         private const char DelimMarker2 = '\t';
         private const char Cr = '\r';
         private const char Lf = '\n';
-
-        static NatsOpStreamReader()
-        {
-            Ops = new Dictionary<string, Func<BinaryReader, IOp>>
-            {
-                { "+OK", ParseOkOp },
-                { "MSG", ParseMsgOp },
-                { "-ERR", ParseErrorOp },
-                { "INFO", ParseInfoOp },
-                { "PING", ParsePingOp },
-                { "PONG", ParsePongOp }
-            };
-        }
 
         private readonly Func<bool> _hasData;
         private BinaryReader _reader;
@@ -85,10 +71,29 @@ namespace MyNatsClient
                 var op = new string(opMarkerChars.ToArray());
                 opMarkerChars.Clear();
 
-                if (Ops.ContainsKey(op))
-                    yield return Ops[op](_reader);
-                else
-                    throw CreateUnsupportedOpException(op);
+                switch (op)
+                {
+                    case "MSG":
+                        yield return ParseMsgOp(_reader);
+                        break;
+                    case "PING":
+                        yield return ParsePingOp(_reader);
+                        break;
+                    case "PONG":
+                        yield return ParsePongOp(_reader);
+                        break;
+                    case "+OK":
+                        yield return ParseOkOp(_reader);
+                        break;
+                    case "INFO":
+                        yield return ParseInfoOp(_reader);
+                        break;
+                    case "-ERR":
+                        yield return ParseErrorOp(_reader);
+                        break;
+                    default:
+                        throw CreateUnsupportedOpException(op);
+                }
             }
         }
 
