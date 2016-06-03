@@ -8,7 +8,7 @@ My .Net client for NATS. Which is the result of me starting to looking into and 
 * [Time to construct a bundled NatsClient for C#](http://danielwertheim.se/time-to-construct-a-bundled-natsclient-for-csharp/)
 
 ## Why a new one when there's an offical project?
-Because I wanted to base mine around `IObservable<>` so that you could use ReactiveExtensions to consume incoming `Ops` from the server.
+Because I wanted to base mine around `IObservable<>` so that you could use [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) to consume incoming `Ops` from the server.
 
 And I also wanted to keep as much of the domain language of NATS but not necesarily follow APIs of other NATS client, but instead offer one that fits the .NET domain.
 
@@ -287,18 +287,30 @@ client.MsgOpStream.Subscribe(msg =>
 ### OpStream vs MsgOpStream
 Why two, you confuse me? Well, in 99% of the cases you probably just care about `MsgOp`. Then instead of bothering about filtering etc. you just use the `MsgOpStream`. More efficient and simpler to use.
 
-### InProcess subscribtions vs NATS subsriptions
+### Stateless
+There's no buffering or anything going on with incoming `IOp` messages. So if you subscribe to a NATS subject using `client.Sub(...)`, but have no in-process subscription against `client.IncomingOps`, then those messages will just end up in getting discarded.
+
+### InProcess Subscribtions vs NATS Subscriptions
 The above is `in process subscribers` and you will not get any `IOp` dispatched to your handlers, unless you have told the client to subscribe to a NATS subject.
 
 ```csharp
-client.Subscribe("subject", "subId");
+client.Sub("subject", "subId");
 //OR
-await client.SubscribeAsync("subject", "subId");
+await client.SubAsync("subject", "subId");
 ```
+
+### Terminate an InProcess Subscription
+The `client.IncomingOps.Subscribe(...)` returns an `IDisposable`. If you dispose that, your subscription to the observable is removed.
+
+This will happen automatically if your subscription is causing an unhandled exception.
+
+**PLEASE NOTE!** The NATS subscription is still there. Use `client.UnSub(...)` or `client.UnSubAsync(...)` to let the server know that your client should not receive messages for a certain subject anymore.
 
 ### Consumer pings and stuff
 The Consumer looks at `client.Stats.LastOpReceivedAt` to see if it has taken to long time since it heard from the server.
 
+**NOTE** this only kicks in as long as the client thinks the `Socket` is connected. If there's a known hard disconnect it will cleanly just get disconnected.
+
 If `ConsumerPingAfterMsSilenceFromServer` (20000ms) has passed, it will start to `PING` the server.
 
-If `ConsumerMaxMsSilenceFromServer` (60000ms) has passed, it will cause an exception and you will get notified via a `ClientConsumerFailed` event dispatched via `client.Events`. You can use this to reconnect.
+If `ConsumerMaxMsSilenceFromServer` (60000ms) has passed, it will cause an exception and you will get notified via a `ClientConsumerFailed` event dispatched via `client.Events`. The Client will also be disconnected, and you will get the `ClientDisconnected` event, which you can use to reconnect.
