@@ -259,16 +259,16 @@ client.IncomingOps.OfType<MsgOp>().Subscribe(msg =>
 });
 ```
 
-### State less
-There's no buffering or anything going on with incoming `IOp` messages. So I you subscribe to a NATS subject using `client.Sub(...)```, but have no in-process subscription against `client.IncomingOps`, then those messages will just end up in getting discarded.
+### Stateless
+There's no buffering or anything going on with incoming `IOp` messages. So if you subscribe to a NATS subject using `client.Sub(...)`, but have no in-process subscription against `client.IncomingOps`, then those messages will just end up in getting discarded.
 
 ### InProcess Subscribtions vs NATS Subscriptions
 The above is `in process subscribers` and you will not get any `IOp` dispatched to your handlers, unless you have told the client to subscribe to a NATS subject.
 
 ```csharp
-client.Subscribe("subject", "subId");
+client.Sub("subject", "subId");
 //OR
-await client.SubscribeAsync("subject", "subId");
+await client.SubAsync("subject", "subId");
 ```
 
 ### Terminate an InProcess Subscription
