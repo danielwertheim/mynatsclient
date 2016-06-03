@@ -24,7 +24,7 @@ namespace Sender
             using (var client = new NatsClient("mySender1", connectionInfo))
             {
                 client.Connect();
-                client.IncomingOps.OfType<PingOp>().Subscribe(ping => client.Pong());
+                client.OpStream.OfType<PingOp>().Subscribe(ping => client.Pong());
 
                 //var cancellation = new CancellationTokenSource();
 

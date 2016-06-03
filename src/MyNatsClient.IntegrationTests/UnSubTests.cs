@@ -50,7 +50,7 @@ namespace MyNatsClient.IntegrationTests
             var nr2ReceiveCount = 0;
             var nr3ReceiveCount = 0;
 
-            _client1.IncomingOps.OfType<MsgOp>().Subscribe(msg =>
+            _client1.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 _client1.UnSub("s1");
                 Interlocked.Increment(ref nr1ReceiveCount);
@@ -58,7 +58,7 @@ namespace MyNatsClient.IntegrationTests
             });
             _client1.Sub(subject, "s1");
 
-            _client2.IncomingOps.OfType<MsgOp>().Subscribe(async msg =>
+            _client2.OpStream.OfType<MsgOp>().Subscribe(async msg =>
             {
                 await _client2.UnSubAsync("s1");
                 Interlocked.Increment(ref nr2ReceiveCount);
@@ -66,7 +66,7 @@ namespace MyNatsClient.IntegrationTests
             });
             _client2.Sub(subject, "s1");
 
-            _client3.IncomingOps.OfType<MsgOp>().Subscribe(msg =>
+            _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr3ReceiveCount);
                 Sync.Set();
@@ -97,7 +97,7 @@ namespace MyNatsClient.IntegrationTests
             var nr2ReceiveCount = 0;
             var nr3ReceiveCount = 0;
 
-            _client2.IncomingOps.OfType<MsgOp>().Subscribe(msg =>
+            _client2.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr2ReceiveCount);
                 Sync.Set();
@@ -105,7 +105,7 @@ namespace MyNatsClient.IntegrationTests
             _client2.Sub(subject, "s1");
             _client2.UnSub("s1", 2);
 
-            _client3.IncomingOps.OfType<MsgOp>().Subscribe(msg =>
+            _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr3ReceiveCount);
                 Sync.Set();

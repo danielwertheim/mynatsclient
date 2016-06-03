@@ -55,21 +55,21 @@ namespace Consumer
                     ev.Client.Connect();
                 });
 
-                //Subscribe to IncomingOps All or e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
-                client.IncomingOps.Subscribe(op =>
+                //Subscribe to OpStream All or e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
+                client.OpStream.Subscribe(op =>
                 {
                     Console.WriteLine("===== RECEIVED =====");
                     Console.WriteLine(op.GetAsString());
                     Console.WriteLine($"OpCount: {client.Stats.OpCount}");
                 });
 
-                client.IncomingOps.OfType<PingOp>().Subscribe(async ping =>
+                client.OpStream.OfType<PingOp>().Subscribe(async ping =>
                 {
                     if (!connectionInfo.AutoRespondToPing)
                         await client.PongAsync();
                 });
 
-                client.IncomingOps.OfType<MsgOp>().Subscribe(msg =>
+                client.OpStream.OfType<MsgOp>().Subscribe(msg =>
                 {
                     Console.WriteLine("===== MSG =====");
                     Console.WriteLine($"Subject: {msg.Subject}");

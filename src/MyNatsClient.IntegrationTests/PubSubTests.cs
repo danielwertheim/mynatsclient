@@ -57,14 +57,14 @@ namespace MyNatsClient.IntegrationTests
             var nr2ReceiveCount = 0;
             var nr3ReceiveCount = 0;
 
-            _client2.IncomingOps.OfType<MsgOp>().Subscribe(msg =>
+            _client2.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr2ReceiveCount);
                 Sync.Set();
             });
             _client2.Sub(subject, "s1");
 
-            _client3.IncomingOps.OfType<MsgOp>().Subscribe(msg =>
+            _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr3ReceiveCount);
                 Sync.Set();
@@ -90,7 +90,7 @@ namespace MyNatsClient.IntegrationTests
             const string subject = "Test";
             var nr1ReceiveCount = 0;
 
-            _client1.IncomingOps.OfType<MsgOp>().Subscribe(msg =>
+            _client1.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr1ReceiveCount);
                 Sync.Set();
@@ -110,7 +110,7 @@ namespace MyNatsClient.IntegrationTests
             const string subject = "Test";
             var nr1ReceiveCount = 0;
 
-            _client1.IncomingOps.OfType<MsgOp>().Subscribe(msg =>
+            _client1.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr1ReceiveCount);
                 Sync.Set();
@@ -131,12 +131,12 @@ namespace MyNatsClient.IntegrationTests
         {
             var nr1ReceiveCount = 0;
 
-            _client1.IncomingOps.OfType<MsgOp>().Where(m => m.Subject == "Foo").Subscribe(msg =>
+            _client1.OpStream.OfType<MsgOp>().Where(m => m.Subject == "Foo").Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr1ReceiveCount);
                 Sync.Set();
             });
-            _client1.IncomingOps.OfType<MsgOp>().Where(m => m.Subject == "Bar").Subscribe(msg =>
+            _client1.OpStream.OfType<MsgOp>().Where(m => m.Subject == "Bar").Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr1ReceiveCount);
                 Sync.Set();

@@ -43,7 +43,7 @@ namespace MyNatsClient
 
         public string Id { get; }
         public IObservable<IClientEvent> Events => _eventMediator;
-        public IObservable<IOp> IncomingOps => _opMediator;
+        public IObservable<IOp> OpStream => _opMediator;
         public INatsClientStats Stats => _opMediator;
         public NatsClientState State { get; private set; }
         public ISocketFactory SocketFactory { private get; set; }
