@@ -281,6 +281,8 @@ This will happen automatically if your subscription is causing an unhandled exce
 ### Consumer pings and stuff
 The Consumer looks at `client.Stats.LastOpReceivedAt` to see if it has taken to long time since it heard from the server.
 
+**NOTE** this only kicks in as long as the client thinks the `Socket` is connected. If there's a known hard disconnect it will cleanly just get disconnected.
+
 If `ConsumerPingAfterMsSilenceFromServer` (20000ms) has passed, it will start to `PING` the server.
 
 If `ConsumerMaxMsSilenceFromServer` (60000ms) has passed, it will cause an exception and you will get notified via a `ClientConsumerFailed` event dispatched via `client.Events`. You can use this to reconnect.
