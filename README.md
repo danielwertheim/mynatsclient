@@ -259,7 +259,10 @@ client.IncomingOps.OfType<MsgOp>().Subscribe(msg =>
 });
 ```
 
-### InProcess subscribtions vs NATS subsriptions
+### State less
+There's no buffering or anything going on with incoming `IOp` messages. So I you subscribe to a NATS subject using `client.Sub(...)```, but have no in-process subscription against `client.IncomingOps`, then those messages will just end up in getting discarded.
+
+### InProcess Subscribtions vs NATS Subscriptions
 The above is `in process subscribers` and you will not get any `IOp` dispatched to your handlers, unless you have told the client to subscribe to a NATS subject.
 
 ```csharp
@@ -267,6 +270,13 @@ client.Subscribe("subject", "subId");
 //OR
 await client.SubscribeAsync("subject", "subId");
 ```
+
+### Terminate an InProcess Subscription
+The `client.IncomingOps.Subscribe(...)` returns an `IDisposable`. If you dispose that, your subscription to the observable is removed.
+
+This will happen automatically if your subscription is causing an unhandled exception.
+
+**PLEASE NOTE!** The NATS subscription is still there. Use `client.UnSub(...)` or `client.UnSubAsync(...)` to let the server know that your client should not receive messages for a certain subject anymore.
 
 ### Consumer pings and stuff
 The Consumer looks at `client.Stats.LastOpReceivedAt` to see if it has taken to long time since it heard from the server.
