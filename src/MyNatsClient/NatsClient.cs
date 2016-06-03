@@ -44,6 +44,7 @@ namespace MyNatsClient
         public string Id { get; }
         public IObservable<IClientEvent> Events => _eventMediator;
         public IObservable<IOp> OpStream => _opMediator;
+        public IObservable<MsgOp> MsgOpStream => _opMediator;
         public INatsClientStats Stats => _opMediator;
         public NatsClientState State { get; private set; }
         public ISocketFactory SocketFactory { private get; set; }
@@ -82,13 +83,9 @@ namespace MyNatsClient
 
             Release();
 
-            _writeStreamSync?.Dispose();
+            Try.DisposeAll(_writeStreamSync, _eventMediator, _opMediator);
             _writeStreamSync = null;
-
-            _eventMediator?.Dispose();
             _eventMediator = null;
-
-            _opMediator?.Dispose();
             _opMediator = null;
         }
 

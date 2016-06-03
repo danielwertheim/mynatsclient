@@ -6,11 +6,11 @@ namespace MyNatsClient.Internals
 {
     internal static class Try
     {
-        internal static void DisposeAll(IEnumerable<IDisposable> disposables)
+        internal static void DisposeAll(params IDisposable[] disposables)
         {
             var exs = new List<Exception>();
 
-            foreach (var disposable in disposables)
+            foreach (var disposable in disposables.Where(d => d != null))
             {
                 try
                 {
