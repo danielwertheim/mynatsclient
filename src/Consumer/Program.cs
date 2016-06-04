@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using MyNatsClient;
 using MyNatsClient.Events;
 using MyNatsClient.Ops;
@@ -21,9 +24,15 @@ namespace Consumer
             {
                 Credentials = new Credentials("test", "p@ssword1234"),
                 AutoRespondToPing = true,
-                Verbose = true
+                Verbose = false
             };
 
+            //FeaturesSample(connectionInfo);
+            //TimedSample(connectionInfo);
+        }
+
+        private static void FeaturesSample(ConnectionInfo connectionInfo)
+        {
             using (var client = new NatsClient("myconsumer1", connectionInfo))
             {
                 //You can subscribe to dispatched client events
@@ -91,6 +100,46 @@ namespace Consumer
                 Console.WriteLine("Hit key to Connect.");
                 Console.ReadKey();
                 client.Connect();
+
+                Console.WriteLine("Hit key to Shutdown.");
+                Console.ReadKey();
+            }
+        }
+
+        private static void TimedSample(ConnectionInfo connectionInfo)
+        {
+            using (var client = new NatsClient("myconsumer1", connectionInfo))
+            {
+                client.Events.OfType<ClientConnected>().Subscribe(
+                    async ev => await ev.Client.SubAsync("foo", "s1"));
+                client.Events.OfType<ClientConsumerFailed>().Subscribe(
+                    ev => Console.WriteLine("Client consumer failed!"));
+                client.Events.OfType<ClientDisconnected>().Subscribe(
+                    ev => Console.WriteLine($"Client was disconnected due to reason '{ev.Reason}'"));
+
+                var sw = new Stopwatch();
+                var n = 0;
+                var timings = new List<double>();
+                client.MsgOpStream.Subscribe(msg =>
+                {
+                    n++;
+                    if(!sw.IsRunning)
+                        sw.Start();
+
+                    if (n == 100000)
+                    {
+                        sw.Stop();
+                        timings.Add(sw.Elapsed.TotalMilliseconds);
+                        sw.Reset();
+                        n = 0;
+                    }
+                });
+
+                client.Connect();
+
+                Console.WriteLine("Hit key to show timings.");
+                Console.ReadKey();
+                timings.ForEach(Console.WriteLine);
 
                 Console.WriteLine("Hit key to Shutdown.");
                 Console.ReadKey();
