@@ -3,93 +3,72 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using MyNatsClient.Internals;
+using MyNatsClient.Internals.Extensions;
 using MyNatsClient.Ops;
 
 namespace MyNatsClient
 {
-    public class NatsOpStreamReader : IDisposable
+    public class NatsOpStreamReader
     {
         private const char DelimMarker1 = ' ';
         private const char DelimMarker2 = '\t';
         private const char Cr = '\r';
         private const char Lf = '\n';
 
-        private readonly Func<bool> _hasData;
-        private BinaryReader _reader;
-        private bool _isDisposed;
+        private readonly Stream _stream;
 
-        public NatsOpStreamReader(Stream stream, Func<bool> hasData)
+        public NatsOpStreamReader(Stream stream)
         {
-            _hasData = hasData;
-            _reader = new BinaryReader(stream, NatsEncoder.Encoding, true);
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-            _isDisposed = true;
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (_isDisposed || !disposing)
-                return;
-
-            _reader?.Close();
-            _reader?.Dispose();
-            _reader = null;
-        }
-
-        private void ThrowIfDisposed()
-        {
-            if (_isDisposed)
-                throw new ObjectDisposedException(GetType().Name);
+            _stream = stream;
         }
 
         public IEnumerable<IOp> ReadOp()
         {
-            ThrowIfDisposed();
+            var opMarkerChars = new char[4];
+            var i = -1;
 
-            if (!_hasData())
-                yield break;
-
-            var opMarkerChars = new List<char>();
-            while (_hasData())
+            while (true)
             {
-                var c = _reader.ReadChar();
+                var curr = _stream.ReadByte();
+                if (curr == -1)
+                    break;
+
+                var c = (char)curr;
                 if (!IsDelimMarker(c) && c != Cr && c != Lf)
                 {
-                    opMarkerChars.Add(c);
+                    opMarkerChars[++i] = c;
                     continue;
                 }
 
-                if (!opMarkerChars.Any())
+                if (i == -1)
                     continue;
 
-                var op = new string(opMarkerChars.ToArray());
-                opMarkerChars.Clear();
+                var op = new string(opMarkerChars.ToArray(), 0, i + 1);
+                i = -1;
+                opMarkerChars[0] = '\0';
+                opMarkerChars[1] = '\0';
+                opMarkerChars[2] = '\0';
+                opMarkerChars[3] = '\0';
 
                 switch (op)
                 {
                     case "MSG":
-                        yield return ParseMsgOp(_reader);
+                        yield return ParseMsgOp(_stream);
                         break;
                     case "PING":
-                        yield return ParsePingOp(_reader);
+                        yield return ParsePingOp(_stream);
                         break;
                     case "PONG":
-                        yield return ParsePongOp(_reader);
+                        yield return ParsePongOp(_stream);
                         break;
                     case "+OK":
-                        yield return ParseOkOp(_reader);
+                        yield return ParseOkOp(_stream);
                         break;
                     case "INFO":
-                        yield return ParseInfoOp(_reader);
+                        yield return ParseInfoOp(_stream);
                         break;
                     case "-ERR":
-                        yield return ParseErrorOp(_reader);
+                        yield return ParseErrorOp(_stream);
                         break;
                     default:
                         throw CreateUnsupportedOpException(op);
@@ -103,15 +82,15 @@ namespace MyNatsClient
         private static Exception CreateParserException(string op, char expected, char got)
             => new Exception($"Error while parsing {op}. Expected char code '{(byte)expected}' got '{(byte)got}'.");
 
-        private static InfoOp ParseInfoOp(BinaryReader reader)
+        private static InfoOp ParseInfoOp(Stream stream)
         {
             var msg = new StringBuilder();
             while (true)
             {
-                var c = reader.ReadChar();
+                var c = stream.ReadChar();
                 if (c == Cr)
                 {
-                    var burn = reader.ReadChar();
+                    var burn = stream.ReadChar();
                     if (burn != Lf)
                         throw CreateParserException(nameof(InfoOp), Lf, burn);
                     break;
@@ -123,42 +102,42 @@ namespace MyNatsClient
             return new InfoOp(msg.ToString());
         }
 
-        private static OkOp ParseOkOp(BinaryReader reader)
+        private static OkOp ParseOkOp(Stream stream)
         {
-            var burn = reader.ReadChar();
+            var burn = stream.ReadChar();
             if (burn != Lf)
                 throw CreateParserException(nameof(OkOp), Lf, burn);
 
             return OkOp.Instance;
         }
 
-        private static PingOp ParsePingOp(BinaryReader reader)
+        private static PingOp ParsePingOp(Stream stream)
         {
-            var burn = reader.ReadChar();
+            var burn = stream.ReadChar();
             if (burn != Lf)
                 throw CreateParserException(nameof(PingOp), Lf, burn);
 
             return PingOp.Instance;
         }
 
-        private static PongOp ParsePongOp(BinaryReader reader)
+        private static PongOp ParsePongOp(Stream stream)
         {
-            var burn = reader.ReadChar();
+            var burn = stream.ReadChar();
             if (burn != Lf)
                 throw CreateParserException(nameof(PongOp), Lf, burn);
 
             return PongOp.Instance;
         }
 
-        private static ErrOp ParseErrorOp(BinaryReader reader)
+        private static ErrOp ParseErrorOp(Stream stream)
         {
             var msg = new StringBuilder();
             while (true)
             {
-                var c = reader.ReadChar();
+                var c = stream.ReadChar();
                 if (c == Cr)
                 {
-                    var burn = reader.ReadChar();
+                    var burn = stream.ReadChar();
                     if (burn != Lf)
                         throw CreateParserException(nameof(ErrOp), Lf, burn);
                     break;
@@ -170,47 +149,50 @@ namespace MyNatsClient
             return new ErrOp(msg.ToString());
         }
 
-        private static MsgOp ParseMsgOp(BinaryReader reader)
+        private static MsgOp ParseMsgOp(Stream stream)
         {
-            var segments = new List<char[]>();
-            var segment = new List<char>();
+            var segments = new string[3];
+            var segmentsI = -1;
+            var segment = new StringBuilder();
             int payloadSize;
             char burn;
 
             while (true)
             {
-                var c = reader.ReadChar();
+                var c = stream.ReadChar();
                 if (c == Cr)
                 {
-                    payloadSize = int.Parse(new string(segment.ToArray()));
-                    burn = reader.ReadChar();
+                    payloadSize = int.Parse(segment.ToString());
+                    burn = stream.ReadChar();
                     if (burn != Lf)
-                        throw CreateParserException(nameof(MsgOp), Lf, burn);
+                        throw CreateParserException(MsgOp.Name, Lf, burn);
                     break;
                 }
 
                 if (!IsDelimMarker(c))
-                    segment.Add(c);
+                    segment.Append(c);
                 else
                 {
-                    segments.Add(segment.ToArray());
+                    segments[++segmentsI] = segment.ToString();
                     segment.Clear();
                 }
             }
 
+            var payload = new byte[payloadSize];
+            stream.Read(payload, 0, payloadSize);
             var msg = new MsgOp(
-                new string(segments.First()),
-                new string(segments.Last()),
-                reader.ReadBytes(payloadSize),
-                segments.Count > 2 ? new string(segments[1]) : null);
+                segments[0],
+                segments[segmentsI],
+                payload,
+                segmentsI == 2 ? segments[1] : null);
 
-            burn = reader.ReadChar();
+            burn = stream.ReadChar();
             if (burn != Cr)
-                throw CreateParserException(nameof(MsgOp), Cr, burn);
+                throw CreateParserException(MsgOp.Name, Cr, burn);
 
-            burn = reader.ReadChar();
+            burn = stream.ReadChar();
             if (burn != Lf)
-                throw CreateParserException(nameof(MsgOp), Lf, burn);
+                throw CreateParserException(MsgOp.Name, Lf, burn);
 
             return msg;
         }

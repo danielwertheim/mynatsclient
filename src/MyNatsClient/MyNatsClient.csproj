@@ -58,6 +58,7 @@
     <Compile Include="Internals\Commands\SubCmd.cs" />
     <Compile Include="Internals\Commands\UnSubCmd.cs" />
     <Compile Include="Internals\Extensions\EnumerableExtensions.cs" />
+    <Compile Include="Internals\Extensions\SocketExtensions.cs" />
     <Compile Include="Internals\JsonOptions.cs" />
     <Compile Include="Internals\Retry.cs" />
     <Compile Include="Internals\NatsEncoder.cs" />
@@ -88,6 +89,7 @@
     <Compile Include="Internals\Try.cs" />
     <Compile Include="Internals\Extensions\TaskExtensions.cs" />
     <Compile Include="Internals\Commands\PubCmd.cs" />
+    <Compile Include="Internals\Extensions\StreamExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

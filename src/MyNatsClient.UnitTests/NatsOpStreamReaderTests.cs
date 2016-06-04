@@ -22,7 +22,7 @@ namespace MyNatsClient.UnitTests
                 "PONG\r\n",
                 "-ERR 'Unknown Protocol Operation'\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream, () => stream.Position < stream.Length);
+                UnitUnderTest = new NatsOpStreamReader(stream);
 
                 var infoOp = UnitUnderTest.ReadOp().First();
                 infoOp.Should().BeOfType<InfoOp>();
@@ -55,7 +55,7 @@ namespace MyNatsClient.UnitTests
             using (var stream = CreateStream(
                 "INFO {\"server_id\":\"H8RgvFtiq2zlQTA5dB0deh\"}\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream, () => stream.Position < stream.Length);
+                UnitUnderTest = new NatsOpStreamReader(stream);
 
                 var op = UnitUnderTest.ReadOp().OfType<InfoOp>().First();
 
@@ -71,7 +71,7 @@ namespace MyNatsClient.UnitTests
             using (var stream = CreateStream(
                 "+OK\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream, () => stream.Position < stream.Length);
+                UnitUnderTest = new NatsOpStreamReader(stream);
 
                 var op = UnitUnderTest.ReadOp().OfType<OkOp>().First();
 
@@ -86,7 +86,7 @@ namespace MyNatsClient.UnitTests
             using (var stream = CreateStream(
                 "MSG foo siddw1 6\r\nte\r\nst\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream, () => stream.Position < stream.Length);
+                UnitUnderTest = new NatsOpStreamReader(stream);
 
                 var op = UnitUnderTest.ReadOp().OfType<MsgOp>().First();
 
@@ -106,7 +106,7 @@ namespace MyNatsClient.UnitTests
             using (var stream = CreateStream(
                 "MSG foo siddw1 5\r\nte\tst\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream, () => stream.Position < stream.Length);
+                UnitUnderTest = new NatsOpStreamReader(stream);
 
                 var op = UnitUnderTest.ReadOp().OfType<MsgOp>().First();
 
@@ -126,7 +126,7 @@ namespace MyNatsClient.UnitTests
             using (var stream = CreateStream(
                 "MSG\tfoo\tsiddw1\t4\r\ntest\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream, () => stream.Position < stream.Length);
+                UnitUnderTest = new NatsOpStreamReader(stream);
 
                 var op = UnitUnderTest.ReadOp().OfType<MsgOp>().First();
 
@@ -146,7 +146,7 @@ namespace MyNatsClient.UnitTests
             using (var stream = CreateStream(
                 "PING\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream, () => stream.Position < stream.Length);
+                UnitUnderTest = new NatsOpStreamReader(stream);
 
                 var op = UnitUnderTest.ReadOp().OfType<PingOp>().First();
 
@@ -161,7 +161,7 @@ namespace MyNatsClient.UnitTests
             using (var stream = CreateStream(
                 "PONG\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream, () => stream.Position < stream.Length);
+                UnitUnderTest = new NatsOpStreamReader(stream);
 
                 var op = UnitUnderTest.ReadOp().OfType<PongOp>().First();
 
@@ -176,7 +176,7 @@ namespace MyNatsClient.UnitTests
             using (var stream = CreateStream(
                 "-ERR 'Unknown Protocol Operation'\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream, () => stream.Position < stream.Length);
+                UnitUnderTest = new NatsOpStreamReader(stream);
 
                 var op = UnitUnderTest.ReadOp().OfType<ErrOp>().First();
 
@@ -192,7 +192,7 @@ namespace MyNatsClient.UnitTests
                 "+OK\r\n\r\n",
                 "PING\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream, () => stream.Position < stream.Length);
+                UnitUnderTest = new NatsOpStreamReader(stream);
 
                 var ops = UnitUnderTest.ReadOp().ToArray();
                 ops.Should().HaveCount(2);
