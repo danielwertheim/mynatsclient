@@ -69,7 +69,7 @@ namespace Consumer
                         await client.PongAsync();
                 });
 
-                client.OpStream.OfType<MsgOp>().Subscribe(msg =>
+                client.MsgOpStream.Subscribe(msg =>
                 {
                     Console.WriteLine("===== MSG =====");
                     Console.WriteLine($"Subject: {msg.Subject}");

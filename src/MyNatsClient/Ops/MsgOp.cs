@@ -5,7 +5,9 @@ namespace MyNatsClient.Ops
 {
     public class MsgOp : IOp
     {
-        public string Code => "MSG";
+        public const string Name = "MSG";
+
+        public string Code => Name;
         public string Subject { get; }
         public string QueueGroup { get; }
         public string SubscriptionId { get; }

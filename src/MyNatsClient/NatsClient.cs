@@ -17,9 +17,7 @@ namespace MyNatsClient
     {
         private static readonly ILogger Logger = LoggerManager.Resolve(typeof(NatsClient));
 
-        private const int ConsumerMaxSpinWaitMs = 500;
-        private const int ConsumerIfNoDataWaitForMs = 250;
-        private const int ConsumerPingAfterMsSilenceFromServer = 20000;
+        private const int ConsumerPingAfterMsSilenceFromServer = 30000;
         private const int ConsumerMaxMsSilenceFromServer = 60000;
         private const int TryConnectMaxCycleDelayMs = 200;
         private const int TryConnectMaxDurationMs = 2000;
@@ -28,12 +26,11 @@ namespace MyNatsClient
         private readonly ConnectionInfo _connectionInfo;
         private readonly Func<bool> _socketIsConnected;
         private readonly Func<bool> _consumerIsCancelled;
-        private readonly Func<bool> _hasData;
         private ObservableOf<IClientEvent> _eventMediator;
         private NatsOpMediator _opMediator;
         private Socket _socket;
-        private NetworkStream _readStream;
-        private NetworkStream _writeStream;
+        private Stream _readStream;
+        private Stream _writeStream;
         private SemaphoreSlim _writeStreamSync;
         private NatsOpStreamReader _reader;
         private Task _consumer;
@@ -59,11 +56,7 @@ namespace MyNatsClient
 
             _socketIsConnected = () => _socket != null && _socket.Connected;
             _consumerIsCancelled = () => _cancellation == null || _cancellation.IsCancellationRequested;
-            _hasData = () =>
-                    _socketIsConnected() &&
-                    _readStream != null &&
-                    _readStream.CanRead &&
-                    _readStream.DataAvailable;
+
             Id = id;
             State = NatsClientState.Disconnected;
             SocketFactory = new SocketFactory();
@@ -183,9 +176,9 @@ namespace MyNatsClient
         {
             _socket = _socket ?? SocketFactory.Create();
             _socket.Connect(host.Address, host.Port);
-            _writeStream = new NetworkStream(_socket, FileAccess.Write, false);
-            _readStream = new NetworkStream(_socket, FileAccess.Read, false);
-            _reader = new NatsOpStreamReader(_readStream, _hasData);
+            _writeStream = new BufferedStream(_socket.CreateWriteStream(), _socket.SendBufferSize);
+            _readStream = new BufferedStream(_socket.CreateReadStream(), _socket.ReceiveBufferSize);
+            _reader = new NatsOpStreamReader(_readStream);
             Func<IOp> readOne = () => Retry.This(() => _reader.ReadOp().FirstOrDefault(), TryConnectMaxCycleDelayMs, TryConnectMaxDurationMs);
 
             var op = readOne();
@@ -259,38 +252,43 @@ namespace MyNatsClient
         {
             ErrOp errOp = null;
 
+            Func<bool> shouldRead = () =>
+                _socketIsConnected() &&
+                !_consumerIsCancelled() &&
+                _readStream != null &&
+                _readStream.CanRead;
+
             while (_socketIsConnected() && !_consumerIsCancelled() && errOp == null)
             {
-                SpinWait.SpinUntil(() => !_socketIsConnected() || _consumerIsCancelled() || _hasData(), ConsumerMaxSpinWaitMs);
-                if (!_socketIsConnected())
+                if (!shouldRead())
                     break;
 
-                if (_consumerIsCancelled())
-                    break;
-
-                if (!_hasData())
+                try
                 {
+                    foreach (var op in _reader.ReadOp())
+                    {
+                        if (_connectionInfo.AutoRespondToPing && op is PingOp)
+                            Pong();
+
+                        errOp = op as ErrOp;
+                        if (errOp != null)
+                            continue;
+
+                        _opMediator.Dispatch(op);
+                    }
+                }
+                catch (IOException ioex)
+                {
+                    var ex = ioex.InnerException as SocketException;
+                    if(ex == null || ex.SocketErrorCode != SocketError.TimedOut)
+                        throw;
+
                     var silenceDeltaMs = DateTime.UtcNow.Subtract(Stats.LastOpReceivedAt).TotalMilliseconds;
                     if (silenceDeltaMs >= ConsumerMaxMsSilenceFromServer)
-                        throw NatsException.NoDataReceivedFromServer();
+                        throw;
 
                     if (silenceDeltaMs >= ConsumerPingAfterMsSilenceFromServer)
                         Ping();
-
-                    Thread.Sleep(ConsumerIfNoDataWaitForMs);
-                    continue;
-                }
-
-                foreach (var op in _reader.ReadOp())
-                {
-                    if (_connectionInfo.AutoRespondToPing && op is PingOp)
-                        Pong();
-
-                    errOp = op as ErrOp;
-                    if (errOp != null)
-                        continue;
-
-                    _opMediator.Dispatch(op);
                 }
             }
 
@@ -347,11 +345,6 @@ namespace MyNatsClient
 
                         _consumer.Dispose();
                         _consumer = null;
-                    },
-                    () =>
-                    {
-                        _reader?.Dispose();
-                        _reader = null;
                     },
                     () =>
                     {
