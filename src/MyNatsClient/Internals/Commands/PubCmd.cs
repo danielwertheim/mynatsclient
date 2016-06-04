@@ -23,6 +23,6 @@ namespace MyNatsClient.Internals.Commands
             return NatsEncoder.GetBytes($"PUB {subject}{s}{replyTo} {bodyLength}{NatsEncoder.Crlf}");
         }
 
-        private static byte[] GenerateAfterBody() => NatsEncoder.GetBytes(NatsEncoder.Crlf);
+        private static byte[] GenerateAfterBody() => NatsEncoder.CrlfBytes;
     }
 }
