@@ -31,27 +31,35 @@ namespace SampleModel
 
                 timings.Sort();
 
-                var avgExcLowHigh = timings.Skip(1).Take(timings.Count - 2).Average();
-                var avgExcLowHighPerMsg = avgExcLowHigh / batchSize;
+                var avgExclLowHighPerBatch = timings.Skip(1).Take(timings.Count - 2).Average();
+                var avgExcLowHighPerMsg = avgExclLowHighPerBatch / batchSize;
                 var avgExcLowHighPerByte = avgExcLowHighPerMsg / bodySize;
                 var avgExcLowHighPerKb = avgExcLowHighPerByte * 1000;
-                output($"Avg ms per batch (excl. lowest & highest)\t{avgExcLowHigh}");
-                output($"Avg ms per mess (excl. lowest & highest)\t{avgExcLowHighPerMsg}");
-                output($"Avg ms per byte (excl. lowest & highest)\t{avgExcLowHighPerByte}");
-                output($"Avg ms per kB (excl. lowest & highest)\t{avgExcLowHighPerKb}");
+                var avgExcLowHighMsgPerSec = 1000/avgExcLowHighPerMsg;
+                var avgExcLowHighKbPerSec = 1000/avgExcLowHighPerKb;
+
+                output($"Avg {avgExclLowHighPerBatch} ms/batch");
+                output($"Avg {avgExcLowHighPerMsg} ms/msg");
+                output($"Avg {avgExcLowHighPerKb} ms/kb");
+                output($"Avg {avgExcLowHighMsgPerSec} msg/s");
+                output($"Avg {avgExcLowHighKbPerSec} kb/s");
 
                 var isEven = timings.Count % 2 == 0;
                 var take = isEven ? 2 : 1;
                 var skip = (timings.Count - take) / 2;
 
-                var medExcLowHigh = timings.Skip(skip).Take(take).Average();
-                var medExcLowHighPerMsg = medExcLowHigh / batchSize;
-                var medExcLowHighPerByte = medExcLowHighPerMsg / bodySize;
-                var medExcLowHighPerKb = medExcLowHighPerByte * 1000;
-                output($"Median ms per batch\t{medExcLowHigh}");
-                output($"Median ms per mess\t{medExcLowHighPerMsg}");
-                output($"Median ms per byte\t{medExcLowHighPerByte}");
-                output($"Median ms per kB\t{medExcLowHighPerKb}");
+                var medianPerBatch = timings.Skip(skip).Take(take).Average();
+                var medianPerMessage = medianPerBatch / batchSize;
+                var medianPerByte = medianPerMessage / bodySize;
+                var medianPerKb = medianPerByte * 1000;
+                var medianMsgPerSec = 1000 / medianPerMessage;
+                var medianKbPerSec = 1000 / medianPerKb;
+
+                output($"Median {medianPerBatch} ms/batch");
+                output($"Median {medianPerMessage} ms/mess");
+                output($"Median {medianPerKb} ms/kb");
+                output($"Median {medianMsgPerSec} mess/s");
+                output($"Median {medianKbPerSec} kb/s");
 
                 file.Flush();
             }
