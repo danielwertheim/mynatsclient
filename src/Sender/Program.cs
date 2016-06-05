@@ -154,7 +154,7 @@ namespace Sender
                     client.Pub("foo", body);
                 sw.Stop();
                 Console.Write(".");
-                timings.Add(sw.Elapsed.Milliseconds);
+                timings.Add(sw.Elapsed.TotalMilliseconds);
                 Thread.Sleep(500);
             }
             Console.WriteLine();
