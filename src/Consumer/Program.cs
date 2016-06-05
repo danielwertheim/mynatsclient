@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
@@ -130,10 +131,18 @@ namespace Consumer
                     }
                 });
 
+                //var dump = File.CreateText(@"d:\temp\log.txt");
+                //client.MsgOpStream.Subscribe(msg =>
+                //{
+                //    dump.WriteLine(msg.GetAsString());
+                //});
+
                 client.Connect();
 
                 Console.WriteLine("Hit key to show timings.");
                 Console.ReadKey();
+                //dump.Flush();
+                //dump.Close();
                 TimedInfo.Report("consumer", timings, SampleSettings.TimedSample.BatchSize, SampleSettings.TimedSample.BodyCharSize);
 
                 Console.WriteLine("Hit key to Shutdown.");
