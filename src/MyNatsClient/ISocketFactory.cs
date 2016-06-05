@@ -4,6 +4,6 @@ namespace MyNatsClient
 {
     public interface ISocketFactory
     {
-        Socket Create();
+        Socket Create(SocketOptions options);
     }
 }

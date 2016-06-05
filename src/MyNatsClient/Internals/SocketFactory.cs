@@ -4,20 +4,20 @@ namespace MyNatsClient.Internals
 {
     internal class SocketFactory : ISocketFactory
     {
-        private const int DefaultReceiveBufferSize = 32768 * 2;
-        private const int DefaultSendBufferSize = 32768;
-        private const int DefaultTimeout = 10000;
-
-        public Socket Create()
+        public Socket Create(SocketOptions options)
         {
-            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
-            {
-                ReceiveBufferSize = DefaultReceiveBufferSize,
-                SendBufferSize = DefaultSendBufferSize,
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            if (options.ReceiveBufferSize.HasValue)
+                socket.ReceiveBufferSize = options.ReceiveBufferSize.Value;
 
-                ReceiveTimeout = DefaultTimeout,
-                SendTimeout = DefaultTimeout
-            };
+            if (options.SendBufferSize.HasValue)
+                socket.SendBufferSize = options.SendBufferSize.Value;
+
+            if (options.ReceiveTimeoutMs.HasValue)
+                socket.ReceiveTimeout = options.ReceiveTimeoutMs.Value;
+
+            if (options.SendTimeoutMs.HasValue)
+                socket.SendTimeout = options.SendTimeoutMs.Value;
 
             return socket;
         }

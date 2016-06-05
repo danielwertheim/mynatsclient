@@ -174,7 +174,7 @@ namespace MyNatsClient
         //TODO: SSL
         private bool ConnectTo(Host host)
         {
-            _socket = _socket ?? SocketFactory.Create();
+            _socket = _socket ?? SocketFactory.Create(_connectionInfo.SocketOptions);
             _socket.Connect(host.Address, host.Port);
             _writeStream = new BufferedStream(_socket.CreateWriteStream(), _socket.SendBufferSize);
             _readStream = new BufferedStream(_socket.CreateReadStream(), _socket.ReceiveBufferSize);

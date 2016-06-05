@@ -8,6 +8,7 @@ namespace MyNatsClient
         public bool AutoRespondToPing { get; set; } = true;
         public Credentials Credentials { get; set; } = Credentials.Empty;
         public bool Verbose { get; set; }
+        public SocketOptions SocketOptions { get; set; } = new SocketOptions();
 
         public ConnectionInfo(Host host) : this(new[] { host }) { }
 
@@ -26,7 +27,14 @@ namespace MyNatsClient
             {
                 AutoRespondToPing = AutoRespondToPing,
                 Credentials = new Credentials(Credentials.User, Credentials.Pass),
-                Verbose = Verbose
+                Verbose = Verbose,
+                SocketOptions = new SocketOptions
+                {
+                    ReceiveBufferSize = SocketOptions.ReceiveBufferSize,
+                    SendBufferSize = SocketOptions.SendBufferSize,
+                    ReceiveTimeoutMs = SocketOptions.ReceiveTimeoutMs,
+                    SendTimeoutMs = SocketOptions.SendTimeoutMs
+                }
             };
         }
     }
