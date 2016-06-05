@@ -179,7 +179,10 @@ namespace MyNatsClient
             }
 
             var payload = new byte[payloadSize];
-            stream.Read(payload, 0, payloadSize);
+            var bytesRead = 0;
+            while (bytesRead < payloadSize)
+                bytesRead += stream.Read(payload, bytesRead, payloadSize - bytesRead);
+
             var msg = new MsgOp(
                 segments[0],
                 segments[segmentsI],
