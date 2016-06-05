@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyNatsClient.UnitTests", "M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyNatsClient.IntegrationTests", "MyNatsClient.IntegrationTests\MyNatsClient.IntegrationTests.csproj", "{65BF44E3-C2D5-400C-9068-E5C371E6F0DB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleModel", "SampleModel\SampleModel.csproj", "{50F066CD-8F67-45CD-A861-34086CC04E78}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,6 +50,10 @@ Global
 		{65BF44E3-C2D5-400C-9068-E5C371E6F0DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65BF44E3-C2D5-400C-9068-E5C371E6F0DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65BF44E3-C2D5-400C-9068-E5C371E6F0DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50F066CD-8F67-45CD-A861-34086CC04E78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50F066CD-8F67-45CD-A861-34086CC04E78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50F066CD-8F67-45CD-A861-34086CC04E78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50F066CD-8F67-45CD-A861-34086CC04E78}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -57,5 +63,6 @@ Global
 		{8EEAB8E8-EC4D-4BD1-9E0B-A9ADACEC80ED} = {13EB2657-75D9-4A02-B8DD-7E31549955A7}
 		{0152E7BE-FDC9-4838-99BB-B3DA94CF6E5F} = {DCBC1436-E537-4E18-84DF-2ADD7FE03606}
 		{65BF44E3-C2D5-400C-9068-E5C371E6F0DB} = {DCBC1436-E537-4E18-84DF-2ADD7FE03606}
+		{50F066CD-8F67-45CD-A861-34086CC04E78} = {13EB2657-75D9-4A02-B8DD-7E31549955A7}
 	EndGlobalSection
 EndGlobal

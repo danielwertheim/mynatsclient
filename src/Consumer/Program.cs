@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using MyNatsClient;
 using MyNatsClient.Events;
 using MyNatsClient.Ops;
+using SampleModel;
 
 namespace Consumer
 {
@@ -14,21 +15,15 @@ namespace Consumer
     {
         static void Main(string[] args)
         {
-            var connectionInfo = new ConnectionInfo(
-                //Hosts to use. When connecting, will randomize the list
-                //and try to connect. First successful will be used.
-                new[]
-                {
-                    new Host("ubuntu01", 4223)
-                })
+            var connectionInfo = new ConnectionInfo(SampleSettings.Hosts)
             {
-                Credentials = new Credentials("test", "p@ssword1234"),
+                Credentials = SampleSettings.Credentials,
                 AutoRespondToPing = true,
                 Verbose = false
             };
 
             //FeaturesSample(connectionInfo);
-            //TimedSample(connectionInfo);
+            TimedSample(connectionInfo);
         }
 
         private static void FeaturesSample(ConnectionInfo connectionInfo)
@@ -113,20 +108,20 @@ namespace Consumer
                 client.Events.OfType<ClientConnected>().Subscribe(
                     async ev => await ev.Client.SubAsync("foo", "s1"));
                 client.Events.OfType<ClientConsumerFailed>().Subscribe(
-                    ev => Console.WriteLine("Client consumer failed!"));
+                    ev => Console.WriteLine("Client consumer failed!" + ev.Exception));
                 client.Events.OfType<ClientDisconnected>().Subscribe(
                     ev => Console.WriteLine($"Client was disconnected due to reason '{ev.Reason}'"));
 
                 var sw = new Stopwatch();
                 var n = 0;
-                var timings = new List<double>();
+                var timings = new List<double>(SampleSettings.TimedSample.NumOfBatches);
                 client.MsgOpStream.Subscribe(msg =>
                 {
                     n++;
-                    if(!sw.IsRunning)
+                    if (!sw.IsRunning)
                         sw.Start();
 
-                    if (n == 100000)
+                    if (n == SampleSettings.TimedSample.BatchSize)
                     {
                         sw.Stop();
                         timings.Add(sw.Elapsed.TotalMilliseconds);
@@ -139,7 +134,7 @@ namespace Consumer
 
                 Console.WriteLine("Hit key to show timings.");
                 Console.ReadKey();
-                timings.ForEach(Console.WriteLine);
+                TimedInfo.Report("consumer", timings, SampleSettings.TimedSample.BatchSize, SampleSettings.TimedSample.BodyCharSize);
 
                 Console.WriteLine("Hit key to Shutdown.");
                 Console.ReadKey();

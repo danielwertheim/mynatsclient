@@ -70,6 +70,10 @@
       <Project>{4bc58c54-3c9e-4a26-a7e0-e8ba0b29d6ec}</Project>
       <Name>MyNatsClient</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SampleModel\SampleModel.csproj">
+      <Project>{50f066cd-8f67-45cd-a861-34086cc04e78}</Project>
+      <Name>SampleModel</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

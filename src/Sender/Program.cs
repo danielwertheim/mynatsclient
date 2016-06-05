@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MyNatsClient;
+using SampleModel;
 
 namespace Sender
 {
@@ -13,15 +15,11 @@ namespace Sender
 
         static void Main(string[] args)
         {
-            var connectionInfo = new ConnectionInfo(
-                //Hosts to use. When connecting, will randomize the list
-                //and try to connect. First successful will be used.
-                new[]
-                {
-                    new Host("ubuntu01", 4223)
-                })
+            var connectionInfo = new ConnectionInfo(SampleSettings.Hosts)
             {
-                Credentials = new Credentials("test", "p@ssword1234")
+                Credentials = SampleSettings.Credentials,
+                AutoRespondToPing = true,
+                Verbose = false
             };
 
             using (var client = new NatsClient("mySender1", connectionInfo))
@@ -32,7 +30,7 @@ namespace Sender
 
                 //SeqSend(client);
 
-                //TimeSend(client, 10, 100000);
+                TimeSend(client);
             }
         }
 
@@ -140,22 +138,27 @@ namespace Sender
             Task.WaitAll(t1, t2, t3, t4);
         }
 
-        private static void TimeSend(NatsClient client, int nBatches, int batchSize)
+        private static void TimeSend(NatsClient client)
         {
             Console.WriteLine("Hit key to start send.");
             Console.ReadKey();
 
             var sw = new Stopwatch();
+            var body = new string('a', SampleSettings.TimedSample.BodyCharSize);
+            var timings = new List<double>(SampleSettings.TimedSample.NumOfBatches);
 
-            for (var n = 0; n < nBatches; n++)
+            for (var n = 0; n < SampleSettings.TimedSample.NumOfBatches; n++)
             {
                 sw.Restart();
-                for (var c = 0; c < batchSize; c++)
-                    client.Pub("foo", $"{n}.{c}");
+                for (var c = 0; c < SampleSettings.TimedSample.BatchSize; c++)
+                    client.Pub("foo", body);
                 sw.Stop();
-                Console.WriteLine(sw.Elapsed.TotalMilliseconds);
+                Console.Write(".");
+                timings.Add(sw.Elapsed.Milliseconds);
                 Thread.Sleep(500);
             }
+            Console.WriteLine();
+            TimedInfo.Report("sender", timings, SampleSettings.TimedSample.BatchSize, SampleSettings.TimedSample.BodyCharSize);
         }
     }
 }
