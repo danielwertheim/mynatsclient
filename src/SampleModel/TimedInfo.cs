@@ -9,7 +9,7 @@ namespace SampleModel
     {
         public static void Report(string who, List<double> timings, int batchSize, int bodySize)
         {
-            using (var file = File.CreateText($@"D:\Temp\rep-{who}-{DateTime.Now.ToString("yyyy-MM-dd-hhmm")}.txt"))
+            using (var file = File.CreateText($@"D:\Temp\rep-{who}-{DateTime.Now.ToString("yyyy-MM-dd-hhmmss")}.txt"))
             {
                 Action<string> output = s =>
                 {
