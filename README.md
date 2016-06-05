@@ -369,196 +369,112 @@ The NATS server is running on the same machine, in a Docker container, on a Ubun
 Timed `2016-06-05` which is `pre v1.0.0`.
 
 ```
-===== RESULT =====
 BatchSize: 100000
-BodySize: 10
-228ms
-240ms
-232ms
-252ms
-228ms
-234ms
-286ms
-242ms
-274ms
-240ms
-Avg ms per batch	245,6
-Avg ms per mess	0,002456
-Avg ms per byte	0,0002456
-Avg ms per mb	245,6
-Avg ms per batch (excluding lowest & highest)	247,555555555556
-Avg ms per mess (excluding lowest & highest)	0,00247555555555556
-Avg ms per byte (excluding lowest & highest)	0,000247555555555556
-Avg ms per mb (excluding lowest & highest)	247,555555555556
+BodySize: 1
+Median per batch	214,5
+Median ms per mess	0,002145
+Median ms per byte	0,002145
+Median ms per kB	2,145
 ```
 
 ```
-===== RESULT =====
 BatchSize: 100000
-BodySize: 100
-389ms
-488ms
-584ms
-406ms
-402ms
-417ms
-403ms
-399ms
-497ms
-410ms
-Avg ms per batch	439,5
-Avg ms per mess	0,004395
-Avg ms per byte	4,395E-05
-Avg ms per mb	43,95
-Avg ms per batch (excluding lowest & highest)	445,111111111111
-Avg ms per mess (excluding lowest & highest)	0,00445111111111111
-Avg ms per byte (excluding lowest & highest)	4,45111111111111E-05
-Avg ms per mb (excluding lowest & highest)	44,5111111111111
+BodySize: 4
+Median per batch	220,5
+Median ms per mess	0,002205
+Median ms per byte	0,00055125
+Median ms per kB	0,55125
 ```
 
 ```
-===== RESULT =====
+BatchSize: 100000
+BodySize: 8
+Median per batch	233,5
+Median ms per mess	0,002335
+Median ms per byte	0,000291875
+Median ms per kB	0,291875
+```
+
+```
 BatchSize: 100000
 BodySize: 1000
-998ms
-57ms
-294ms
-17ms
-57ms
-93ms
-272ms
-46ms
-1ms
-23ms
-Avg ms per batch	185,8
-Avg ms per mess	0,001858
-Avg ms per byte	1,858E-06
-Avg ms per mb	1,858
-Avg ms per batch (excluding lowest & highest)	206,333333333333
-Avg ms per mess (excluding lowest & highest)	0,00206333333333333
-Avg ms per byte (excluding lowest & highest)	2,06333333333333E-06
-Avg ms per mb (excluding lowest & highest)	2,06333333333333
+Median per batch	24,5
+Median ms per mess	0,000245
+Median ms per byte	2,45E-07
+Median ms per kB	0,000245
 ```
 
 ```
-===== RESULT =====
 BatchSize: 100000
-BodySize: 10000
-344ms
-470ms
-773ms
-446ms
-584ms
-369ms
-475ms
-553ms
-461ms
-364ms
-Avg ms per batch	483,9
-Avg ms per mess	0,004839
-Avg ms per byte	4,839E-07
-Avg ms per mb	0,4839
-Avg ms per batch (excluding lowest & highest)	499,444444444444
-Avg ms per mess (excluding lowest & highest)	0,00499444444444444
-Avg ms per byte (excluding lowest & highest)	4,99444444444444E-07
-Avg ms per mb (excluding lowest & highest)	0,499444444444444
+BodySize: 4000
+Median ms per batch	241,5
+Median ms per mess	0,002415
+Median ms per byte	6,0375E-07
+Median ms per kB	0,00060375
+```
+
+```
+BatchSize: 100000
+BodySize: 8000
+Median per batch	678,5
+Median ms per mess	0,006785
+Median ms per byte	8,48125E-07
+Median ms per kB	0,000848125
 ```
 
 ### Consumer timings
 Timed `2016-06-05` which is `pre v1.0.0`.
 
 ```
-===== RESULT =====
 BatchSize: 100000
-BodySize: 10
-262,9573ms
-240,2051ms
-232,8512ms
-250,5377ms
-228,0289ms
-234,6012ms
-290,346ms
-242,2346ms
-273,6868ms
-239,9918ms
-Avg ms per batch	249,54406
-Avg ms per mess	0,0024954406
-Avg ms per byte	0,00024954406
-Avg ms per mb	249,54406
-Avg ms per batch (excluding lowest & highest)	251,934633333333
-Avg ms per mess (excluding lowest & highest)	0,00251934633333333
-Avg ms per byte (excluding lowest & highest)	0,000251934633333333
-Avg ms per mb (excluding lowest & highest)	251,934633333333
+BodySize: 1
+Median per batch	216,8881
+Median ms per mess	0,002168881
+Median ms per byte	0,002168881
+Median ms per kB	2,168881
 ```
 
 ```
-===== RESULT =====
 BatchSize: 100000
-BodySize: 100
-384,0295ms
-488,4619ms
-584,221ms
-406,3696ms
-402,2874ms
-417,3684ms
-402,5042ms
-399,0836ms
-497,1408ms
-411,0902ms
-Avg ms per batch	439,25566
-Avg ms per mess	0,0043925566
-Avg ms per byte	4,3925566E-05
-Avg ms per mb	43,925566
-Avg ms per batch (excluding lowest & highest)	445,3919
-Avg ms per mess (excluding lowest & highest)	0,004453919
-Avg ms per byte (excluding lowest & highest)	4,453919E-05
-Avg ms per mb (excluding lowest & highest)	44,53919
+BodySize: 4
+Median per batch	237,5483
+Median ms per mess	0,002375483
+Median ms per byte	0,00059387075
+Median ms per kB	0,59387075
 ```
 
 ```
-===== RESULT =====
+BatchSize: 100000
+BodySize: 8
+Median per batch	238,2871
+Median ms per mess	0,002382871
+Median ms per byte	0,000297858875
+Median ms per kB	0,297858875
+```
+
+```
 BatchSize: 100000
 BodySize: 1000
-1994,3751ms
-2056,7058ms
-2293,8253ms
-2013,0667ms
-2057,2065ms
-2112,0543ms
-2264,694ms
-2026,4929ms
-1995,7137ms
-2017,5575ms
-Avg ms per batch	2083,16918
-Avg ms per mess	0,0208316918
-Avg ms per byte	2,08316918E-05
-Avg ms per mb	20,8316918
-Avg ms per batch (excluding lowest & highest)	2093,03518888889
-Avg ms per mess (excluding lowest & highest)	0,0209303518888889
-Avg ms per byte (excluding lowest & highest)	2,09303518888889E-05
-Avg ms per mb (excluding lowest & highest)	20,9303518888889
+Median ms per batch	2021,08435
+Median ms per mess	0,0202108435
+Median ms per byte	2,02108435E-05
+Median ms per kB	0,0202108435
 ```
 
 ```
-===== RESULT =====
 BatchSize: 100000
-BodySize: 10000
-17341,213ms
-17466,481ms
-17772,0726ms
-17427,3979ms
-17571,934ms
-17351,7579ms
-17464,0851ms
-17551,7528ms
-17452,9309ms
-17347,1624ms
-Avg ms per batch	17474,67876
-Avg ms per mess	0,1747467876
-Avg ms per byte	1,747467876E-05
-Avg ms per mb	17,47467876
-Avg ms per batch (excluding lowest & highest)	17489,5082888889
-Avg ms per mess (excluding lowest & highest)	0,174895082888889
-Avg ms per byte (excluding lowest & highest)	1,74895082888889E-05
-Avg ms per mb (excluding lowest & highest)	17,4895082888889
+BodySize: 4000
+Median ms per batch	7240,5055
+Median ms per mess	0,072405055
+Median ms per byte	1,810126375E-05
+Median ms per kB	0,01810126375
+```
+
+```
+BatchSize: 100000
+BodySize: 8000
+Median ms per batch	14006,21515
+Median ms per mess	0,1400621515
+Median ms per byte	1,75077689375E-05
+Median ms per kB	0,0175077689375
 ```

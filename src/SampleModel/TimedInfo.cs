@@ -9,7 +9,13 @@ namespace SampleModel
     {
         public static void Report(string who, List<double> timings, int batchSize, int bodySize)
         {
-            using (var file = File.CreateText($@"D:\Temp\rep-{who}-{DateTime.Now.ToString("yyyy-MM-dd-hhmmss")}.txt"))
+            if (!timings.Any())
+            {
+                Console.WriteLine("No timings.");
+                return;
+            }
+
+            using (var file = File.CreateText($@"D:\Temp\rep-{DateTime.Now.ToString("yyyy-MM-dd")}-{bodySize}-{who}.txt"))
             {
                 Action<string> output = s =>
                 {
@@ -21,26 +27,32 @@ namespace SampleModel
                 output("BatchSize: " + batchSize);
                 output("BodySize: " + bodySize);
 
-                var average = timings.Average();
-                var averagePerMess = average/batchSize;
-                var averagePerByte = averagePerMess/bodySize;
-                var averagePerMb = averagePerByte*1000000;
-
                 timings.ForEach(t => output($"{t}ms"));
-                output($"Avg ms per batch\t{average}");
-                output($"Avg ms per mess\t{averagePerMess}");
-                output($"Avg ms per byte\t{averagePerByte}");
-                output($"Avg ms per mb\t{averagePerMb}");
 
                 timings.Sort();
-                var avgExcLowHigh = timings.Skip(1).Take(timings.Count - 1).Average();
-                var avgExcLowHighPerMess = avgExcLowHigh/batchSize;
-                var avgExcLowHighPerByte = avgExcLowHighPerMess/bodySize;
-                var avgExcLowHighPerMb = avgExcLowHighPerByte*1000000;
-                output($"Avg ms per batch (excluding lowest & highest)\t{avgExcLowHigh}");
-                output($"Avg ms per mess (excluding lowest & highest)\t{avgExcLowHighPerMess}");
-                output($"Avg ms per byte (excluding lowest & highest)\t{avgExcLowHighPerByte}");
-                output($"Avg ms per mb (excluding lowest & highest)\t{avgExcLowHighPerMb}");
+
+                var avgExcLowHigh = timings.Skip(1).Take(timings.Count - 2).Average();
+                var avgExcLowHighPerMsg = avgExcLowHigh / batchSize;
+                var avgExcLowHighPerByte = avgExcLowHighPerMsg / bodySize;
+                var avgExcLowHighPerKb = avgExcLowHighPerByte * 1000;
+                output($"Avg ms per batch (excl. lowest & highest)\t{avgExcLowHigh}");
+                output($"Avg ms per mess (excl. lowest & highest)\t{avgExcLowHighPerMsg}");
+                output($"Avg ms per byte (excl. lowest & highest)\t{avgExcLowHighPerByte}");
+                output($"Avg ms per kB (excl. lowest & highest)\t{avgExcLowHighPerKb}");
+
+                var isEven = timings.Count % 2 == 0;
+                var take = isEven ? 2 : 1;
+                var skip = (timings.Count - take) / 2;
+
+                var medExcLowHigh = timings.Skip(skip).Take(take).Average();
+                var medExcLowHighPerMsg = medExcLowHigh / batchSize;
+                var medExcLowHighPerByte = medExcLowHighPerMsg / bodySize;
+                var medExcLowHighPerKb = medExcLowHighPerByte * 1000;
+                output($"Median ms per batch\t{medExcLowHigh}");
+                output($"Median ms per mess\t{medExcLowHighPerMsg}");
+                output($"Median ms per byte\t{medExcLowHighPerByte}");
+                output($"Median ms per kB\t{medExcLowHighPerKb}");
+
                 file.Flush();
             }
         }
