@@ -280,8 +280,14 @@ namespace MyNatsClient
                 catch (IOException ioex)
                 {
                     var ex = ioex.InnerException as SocketException;
-                    if(ex == null || ex.SocketErrorCode != SocketError.TimedOut)
-                        throw;
+                    if (ex != null)
+                    {
+                        if (ex.SocketErrorCode == SocketError.Interrupted && _consumerIsCancelled())
+                            break;
+
+                        if (ex.SocketErrorCode != SocketError.TimedOut)
+                            throw;
+                    }
 
                     var silenceDeltaMs = DateTime.UtcNow.Subtract(Stats.LastOpReceivedAt).TotalMilliseconds;
                     if (silenceDeltaMs >= ConsumerMaxMsSilenceFromServer)
