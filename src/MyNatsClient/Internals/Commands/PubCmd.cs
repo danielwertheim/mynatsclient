@@ -1,5 +1,4 @@
-using System.Linq;
-using MyNatsClient.Internals.Extensions;
+using System;
 
 namespace MyNatsClient.Internals.Commands
 {
@@ -10,19 +9,26 @@ namespace MyNatsClient.Internals.Commands
 
         internal static byte[] Generate(string subject, byte[] body, string replyTo = null)
         {
-            return GeneratePreBody(subject, body.Length, replyTo)
-                .CombineWith(body)
-                .CombineWith(GenerateAfterBody())
-                .ToArray();
+            var preBody = GeneratePreBody(subject, body.Length, replyTo);
+            var crlfLen = NatsEncoder.CrlfBytes.Length;
+            var buff = new byte[
+                preBody.Length +
+                crlfLen +
+                body.Length +
+                crlfLen];
+            Array.Copy(preBody, buff, preBody.Length);
+            Array.Copy(NatsEncoder.CrlfBytes, 0, buff, preBody.Length, crlfLen);
+            Array.Copy(body, 0, buff, preBody.Length + crlfLen, body.Length);
+            Array.Copy(NatsEncoder.CrlfBytes, 0, buff, preBody.Length + crlfLen + body.Length, crlfLen);
+
+            return buff;
         }
 
         private static byte[] GeneratePreBody(string subject, int bodyLength, string replyTo = null)
         {
             var s = replyTo != null ? " " : string.Empty;
 
-            return NatsEncoder.GetBytes($"PUB {subject}{s}{replyTo} {bodyLength}{NatsEncoder.Crlf}");
+            return NatsEncoder.GetBytes($"PUB {subject}{s}{replyTo} {bodyLength}");
         }
-
-        private static byte[] GenerateAfterBody() => NatsEncoder.CrlfBytes;
     }
 }

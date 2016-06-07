@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -47,6 +50,38 @@ namespace MyNatsClient.IntegrationTests
         {
             _client1.Pub("Test", "test message");
             await _client1.PubAsync("Test", "Test message");
+        }
+
+        [Test]
+        [Timeout(MaxTimeMs)]
+        public async Task A_published_message_Should_be_published_and_consumed_in_full()
+        {
+            var intercepted = new List<MsgOp>();
+            var messages = new[]
+            {
+                "My test string\r\nwith two lines and\ttabs!",
+                "Foo bar!",
+                "My async test string\r\nwith two lines and\ttabs!",
+                "Async Foo bar!"
+            };
+            _client1.Sub("Test", "s1");
+            _client1.MsgOpStream.Subscribe(msg =>
+            {
+                intercepted.Add(msg);
+                Sync.Set();
+            });
+
+            _client1.Pub("Test", messages[0]);
+            Sync.WaitOne();
+            _client1.Pub("Test", Encoding.UTF8.GetBytes(messages[1]));
+            Sync.WaitOne();
+            await _client1.PubAsync("Test", messages[2]);
+            Sync.WaitOne();
+            await _client1.PubAsync("Test", Encoding.UTF8.GetBytes(messages[3]));
+            Sync.WaitOne();
+
+            intercepted.Should().HaveCount(messages.Length);
+            intercepted.Select(m => m.GetPayloadAsString()).ToArray().Should().Contain(messages);
         }
 
         [Test]
