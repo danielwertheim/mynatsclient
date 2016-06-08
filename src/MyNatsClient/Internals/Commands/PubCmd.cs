@@ -42,7 +42,7 @@ namespace MyNatsClient.Internals.Commands
                 buff[++curr] = NatsEncoder.SpaceByte;
                 curr = NatsEncoder.WriteSingleByteUtf8String(buff, replyTo, curr);
             }
-            buff[++curr] = (byte)' ';
+            buff[++curr] = NatsEncoder.SpaceByte;
             NatsEncoder.WriteSingleByteUtf8String(buff, bodyLenString, curr);
         }
     }
