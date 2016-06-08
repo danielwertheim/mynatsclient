@@ -57,7 +57,6 @@
     <Compile Include="Internals\Commands\PongCmd.cs" />
     <Compile Include="Internals\Commands\SubCmd.cs" />
     <Compile Include="Internals\Commands\UnSubCmd.cs" />
-    <Compile Include="Internals\Extensions\EnumerableExtensions.cs" />
     <Compile Include="Internals\Extensions\SocketExtensions.cs" />
     <Compile Include="Internals\JsonOptions.cs" />
     <Compile Include="Internals\Retry.cs" />
