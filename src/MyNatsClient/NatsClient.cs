@@ -31,7 +31,7 @@ namespace MyNatsClient
         private Socket _socket;
         private Stream _readStream;
         private Stream _writeStream;
-        private SemaphoreSlim _writeStreamSync;
+        private Locker _writeStreamSync;
         private NatsOpStreamReader _reader;
         private Task _consumer;
         private CancellationTokenSource _cancellation;
@@ -49,7 +49,7 @@ namespace MyNatsClient
         public NatsClient(string id, ConnectionInfo connectionInfo)
         {
             _sync = new object();
-            _writeStreamSync = new SemaphoreSlim(1, 1);
+            _writeStreamSync = new Locker();
             _connectionInfo = connectionInfo.Clone();
             _eventMediator = new ObservableOf<IClientEvent>();
             _opMediator = new NatsOpMediator();
@@ -468,15 +468,10 @@ namespace MyNatsClient
             if (data.Length > _serverInfo.MaxPayload)
                 throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, data.Length);
 
-            try
+            using (_writeStreamSync.Lock())
             {
-                _writeStreamSync.Wait(_cancellation.Token);
                 _writeStream.Write(data, 0, data.Length);
                 _writeStream.Flush();
-            }
-            finally
-            {
-                _writeStreamSync.Release();
             }
         }
 
@@ -487,15 +482,10 @@ namespace MyNatsClient
             if (data.Length > _serverInfo.MaxPayload)
                 throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, data.Length);
 
-            try
+            using (await _writeStreamSync.LockAsync(_cancellation.Token))
             {
-                await _writeStreamSync.WaitAsync(_cancellation.Token).ForAwait();
                 await _writeStream.WriteAsync(data, 0, data.Length, _cancellation.Token).ForAwait();
                 await _writeStream.FlushAsync(_cancellation.Token).ForAwait();
-            }
-            finally
-            {
-                _writeStreamSync.Release();
             }
         }
     }
