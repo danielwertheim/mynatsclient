@@ -11,7 +11,6 @@ namespace MyNatsClient
     {
         private readonly Task<IDisposable> _releaserTask;
         private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-        private bool _isDisposed;
 
         public Locker()
         {
@@ -20,18 +19,9 @@ namespace MyNatsClient
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-            _isDisposed = true;
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (_isDisposed || !disposing)
-                return;
-
             _semaphore?.Dispose();
             _semaphore = null;
+            GC.SuppressFinalize(this);
         }
 
         public IDisposable Lock()
@@ -55,7 +45,7 @@ namespace MyNatsClient
                     TaskScheduler.Default);
         }
 
-        private sealed class Releaser : IDisposable
+        private class Releaser : IDisposable
         {
             private readonly SemaphoreSlim _toRelease;
 
@@ -67,6 +57,7 @@ namespace MyNatsClient
             public void Dispose()
             {
                 _toRelease.Release();
+                GC.SuppressFinalize(this);
             }
         }
     }
