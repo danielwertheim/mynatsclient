@@ -123,6 +123,25 @@ namespace MyNatsClient
         Task PubAsync(string subject, byte[] body, string replyTo);
 
         /// <summary>
+        /// Gives access to a publisher that will call
+        /// <see cref="Flush"/> when your inject delegate
+        /// is done executing.
+        /// </summary>
+        /// <param name="p"></param>
+        void PubMany(Action<IPublisher> p);
+
+        /// <summary>
+        /// Flushes the write stream.
+        /// </summary>
+        void Flush();
+
+        /// <summary>
+        /// Async flush of write stream.
+        /// </summary>
+        /// <returns></returns>
+        Task FlushAsync();
+
+        /// <summary>
         /// Sync send of Sub message to indicate that client should
         /// get messages for the subject.
         /// </summary>

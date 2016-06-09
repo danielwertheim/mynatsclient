@@ -26,6 +26,7 @@ namespace MyNatsClient
         private readonly ConnectionInfo _connectionInfo;
         private readonly Func<bool> _socketIsConnected;
         private readonly Func<bool> _consumerIsCancelled;
+        private readonly IPublisher _publisher;
         private ObservableOf<IClientEvent> _eventMediator;
         private NatsOpMediator _opMediator;
         private Socket _socket;
@@ -37,6 +38,8 @@ namespace MyNatsClient
         private CancellationTokenSource _cancellation;
         private NatsServerInfo _serverInfo;
         private bool _isDisposed;
+
+        private bool ShouldFlush => _connectionInfo.PubFlushMode != PubFlushMode.Manual;
 
         public string Id { get; }
         public IObservable<IClientEvent> Events => _eventMediator;
@@ -51,6 +54,7 @@ namespace MyNatsClient
             _sync = new object();
             _writeStreamSync = new Locker();
             _connectionInfo = connectionInfo.Clone();
+            _publisher = new Publisher(DoSend, DoSendAsync);
             _eventMediator = new ObservableOf<IClientEvent>();
             _opMediator = new NatsOpMediator();
 
@@ -381,84 +385,175 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
-            DoSend(PingCmd.Generate());
+            WithWriteLock(() =>
+            {
+                DoSend(PingCmd.Generate());
+                DoFlush();
+            });
         }
 
         public async Task PingAsync()
         {
             ThrowIfDisposed();
 
-            await DoSendAsync(PingCmd.Generate()).ForAwait();
+            await WithWriteLockAsync(async () =>
+            {
+                await DoSendAsync(PingCmd.Generate()).ForAwait();
+                await DoFlushAsync().ForAwait();
+            }).ForAwait();
         }
 
         public void Pong()
         {
             ThrowIfDisposed();
 
-            DoSend(PongCmd.Generate());
+            WithWriteLock(() =>
+            {
+                DoSend(PongCmd.Generate());
+                DoFlush();
+            });
         }
 
         public async Task PongAsync()
         {
             ThrowIfDisposed();
 
-            await DoSendAsync(PongCmd.Generate()).ForAwait();
+            await WithWriteLockAsync(async () =>
+            {
+                await DoSendAsync(PongCmd.Generate()).ForAwait();
+                await DoFlushAsync().ForAwait();
+            }).ForAwait();
         }
 
         public void Pub(string subject, string body, string replyTo = null)
         {
             ThrowIfDisposed();
 
-            DoSend(PubCmd.Generate(subject, body, replyTo));
+            WithWriteLock(() =>
+            {
+                DoSend(PubCmd.Generate(subject, body, replyTo));
+                if (ShouldFlush)
+                    DoFlush();
+            });
         }
 
         public void Pub(string subject, byte[] body, string replyTo = null)
         {
             ThrowIfDisposed();
 
-            DoSend(PubCmd.Generate(subject, body, replyTo));
+            WithWriteLock(() =>
+            {
+                DoSend(PubCmd.Generate(subject, body, replyTo));
+                if (ShouldFlush)
+                    DoFlush();
+            });
         }
 
         public async Task PubAsync(string subject, byte[] body, string replyTo = null)
         {
             ThrowIfDisposed();
 
-            await DoSendAsync(PubCmd.Generate(subject, body, replyTo)).ForAwait();
+            await WithWriteLockAsync(async () =>
+            {
+                await DoSendAsync(PubCmd.Generate(subject, body, replyTo));
+                if (ShouldFlush)
+                    await DoFlushAsync().ForAwait();
+            }).ForAwait();
         }
 
         public async Task PubAsync(string subject, string body, string replyTo = null)
         {
             ThrowIfDisposed();
 
-            await DoSendAsync(PubCmd.Generate(subject, body, replyTo)).ForAwait();
+            await WithWriteLockAsync(async () =>
+            {
+                await DoSendAsync(PubCmd.Generate(subject, body, replyTo));
+                if (ShouldFlush)
+                    await DoFlushAsync().ForAwait();
+            }).ForAwait();
+        }
+
+        public void PubMany(Action<IPublisher> p)
+        {
+            ThrowIfDisposed();
+
+            WithWriteLock(() =>
+            {
+                p(_publisher);
+                DoFlush();
+            });
+        }
+
+        public void Flush()
+        {
+            ThrowIfDisposed();
+
+            WithWriteLock(() => DoFlush());
+        }
+
+        public async Task FlushAsync()
+        {
+            ThrowIfDisposed();
+
+            await WithWriteLockAsync(() => DoFlushAsync()).ForAwait();
+        }
+
+        private void DoFlush()
+        {
+            ThrowIfNotConnected();
+
+            _writeStream.Flush();
+        }
+
+        private async Task DoFlushAsync()
+        {
+            ThrowIfNotConnected();
+
+            await _writeStream.FlushAsync();
         }
 
         public void Sub(string subject, string subscriptionId, string queueGroup = null)
         {
             ThrowIfDisposed();
 
-            DoSend(SubCmd.Generate(subject, subscriptionId, queueGroup));
+            WithWriteLock(() =>
+            {
+                DoSend(SubCmd.Generate(subject, subscriptionId, queueGroup));
+                DoFlush();
+            });
         }
 
         public async Task SubAsync(string subject, string subscriptionId, string queueGroup = null)
         {
             ThrowIfDisposed();
 
-            await DoSendAsync(SubCmd.Generate(subject, subscriptionId, queueGroup)).ForAwait();
+            await WithWriteLockAsync(async () =>
+            {
+                await DoSendAsync(SubCmd.Generate(subject, subscriptionId, queueGroup)).ForAwait();
+                await DoFlushAsync().ForAwait();
+            }).ForAwait();
         }
 
         public void UnSub(string subscriptionId, int? maxMessages = null)
         {
             ThrowIfDisposed();
 
-            DoSend(UnSubCmd.Generate(subscriptionId, maxMessages));
+            WithWriteLock(() =>
+            {
+                DoSend(UnSubCmd.Generate(subscriptionId, maxMessages));
+                DoFlush();
+            });
         }
 
         public async Task UnSubAsync(string subscriptionId, int? maxMessages = null)
         {
             ThrowIfDisposed();
 
-            await DoSendAsync(UnSubCmd.Generate(subscriptionId, maxMessages)).ForAwait();
+            await WithWriteLockAsync(async () =>
+            {
+                await DoSendAsync(UnSubCmd.Generate(subscriptionId, maxMessages)).ForAwait();
+                await DoFlushAsync().ForAwait();
+            }).ForAwait();
         }
 
         private void DoSend(byte[] data)
@@ -468,11 +563,7 @@ namespace MyNatsClient
             if (data.Length > _serverInfo.MaxPayload)
                 throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, data.Length);
 
-            using (_writeStreamSync.Lock())
-            {
-                _writeStream.Write(data, 0, data.Length);
-                _writeStream.Flush();
-            }
+            _writeStream.Write(data, 0, data.Length);
         }
 
         private async Task DoSendAsync(byte[] data)
@@ -482,11 +573,19 @@ namespace MyNatsClient
             if (data.Length > _serverInfo.MaxPayload)
                 throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, data.Length);
 
-            using (await _writeStreamSync.LockAsync(_cancellation.Token))
-            {
-                await _writeStream.WriteAsync(data, 0, data.Length, _cancellation.Token).ForAwait();
-                await _writeStream.FlushAsync(_cancellation.Token).ForAwait();
-            }
+            await _writeStream.WriteAsync(data, 0, data.Length, _cancellation.Token).ForAwait();
+        }
+
+        private void WithWriteLock(Action a)
+        {
+            using (_writeStreamSync.Lock())
+                a();
+        }
+
+        private async Task WithWriteLockAsync(Func<Task> a)
+        {
+            using (await _writeStreamSync.LockAsync(_cancellation.Token).ForAwait())
+                await a().ForAwait();
         }
     }
 }

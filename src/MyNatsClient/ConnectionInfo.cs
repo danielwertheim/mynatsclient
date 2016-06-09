@@ -8,6 +8,7 @@ namespace MyNatsClient
         public bool AutoRespondToPing { get; set; } = true;
         public Credentials Credentials { get; set; } = Credentials.Empty;
         public bool Verbose { get; set; }
+        public PubFlushMode PubFlushMode { get; set; } = PubFlushMode.Auto;
         public SocketOptions SocketOptions { get; set; } = new SocketOptions();
 
         public ConnectionInfo(Host host) : this(new[] { host }) { }
@@ -28,6 +29,7 @@ namespace MyNatsClient
                 AutoRespondToPing = AutoRespondToPing,
                 Credentials = new Credentials(Credentials.User, Credentials.Pass),
                 Verbose = Verbose,
+                PubFlushMode = PubFlushMode,
                 SocketOptions = new SocketOptions
                 {
                     ReceiveBufferSize = SocketOptions.ReceiveBufferSize,

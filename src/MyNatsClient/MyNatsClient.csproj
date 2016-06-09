@@ -44,6 +44,8 @@
     <Compile Include="..\GlobalAssemblyInfo.cs">
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="PubFlushMode.cs" />
+    <Compile Include="IPublisher.cs" />
     <Compile Include="Locker.cs" />
     <Compile Include="Credentials.cs" />
     <Compile Include="Events\ClientConnected.cs" />
@@ -62,6 +64,7 @@
     <Compile Include="Internals\JsonOptions.cs" />
     <Compile Include="Internals\Retry.cs" />
     <Compile Include="Internals\NatsEncoder.cs" />
+    <Compile Include="Internals\Publisher.cs" />
     <Compile Include="SocketOptions.cs" />
     <Compile Include="ISocketFactory.cs" />
     <Compile Include="ObservableOf.cs" />
