@@ -8,6 +8,7 @@ using System.Text;
 using MyNatsClient;
 using MyNatsClient.Events;
 using MyNatsClient.Ops;
+using NATS.Client;
 using SampleModel;
 
 namespace Consumer
@@ -18,13 +19,15 @@ namespace Consumer
         {
             var connectionInfo = new ConnectionInfo(SampleSettings.Hosts)
             {
-                Credentials = SampleSettings.Credentials,
+                //Credentials = SampleSettings.Credentials,
                 AutoRespondToPing = true,
                 Verbose = false
             };
 
             //FeaturesSample(connectionInfo);
             TimedSample(connectionInfo);
+
+            //TimedSampleOfficial();
         }
 
         private static void FeaturesSample(ConnectionInfo connectionInfo)
@@ -147,6 +150,54 @@ namespace Consumer
 
                 Console.WriteLine("Hit key to Shutdown.");
                 Console.ReadKey();
+            }
+        }
+
+        private static void TimedSampleOfficial()
+        {
+            var sw = new Stopwatch();
+            var n = 0;
+            var timings = new List<double>(SampleSettings.TimedSample.NumOfBatches);
+
+            var cf = new ConnectionFactory();
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.Verbose = false;
+            opts.Servers = new[] {"nats://ubuntu01:4222"};
+            using (var cn = cf.CreateConnection(opts))
+            {
+                EventHandler<MsgHandlerEventArgs> h = (sender, args) =>
+                {
+                    n++;
+                    if (!sw.IsRunning)
+                        sw.Start();
+
+                    if (n == SampleSettings.TimedSample.BatchSize)
+                    {
+                        sw.Stop();
+                        timings.Add(sw.Elapsed.TotalMilliseconds);
+                        sw.Reset();
+                        n = 0;
+                    }
+                };
+
+                var s = cn.SubscribeAsync("foo", h);
+
+                //var dump = File.CreateText(@"d:\temp\log.txt");
+                //client.MsgOpStream.Subscribe(msg =>
+                //{
+                //    dump.WriteLine(msg.GetAsString());
+                //});
+
+                Console.WriteLine("Hit key to show timings.");
+                Console.ReadKey();
+                //dump.Flush();
+                //dump.Close();
+
+                TimedInfo.Report("consumer", timings, SampleSettings.TimedSample.BatchSize, SampleSettings.TimedSample.BodyCharSize);
+
+                Console.WriteLine("Hit key to Shutdown.");
+                Console.ReadKey();
+                cn.Close();
             }
         }
     }
