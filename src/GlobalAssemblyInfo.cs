@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Reflection;
 
 #if DEBUG
@@ -14,6 +14,3 @@ using System.Reflection;
 [assembly: AssemblyCopyright("Copyright © 2016 Daniel Wertheim")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-
-[assembly: AssemblyVersion("0.0.0.*")]
-[assembly: AssemblyInformationalVersion("0.0.0.*")]

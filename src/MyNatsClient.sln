@@ -12,6 +12,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7447886C-F0BB-467D-82FD-09A0D00C0E42}"
 	ProjectSection(SolutionItems) = preProject
 		GlobalAssemblyInfo.cs = GlobalAssemblyInfo.cs
+		GlobalAssemblyVersion.cs = GlobalAssemblyVersion.cs
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Consumer", "Consumer\Consumer.csproj", "{8EEAB8E8-EC4D-4BD1-9E0B-A9ADACEC80ED}"

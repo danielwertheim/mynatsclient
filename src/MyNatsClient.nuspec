@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+    <metadata>
+        <id>MyNatsClient</id>
+        <title>MyNatsClient - async, reactive and simple NATS.io client</title>
+        <version>$version$</version>
+        <authors>danielwertheim</authors>
+        <copyright>©Daniel Wertheim</copyright>
+        <summary>Used for working with NATS.io message broker</summary>
+        <description>Provides a simple, effective sync and async library for interacting with NATS.io using DotNet. Uses IObservable so it is ReactiveX friendly.</description>
+        <projectUrl>https://github.com/danielwertheim/mynatsclient</projectUrl>
+        <licenseUrl>https://raw.githubusercontent.com/danielwertheim/mynatsclient/master/LICENSE.txt</licenseUrl>
+        <releaseNotes>https://github.com/danielwertheim/mynatsclient/blob/master/ReleaseNotes.md</releaseNotes>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <tags>NATS NATS.io messaging reactivex reactiveextensions</tags>
+    </metadata>
+    <files>
+        <file src="MyNatsClient.dll" target="lib\net45" />
+        <file src="MyNatsClient.XML" target="lib\net45" />
+    </files>
+</package>

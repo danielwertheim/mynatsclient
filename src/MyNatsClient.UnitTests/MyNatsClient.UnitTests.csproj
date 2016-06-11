@@ -73,6 +73,9 @@
     <Compile Include="..\GlobalAssemblyInfo.cs">
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="..\GlobalAssemblyVersion.cs">
+      <Link>Properties\GlobalAssemblyVersion.cs</Link>
+    </Compile>
     <Compile Include="ConnectionInfoTests.cs" />
     <Compile Include="CredentialsTests.cs" />
     <Compile Include="HostTests.cs" />
