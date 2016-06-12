@@ -56,6 +56,7 @@ namespace MyNatsClient.IntegrationTests
         [Timeout(MaxTimeMs)]
         public async Task A_published_message_Should_be_published_and_consumed_in_full()
         {
+            var interceptCount = 0;
             var intercepted = new List<MsgOp>();
             var messages = new[]
             {
@@ -64,22 +65,56 @@ namespace MyNatsClient.IntegrationTests
                 "My async test string\r\nwith two lines and\ttabs!",
                 "Async Foo bar!"
             };
-            _client1.Sub("Test", "s1");
             _client1.MsgOpStream.Subscribe(msg =>
             {
                 intercepted.Add(msg);
-                Sync.Set();
+                var x = Interlocked.Increment(ref interceptCount);
+                if (x == messages.Length)
+                    Sync.Set();
             });
+            _client1.Sub("Test", "s1");
 
             _client1.Pub("Test", messages[0]);
-            Sync.WaitOne();
             _client1.Pub("Test", Encoding.UTF8.GetBytes(messages[1]));
-            Sync.WaitOne();
             await _client1.PubAsync("Test", messages[2]);
-            Sync.WaitOne();
             await _client1.PubAsync("Test", Encoding.UTF8.GetBytes(messages[3]));
-            Sync.WaitOne();
 
+            Sync.WaitOne();
+            intercepted.Should().HaveCount(messages.Length);
+            intercepted.Select(m => m.GetPayloadAsString()).ToArray().Should().Contain(messages);
+        }
+
+        [Test]
+        [Timeout(MaxTimeMs)]
+        public void A_published_message_using_PubMany_Should_be_published_and_consumed_in_full()
+        {
+            var interceptCount = 0;
+            var intercepted = new List<MsgOp>();
+            var messages = new[]
+            {
+                "My test string\r\nwith two lines and\ttabs!",
+                "Foo bar!",
+                "My async test string\r\nwith two lines and\ttabs!",
+                "Async Foo bar!"
+            };
+            _client1.MsgOpStream.Subscribe(msg =>
+            {
+                intercepted.Add(msg);
+                var x = Interlocked.Increment(ref interceptCount);
+                if (x == messages.Length)
+                    Sync.Set();
+            });
+            _client1.Sub("Test", "s1");
+
+            _client1.PubMany(async p =>
+            {
+                p.Pub("Test", messages[0]);
+                p.Pub("Test", Encoding.UTF8.GetBytes(messages[1]));
+                await p.PubAsync("Test", messages[2]);
+                await p.PubAsync("Test", Encoding.UTF8.GetBytes(messages[3]));
+            });
+
+            Sync.WaitOne();
             intercepted.Should().HaveCount(messages.Length);
             intercepted.Select(m => m.GetPayloadAsString()).ToArray().Should().Contain(messages);
         }
