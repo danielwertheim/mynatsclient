@@ -3,7 +3,7 @@
 #load "./buildconfig.cake"
 
 var config = BuildConfig.Create(Context, BuildSystem);
-Func<string, string> projectOutDir = project => string.Format("{0}{1}.v{2}", config.OutDir, project, config.SemVer);
+Func<string, string> projectOutDir = project => string.Format("{0}{1}.{2}", config.OutDir, project, config.SemVer);
 
 Task("Default")
     .IsDependentOn("InitOutDir")
