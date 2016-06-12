@@ -185,9 +185,9 @@ namespace MyNatsClient
 
             var msg = new MsgOp(
                 segments[0],
-                segments[segmentsI],
+                segments[1],
                 payload,
-                segmentsI == 2 ? segments[1] : null);
+                segments[2]);
 
             burn = stream.ReadChar();
             if (burn != Cr)

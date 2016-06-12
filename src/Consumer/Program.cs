@@ -81,7 +81,7 @@ namespace Consumer
                 {
                     Console.WriteLine("===== MSG =====");
                     Console.WriteLine($"Subject: {msg.Subject}");
-                    Console.WriteLine($"QueueGroup: {msg.QueueGroup}");
+                    Console.WriteLine($"ReplyTo: {msg.ReplyTo}");
                     Console.WriteLine($"SubscriptionId: {msg.SubscriptionId}");
                     Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
                 });

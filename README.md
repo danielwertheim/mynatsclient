@@ -86,7 +86,7 @@ using (var client = new NatsClient("myClientId", connectionInfo))
     {
         Console.WriteLine("===== MSG =====");
         Console.WriteLine($"Subject: {msg.Subject}");
-        Console.WriteLine($"QueueGroup: {msg.QueueGroup}");
+        Console.WriteLine($"ReplyTo: {msg.ReplyTo}");
         Console.WriteLine($"SubscriptionId: {msg.SubscriptionId}");
         Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
     });
@@ -96,7 +96,7 @@ using (var client = new NatsClient("myClientId", connectionInfo))
     {
         Console.WriteLine("===== MSG =====");
         Console.WriteLine($"Subject: {msg.Subject}");
-        Console.WriteLine($"QueueGroup: {msg.QueueGroup}");
+        Console.WriteLine($"ReplyTo: {msg.ReplyTo}");
         Console.WriteLine($"SubscriptionId: {msg.SubscriptionId}");
         Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
     });
@@ -291,7 +291,7 @@ client.OpStream.OfType<MsgOp>().Subscribe(msg =>
 {
     Console.WriteLine("===== MSG =====");
     Console.WriteLine($"Subject: {msg.Subject}");
-    Console.WriteLine($"QueueGroup: {msg.QueueGroup}");
+    Console.WriteLine($"ReplyTo: {msg.ReplyTo}");
     Console.WriteLine($"SubscriptionId: {msg.SubscriptionId}");
     Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
 });
@@ -301,7 +301,7 @@ client.MsgOpStream.Subscribe(msg =>
 {
     Console.WriteLine("===== MSG =====");
     Console.WriteLine($"Subject: {msg.Subject}");
-    Console.WriteLine($"QueueGroup: {msg.QueueGroup}");
+    Console.WriteLine($"ReplyTo: {msg.ReplyTo}");
     Console.WriteLine($"SubscriptionId: {msg.SubscriptionId}");
     Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
 });

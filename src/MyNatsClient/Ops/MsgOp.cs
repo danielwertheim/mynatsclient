@@ -9,7 +9,7 @@ namespace MyNatsClient.Ops
 
         public string Code => Name;
         public string Subject { get; }
-        public string QueueGroup { get; }
+        public string ReplyTo { get; }
         public string SubscriptionId { get; }
         public byte[] Payload { get; }
 
@@ -19,17 +19,17 @@ namespace MyNatsClient.Ops
             string subject,
             string subscriptionId,
             byte[] payload,
-            string queueGroup = null)
+            string replyTo = null)
         {
             Subject = subject;
-            QueueGroup = queueGroup;
+            ReplyTo = replyTo;
             SubscriptionId = subscriptionId;
             Payload = payload;
             _size = 3 + //MSG
                     1 + //BLANK
                     Subject.Length +
                     1 + //BLANK
-                    (QueueGroup?.Length + 1 ?? 0) + //Optinal GRP + BLANK
+                    (ReplyTo?.Length + 1 ?? 0) + //Optinal REPLYTO + BLANK
                     SubscriptionId.Length +
                     1 + //BLANK
                     Payload.Length.ToString().Length +
@@ -50,9 +50,9 @@ namespace MyNatsClient.Ops
             sb.Append(" ");
             sb.Append(Subject);
             sb.Append(" ");
-            if (QueueGroup != null)
+            if (ReplyTo != null)
             {
-                sb.Append(QueueGroup);
+                sb.Append(ReplyTo);
                 sb.Append(" ");
             }
 

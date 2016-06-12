@@ -93,7 +93,7 @@ namespace MyNatsClient.UnitTests
                 op.Code.Should().Be("MSG");
                 op.Subject.Should().Be("foo");
                 op.SubscriptionId.Should().Be("siddw1");
-                op.QueueGroup.Should().BeNull();
+                op.ReplyTo.Should().BeNull();
                 op.Payload.Should().HaveCount(6);
                 op.GetAsString().Should().Be("MSG foo siddw1 6\r\nte\r\nst");
                 op.GetPayloadAsString().Should().Be("te\r\nst");
@@ -113,7 +113,7 @@ namespace MyNatsClient.UnitTests
                 op.Code.Should().Be("MSG");
                 op.Subject.Should().Be("foo");
                 op.SubscriptionId.Should().Be("siddw1");
-                op.QueueGroup.Should().BeNull();
+                op.ReplyTo.Should().BeNull();
                 op.Payload.Should().HaveCount(5);
                 op.GetAsString().Should().Be("MSG foo siddw1 5\r\nte\tst");
                 op.GetPayloadAsString().Should().Be("te\tst");
@@ -133,7 +133,7 @@ namespace MyNatsClient.UnitTests
                 op.Code.Should().Be("MSG");
                 op.Subject.Should().Be("foo");
                 op.SubscriptionId.Should().Be("siddw1");
-                op.QueueGroup.Should().BeNull();
+                op.ReplyTo.Should().BeNull();
                 op.Payload.Should().HaveCount(4);
                 op.GetAsString().Should().Be("MSG foo siddw1 4\r\ntest");
                 op.GetPayloadAsString().Should().Be("test");

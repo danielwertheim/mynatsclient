@@ -12,7 +12,7 @@ namespace MyNatsClient.Internals.Commands
         internal static byte[] Generate(string subject, byte[] body, string replyTo = null)
         {
             var bodyLenString = body.Length.ToString();
-            var preBodyLen = 3 + 1 + subject.Length + (replyTo?.Length ?? 0) + 1 + bodyLenString.Length;
+            var preBodyLen = 3 + 1 + subject.Length + (replyTo?.Length + 1 ?? 0) + 1 + bodyLenString.Length;
             var buff = new byte[
                 preBodyLen +
                 NatsEncoder.CrlfBytesLen +
