@@ -1,35 +1,24 @@
 # MyNatsClient
-My .Net client for NATS. Which is the result of me starting to looking into and learning NATS. You can read about it here in my blog series:
+## Why a new one when there's an official project?
+Because I wanted one that leaves .Net4.0 behind and therefore offers `async` constructs. And I also wanted one that is reactive and supports [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET), by being based around `IObservable<T>`. And I also wanted to keep as much of the domain language of NATS as possible, but not strictly be following/limited to the APIs of other NATS client, but instead offer one that fits the .NET domain.
 
-* [NATS, What a beautiful protocol](http://danielwertheim.se/nats-what-a-beautiful-protocol/)
-* [Simple incoming OP parser for Nats in C#](http://danielwertheim.se/simple-incoming-op-parser-for-nats-in-c/)
-* [Using the OpParser with Nats to create a long running consumer in C#](http://danielwertheim.se/using-the-opparser-with-nats-to-create-a-long-running-consumer-in-c/)
-* [Continuing with C# and Nats, now looking at NatsObservable](http://danielwertheim.se/continuing-with-c-and-nats-now-looking-at-natsobservable/)
-* [Time to construct a bundled NatsClient for C#](http://danielwertheim.se/time-to-construct-a-bundled-natsclient-for-csharp/)
+## Metrics
+There are some posts on this on my blog. The most interesting one would be: ["http://danielwertheim.se/mynatsclient-it-flushes-but-so-can-you/"](http://danielwertheim.se/mynatsclient-it-flushes-but-so-can-you/)
 
-# Why a new one when there's an offical project?
-Because I wanted to base mine around `IObservable<>` so that you could use [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) to consume incoming `Ops` from the server.
-
-And I also wanted to keep as much of the domain language of NATS but not necesarily follow APIs of other NATS client, but instead offer one that fits the .NET domain.
-
-Finally, I also created this client as a way to learn about NATS itself.
-
-For the official client, look here: https://github.com/nats-io/csnats
-
-# .NET Core
+## .NET Core
 MyNatsClient can, in its current shape, be compiled and distributed for .NET Core. MyNatsClient in itself does not have any dependencies on [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET). But your client will (if you want to use it). And to get that to work with a core project, you have to explicit import it as a dependency on a portable profile that RX currently supports.
 
 The first releases will how-ever be distributed over NuGet for .NET 4.5 and soon .NET Core.
 
-# License
+## License
 Have fun using it ;-) [MIT](https://github.com/danielwertheim/mynatsclient/blob/master/LICENSE.txt)
 
-# Issues, Questions etc.
+## Issues, Questions etc.
 Found any Issues? Cool, then someone is using it. Just report them under Issues.
 
 Have any questions? Awesome. Ping me on Twitter @danielwertheim.
 
-# Consumer sample
+## Consumer sample
 Just some simple code showing usage.
 
 ```csharp
@@ -131,7 +120,7 @@ using (var client = new NatsClient("myClientId", connectionInfo))
 }
 ```
 
-# Auth
+## Auth
 You specify credentials on the `ConnectionInfo` object:
 
 ```csharp
@@ -153,7 +142,7 @@ With an inner exception of:
 Error while connecting to ubuntu01:4223. Server requires credentials to be passed. None was specified.
 ```
 
-# SocketOptions
+## SocketOptions
 You can adjust the `SocketOptions` by configuring the following:
 
 ```csharp
@@ -187,14 +176,14 @@ public class SocketOptions
 }
 ```
 
-# SocketFactory
+## SocketFactory
 If you like to tweak socket options, you inject your custom implementation of `ISocketFactory` on the client:
 
 ```csharp
 client.SocketFactory = new MyMonoOptimizedSocketFactory();
 ```
 
-# Logging
+## Logging
 Some information is passed to a logger, e.g. Errors while trying to connect to a host. By default there's a `NullLogger` hooked in. To add a logger of choice, you would implement `ILogger` and assign a new resolver to `LoggerManager.Resolve`.
 
 ```csharp
@@ -212,14 +201,14 @@ LoggerManager.Resolve = loggerForType => new MyLogger();
 
 The `loggerForType` being passed could be used for passing to NLog to get Logger per class etc.
 
-# Client.Events
+## Client.Events
 The events aren't normal events, the events are distributed via `client.Events` which is an `IObservable<IClientEvent>`. The events are:
 
 * ClientConnected
 * ClientDisconnected
 * ClientConsumerFailed
 
-## ClientConnected
+### ClientConnected
 Signals that the client is connected and ready for use. You can react on this to subscribe to `subjects`:
 
 ```csharp
@@ -234,7 +223,7 @@ client.Events.OfType<ClientConnected>().Subscribe(async ev =>
 });
 ```
 
-## ClientDisconnected
+### ClientDisconnected
 You can use the `ClientDisconnected.Reason` to see if you manually should reconnect the client:
 
 ```csharp
@@ -247,16 +236,16 @@ client.Events.OfType<ClientDisconnected>().Subscribe(ev =>
 });
 ```
 
-## ClientConsumerFailed
+### ClientConsumerFailed
 This would be dispatched from the client, if the `Consumer` (internal part that continuously reads from server and dispatches messages) gets an `ErrOp` or if there's an `Exception`. E.g. if there's an unhandled exception from one of your subscribers.
 
-# Connection behaviour
+## Connection behaviour
 When creating the `ConnectionInfo` you can specify one or more `hosts`. It will try to get a connection to one of the servers. This is picked randomly and if no connection can be established to any of the hosts, an `NatsException` will be thrown.
 
-# Reads and Writes
+## Reads and Writes
 The client uses one `Socket` but two `NetworkStreams`. One stream for writes and one for reads. The client only locks on writes.
 
-# Synchronous and Asynchronous
+## Synchronous and Asynchronous
 The Client has both synchronous and asynchronous methods. They are pure versions and **NOT sync over async**. All async versions uses `ConfigureAwait(false)`.
 
 ```csharp
@@ -278,7 +267,7 @@ void UnSub(string subscriptionId, int? maxMessages = null);
 Task UnSubAsync(string subscriptionId, int? maxMessages = null);
 ```
 
-# Consuming
+## Consuming
 The Consumer is the part that consumes the readstream. It tries to parse the incoming data to `IOp` implementations: `ErrOp`, `InfoOp`, `MsgOp`, `PingOp`, `PongOp`; which you consume via `client.OpStream.Subscribe(...)` or for `MsgOp`ONLY, use the `client.MsgOpStream.Subscribe(...)`. The Sample client is using [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) and with this in place, you can do stuff like:
 
 ```csharp
@@ -318,13 +307,13 @@ client.MsgOpStream.Subscribe(msg =>
 });
 ```
 
-## OpStream vs MsgOpStream
+### OpStream vs MsgOpStream
 Why two, you confuse me? Well, in 99% of the cases you probably just care about `MsgOp`. Then instead of bothering about filtering etc. you just use the `MsgOpStream`. More efficient and simpler to use.
 
-## Stateless
+### Stateless
 There's no buffering or anything going on with incoming `IOp` messages. So if you subscribe to a NATS subject using `client.Sub(...)`, but have no in-process subscription against `client.IncomingOps`, then those messages will just end up in getting discarded.
 
-## InProcess Subscribtions vs NATS Subscriptions
+### InProcess Subscribtions vs NATS Subscriptions
 The above is `in process subscribers` and you will not get any `IOp` dispatched to your handlers, unless you have told the client to subscribe to a NATS subject.
 
 ```csharp
@@ -333,14 +322,14 @@ client.Sub("subject", "subId");
 await client.SubAsync("subject", "subId");
 ```
 
-## Terminate an InProcess Subscription
+### Terminate an InProcess Subscription
 The `client.IncomingOps.Subscribe(...)` returns an `IDisposable`. If you dispose that, your subscription to the observable is removed.
 
 This will happen automatically if your subscription is causing an unhandled exception.
 
 **PLEASE NOTE!** The NATS subscription is still there. Use `client.UnSub(...)` or `client.UnSubAsync(...)` to let the server know that your client should not receive messages for a certain subject anymore.
 
-## Consumer pings and stuff
+### Consumer pings and stuff
 The Consumer looks at `client.Stats.LastOpReceivedAt` to see if it has taken to long time since it heard from the server.
 
 **NOTE** this only kicks in as long as the client thinks the `Socket` is connected. If there's a known hard disconnect it will cleanly just get disconnected.
@@ -348,25 +337,3 @@ The Consumer looks at `client.Stats.LastOpReceivedAt` to see if it has taken to 
 If `ConsumerPingAfterMsSilenceFromServer` (20000ms) has passed, it will start to `PING` the server.
 
 If `ConsumerMaxMsSilenceFromServer` (60000ms) has passed, it will cause an exception and you will get notified via a `ClientConsumerFailed` event dispatched via `client.Events`. The Client will also be disconnected, and you will get the `ClientDisconnected` event, which you can use to reconnect.
-
-# Timings
-The code for this is included in the Samples in this repo.
-
-The measurements are reported `Sender` vs `Consumer`, but these are running in parallel.
-
-One sender console publishes 100000 messages (one per call), 10 times. Different payloads are used. It reports how long time it took to dispatch all 100000 messages.
-
-One consumer console consumes these messages, and reports how long time it spent consuming 100000 messages.
-
-## Environment
-Everything is running on a physical Windosw10 64bit, 32GB RAM i7-4790K quad core computer.
-
-The Sender console and Consumer console is running as separate processes on this machine.
-
-The NATS server is running on the same machine, in a Docker container, on a Ubuntu 14.04.4 LTS, with 8GB RAM, 2 virtual cores, via Hyper-V.
-
-### Publisher timings
-Coming
-
-### Consumer timings
-Coming
