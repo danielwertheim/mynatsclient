@@ -11,6 +11,7 @@ Task("Default")
     .IsDependentOn("AssemblyVersion")
     .IsDependentOn("Build")
     .IsDependentOn("UnitTests")
+    .IsDependentOn("IntegrationTests")
     .IsDependentOn("Copy")
     .IsDependentOn("NuGet-Pack"); //assinfo, nuget-pack
   
