@@ -39,7 +39,7 @@ namespace MyNatsClient
         private NatsServerInfo _serverInfo;
         private bool _isDisposed;
 
-        private bool ShouldFlush => _connectionInfo.PubFlushMode != PubFlushMode.Manual;
+        private bool ShouldAutoFlush => _connectionInfo.PubFlushMode != PubFlushMode.Manual;
 
         public string Id { get; }
         public IObservable<IClientEvent> Events => _eventMediator;
@@ -432,7 +432,7 @@ namespace MyNatsClient
             WithWriteLock(() =>
             {
                 DoSend(PubCmd.Generate(subject, body, replyTo));
-                if (ShouldFlush)
+                if (ShouldAutoFlush)
                     DoFlush();
             });
         }
@@ -444,7 +444,7 @@ namespace MyNatsClient
             WithWriteLock(() =>
             {
                 DoSend(PubCmd.Generate(subject, body, replyTo));
-                if (ShouldFlush)
+                if (ShouldAutoFlush)
                     DoFlush();
             });
         }
@@ -456,7 +456,7 @@ namespace MyNatsClient
             await WithWriteLockAsync(async () =>
             {
                 await DoSendAsync(PubCmd.Generate(subject, body, replyTo));
-                if (ShouldFlush)
+                if (ShouldAutoFlush)
                     await DoFlushAsync().ForAwait();
             }).ForAwait();
         }
@@ -468,7 +468,7 @@ namespace MyNatsClient
             await WithWriteLockAsync(async () =>
             {
                 await DoSendAsync(PubCmd.Generate(subject, body, replyTo));
-                if (ShouldFlush)
+                if (ShouldAutoFlush)
                     await DoFlushAsync().ForAwait();
             }).ForAwait();
         }
@@ -480,7 +480,8 @@ namespace MyNatsClient
             WithWriteLock(() =>
             {
                 p(_publisher);
-                DoFlush();
+                if (ShouldAutoFlush)
+                    DoFlush();
             });
         }
 

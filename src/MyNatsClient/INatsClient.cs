@@ -123,9 +123,9 @@ namespace MyNatsClient
         Task PubAsync(string subject, byte[] body, string replyTo);
 
         /// <summary>
-        /// Gives access to a publisher that will call
-        /// <see cref="Flush"/> when your inject delegate
-        /// is done executing.
+        /// Gives access to a publisher that will be running in
+        /// a sync locked scope until your injected delegate
+        /// is done.
         /// </summary>
         /// <param name="p"></param>
         void PubMany(Action<IPublisher> p);
