@@ -16,6 +16,6 @@
     </metadata>
     <files>
         <file src="MyNatsClient.dll" target="lib\net45" />
-        <file src="MyNatsClient.XML" target="lib\net45" />
+        <file src="MyNatsClient.xml" target="lib\net45" />
     </files>
 </package>
