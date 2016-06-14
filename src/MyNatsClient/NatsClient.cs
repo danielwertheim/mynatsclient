@@ -199,7 +199,7 @@ namespace MyNatsClient
                 return false;
             }
 
-            _serverInfo = NatsServerInfo.Parse(infoOp);
+            _serverInfo = NatsServerInfo.Parse(infoOp.Message);
             if (_serverInfo.AuthRequired && _connectionInfo.Credentials == Credentials.Empty)
                 throw new NatsException($"Error while connecting to {host}. Server requires credentials to be passed. None was specified.");
 

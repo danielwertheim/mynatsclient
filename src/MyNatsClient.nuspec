@@ -13,11 +13,6 @@
         <releaseNotes>https://github.com/danielwertheim/mynatsclient/blob/master/ReleaseNotes.md</releaseNotes>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <tags>NATS NATS.io messaging reactivex reactiveextensions</tags>
-        <dependencies>
-           <group targetFramework="net45">
-             <dependency id="Newtonsoft.Json" version="8.0.3" />
-           </group>
-        </dependencies>
     </metadata>
     <files>
         <file src="MyNatsClient.dll" target="lib\net45" />
