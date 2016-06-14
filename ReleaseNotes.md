@@ -1,6 +1,6 @@
 # Release notes
 
-## v0.2.0 - 2016-06-14
+## v0.2.1 - 2016-06-14
 - Closed [#7](https://github.com/danielwertheim/mynatsclient/issues/9), remove dependency on JSON.Net
 - Closed [#10](https://github.com/danielwertheim/mynatsclient/issues/9), provide MyNatsClient.Rx as a convenience NuGet for bringing in MyNatsClient and Rx.
 

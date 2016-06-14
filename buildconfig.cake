@@ -21,7 +21,7 @@ public class BuildConfig
             throw new ArgumentNullException("context");
 
         var target = context.Argument("target", "Default");
-        var version = "0.2.0";
+        var version = "0.2.1";
 
         return new BuildConfig
         {
