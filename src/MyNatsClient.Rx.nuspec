@@ -16,7 +16,7 @@
         <dependencies>
            <group targetFramework="net45">
              <dependency id="MyNatsClient" version="[$version$]" />
-             <dependency id="Rx-Main" version="2.2.25" />
+             <dependency id="Rx-Main" version="2.2.5" />
            </group>
         </dependencies>
     </metadata>
