@@ -3,7 +3,6 @@
 #load "./buildconfig.cake"
 
 var config = BuildConfig.Create(Context, BuildSystem);
-Func<string, string> projectOutDir = project => string.Format("{0}{1}.{2}", config.OutDir, project, config.SemVer);
 
 Task("Default")
     .IsDependentOn("InitOutDir")
@@ -65,7 +64,7 @@ Task("IntegrationTests").Does(() =>
 Task("Copy").Does(() =>
 {
     foreach(var project in config.Projects){
-        var trg = projectOutDir(project);
+        var trg = string.Format("{0}{1}.{2}", config.OutDir, project, config.SemVer);
         CreateDirectory(trg);
         CopyFiles(
             string.Format("{0}{1}/bin/{2}/{1}.*", config.SrcDir, project, config.BuildProfile),
@@ -74,10 +73,10 @@ Task("Copy").Does(() =>
 });
 
 Task("NuGet-Pack").Does(() => {
-    foreach(var project in config.Projects){
-        NuGetPack(config.SrcDir + project + ".nuspec", new NuGetPackSettings {
+    foreach(var nuspec in GetFiles(config.SrcDir + "*.nuspec")) {
+        NuGetPack(nuspec, new NuGetPackSettings {
             Version = config.SemVer,
-            BasePath = projectOutDir(project),
+            BasePath = config.OutDir,
             OutputDirectory = config.OutDir
         });
     }

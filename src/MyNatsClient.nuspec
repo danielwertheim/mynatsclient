@@ -15,7 +15,7 @@
         <tags>NATS NATS.io messaging reactivex reactiveextensions</tags>
     </metadata>
     <files>
-        <file src="MyNatsClient.dll" target="lib\net45" />
-        <file src="MyNatsClient.xml" target="lib\net45" />
+        <file src="MyNatsClient.$version$\MyNatsClient.dll" target="lib\net45" />
+        <file src="MyNatsClient.$version$\MyNatsClient.xml" target="lib\net45" />
     </files>
 </package>
