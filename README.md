@@ -18,6 +18,19 @@ Found any Issues? Cool, then someone is using it. Just report them under Issues.
 
 Have any questions? Awesome. Ping me on Twitter @danielwertheim.
 
+## Install NuGet Package
+If you just want the client and not the Reactive Extensions packages, use:
+
+```
+install-package MyNatsClient
+```
+
+For convenience, if you want a consumer that makes use of Reactive Extensions, use:
+
+```
+install-package MyNatsClient.Rx
+```
+
 ## Consumer sample
 Just some simple code showing usage.
 
