@@ -11,8 +11,7 @@ Task("Default")
     .IsDependentOn("Build")
     .IsDependentOn("UnitTests")
     .IsDependentOn("IntegrationTests")
-    .IsDependentOn("Copy")
-    .IsDependentOn("NuGet-Pack"); //assinfo, nuget-pack
+    .IsDependentOn("NuGet-Pack");
   
 Task("InitOutDir")
     .Does(() => {
@@ -23,8 +22,7 @@ Task("InitOutDir")
 Task("NuGet-Restore")
     .Does(() => NuGetRestore(config.SolutionPath));
 
-Task("AssemblyVersion").Does(() =>
-{
+Task("AssemblyVersion").Does(() => {
     var file = config.SrcDir + "GlobalAssemblyVersion.cs";
     var info = ParseAssemblyInfo(file);
     CreateAssemblyInfo(file, new AssemblyInfoSettings {
@@ -33,8 +31,7 @@ Task("AssemblyVersion").Does(() =>
     });
 });
     
-Task("Build").Does(() =>
-{
+Task("Build").Does(() => {
     MSBuild(config.SolutionPath, new MSBuildSettings {
         Verbosity = Verbosity.Minimal,
         ToolVersion = MSBuildToolVersion.VS2015,
@@ -43,8 +40,7 @@ Task("Build").Does(() =>
     }.WithTarget("Rebuild"));
 });
 
-Task("UnitTests").Does(() =>
-{
+Task("UnitTests").Does(() => {
     NUnit3(config.SrcDir + "**/*.UnitTests/bin/" + config.BuildProfile + "/*.UnitTests.dll", new NUnit3Settings {
         NoResults = true,
         NoHeader = true,
@@ -52,32 +48,24 @@ Task("UnitTests").Does(() =>
     });
 });
 
-Task("IntegrationTests").Does(() =>
-{
+Task("IntegrationTests").Does(() => {
     NUnit3(config.SrcDir + "**/*.IntegrationTests/bin/" + config.BuildProfile + "/*.IntegrationTests.dll", new NUnit3Settings {
         NoResults = true,
         NoHeader = true,
         TeamCity = config.IsTeamCityBuild
     });
 });
-  
-Task("Copy").Does(() =>
-{
-    foreach(var project in config.Projects){
-        var trg = string.Format("{0}{1}.{2}", config.OutDir, project, config.SemVer);
-        CreateDirectory(trg);
-        CopyFiles(
-            string.Format("{0}{1}/bin/{2}/{1}.*", config.SrcDir, project, config.BuildProfile),
-            trg);
-    }    
-});
 
 Task("NuGet-Pack").Does(() => {
     foreach(var nuspec in GetFiles(config.SrcDir + "*.nuspec")) {
         NuGetPack(nuspec, new NuGetPackSettings {
             Version = config.SemVer,
-            BasePath = config.OutDir,
-            OutputDirectory = config.OutDir
+            BasePath = config.SrcDir,
+            OutputDirectory = config.OutDir,
+            Properties = new Dictionary<string, string>
+            {
+                {"Configuration", config.BuildProfile}
+            }
         });
     }
 });
