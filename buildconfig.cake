@@ -28,7 +28,7 @@ public class BuildConfig
         return new BuildConfig
         {
             Target = target,
-            SemVer = Version + branchIsMaster ? "-b" + buildRevision : string.Empty,
+            SemVer = Version + (branchIsMaster ? "-b" + buildRevision : string.Empty),
             BuildVersion = Version + "." + buildRevision,
             BuildProfile = context.Argument("configuration", "Release"),
             IsTeamCityBuild = buildSystem.TeamCity.IsRunningOnTeamCity
