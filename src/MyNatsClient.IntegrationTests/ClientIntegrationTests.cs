@@ -14,7 +14,7 @@ namespace MyNatsClient.IntegrationTests
 
         protected ClientIntegrationTests()
         {
-            ConnectionInfo = new ConnectionInfo(new Host("ubuntu01", 4223))
+            ConnectionInfo = new ConnectionInfo(new Host("192.168.1.176", 4223))
             {
                 AutoRespondToPing = false,
                 Verbose = false,
