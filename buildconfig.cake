@@ -23,14 +23,14 @@ public class BuildConfig
 
         var target = context.Argument("target", "Default");
         var branchIsMaster = context.Argument("branch", "master").ToLower() == "master";
-        var buildRevision = context.Argument("buildrevision", "1");
+        var buildRevision = context.Argument("buildrevision", "0");
 
         return new BuildConfig
         {
             Target = target,
-            Version = version,
-            SemVer = version + branchIsMaster ? "-b" + buildRevision : string.Empty,
-            BuildVersion = version + "." + context.Argument("buildrevision", "0"),
+            Version = Version,
+            SemVer = Version + branchIsMaster ? "-b" + buildRevision : string.Empty,
+            BuildVersion = Version + "." + buildRevision,
             BuildProfile = context.Argument("configuration", "Release"),
             IsTeamCityBuild = buildSystem.TeamCity.IsRunningOnTeamCity
         };
