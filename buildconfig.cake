@@ -28,7 +28,6 @@ public class BuildConfig
         return new BuildConfig
         {
             Target = target,
-            Version = Version,
             SemVer = Version + branchIsMaster ? "-b" + buildRevision : string.Empty,
             BuildVersion = Version + "." + buildRevision,
             BuildProfile = context.Argument("configuration", "Release"),
