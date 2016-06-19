@@ -45,6 +45,9 @@
     <Compile Include="..\GlobalAssemblyVersion.cs">
       <Link>Properties\GlobalAssemblyVersion.cs</Link>
     </Compile>
+    <Compile Include="IPayload.cs" />
+    <Compile Include="Internals\Payload.cs" />
+    <Compile Include="PayloadBuilder.cs" />
     <Compile Include="PubFlushMode.cs" />
     <Compile Include="IPublisher.cs" />
     <Compile Include="Locker.cs" />

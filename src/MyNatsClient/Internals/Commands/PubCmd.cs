@@ -27,6 +27,22 @@ namespace MyNatsClient.Internals.Commands
             return buff;
         }
 
+        internal static IPayload Generate(string subject, IPayload body, string replyTo = null)
+        {
+            var bodySizeString = body.Size.ToString();
+            var preBodyLen = 3 + 1 + subject.Length + (replyTo?.Length + 1 ?? 0) + 1 + bodySizeString.Length;
+            var preBody = new byte[preBodyLen];
+            FillPreBody(preBody, subject, bodySizeString, replyTo);
+
+            var pubCmd = new PayloadBuilder();
+            pubCmd.Append(preBody);
+            pubCmd.Append(NatsEncoder.CrlfBytes);
+            pubCmd.Append(body);
+            pubCmd.Append(NatsEncoder.CrlfBytes);
+
+            return pubCmd.ToPayload();
+        }
+
         private static void FillPreBody(byte[] buff, string subject, string bodyLenString, string replyTo = null)
         {
             buff[0] = Cmd[0];

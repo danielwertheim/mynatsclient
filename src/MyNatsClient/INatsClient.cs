@@ -105,6 +105,15 @@ namespace MyNatsClient
         void Pub(string subject, byte[] body, string replyTo);
 
         /// <summary>
+        /// Async Publish of a messages using <see cref="IPayload"/>.
+        /// This is intended for use when dispatching larger messages.
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="body"></param>
+        /// <param name="replyTo"></param>
+        void Pub(string subject, IPayload body, string replyTo);
+
+        /// <summary>
         /// Async Publish of a message.
         /// </summary>
         /// <param name="subject"></param>
@@ -121,6 +130,16 @@ namespace MyNatsClient
         /// <param name="replyTo"></param>
         /// <returns></returns>
         Task PubAsync(string subject, byte[] body, string replyTo);
+
+        /// <summary>
+        /// Async Publish of a messages using <see cref="IPayload"/>.
+        /// This is intended for use when dispatching larger messages.
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="body"></param>
+        /// <param name="replyTo"></param>
+        /// <returns></returns>
+        Task PubAsync(string subject, IPayload body, string replyTo = null);
 
         /// <summary>
         /// Gives access to a publisher that will be running in

@@ -83,6 +83,7 @@
     <Compile Include="NatsOpMediatorTests.cs" />
     <Compile Include="NatsOpStreamReaderTests.cs" />
     <Compile Include="ObservableOfTests.cs" />
+    <Compile Include="PayloadBuilderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NatsServerInfoParseTests.cs" />
     <Compile Include="UnitTests.cs" />

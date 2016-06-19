@@ -152,10 +152,13 @@ namespace Sender
             Console.WriteLine("Hit key to start send.");
             Console.ReadKey();
 
-            var sw = new Stopwatch();
-            var body = new string('a', SampleSettings.TimedSample.BodyCharSize);
-            var timings = new List<double>(SampleSettings.TimedSample.NumOfBatches);
+            //var body = new string('a', SampleSettings.TimedSample.BodyCharSize);
+            var writer = new PayloadBuilder();
+            writer.Append(GetBytesToAdd(SampleSettings.TimedSample.BodyCharSize));
+            var body = writer.ToPayload();
 
+            var timings = new List<double>(SampleSettings.TimedSample.NumOfBatches);
+            var sw = new Stopwatch();
             for (var n = 0; n < SampleSettings.TimedSample.NumOfBatches; n++)
             {
                 sw.Restart();
@@ -200,6 +203,21 @@ namespace Sender
             }
             Console.WriteLine();
             TimedInfo.Report("sender", timings, SampleSettings.TimedSample.BatchSize, SampleSettings.TimedSample.BodyCharSize);
+        }
+
+        private static byte[] GetBytesToAdd(int numOfBytesToAdd)
+        {
+            return new string('a', numOfBytesToAdd).Select(c => (byte)c).ToArray();
+            //const byte someAsciiByte = (byte)'a';
+            //var r = new byte[numOfBytesToAdd];
+            //byte c = 0;
+            //for (var i = 0; i < numOfBytesToAdd; i++)
+            //{
+            //    r[i] = (byte)(someAsciiByte + c);
+            //    c += 1;
+            //    c = c % 10 == 0 ? (byte)0 : c;
+            //}
+            //return r;
         }
     }
 }

@@ -9,9 +9,9 @@ namespace SampleModel
 
         public static class TimedSample
         {
-            public static int NumOfBatches = 10;
+            public static int NumOfBatches = 5;
             public static int BatchSize = 100000;
-            public static int BodyCharSize = 1;
+            public static int BodyCharSize = 1000;
         }
     }
 }
