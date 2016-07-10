@@ -11,7 +11,7 @@ namespace SampleModel
         {
             public static int NumOfBatches = 5;
             public static int BatchSize = 100000;
-            public static int BodyCharSize = 1000;
+            public static int BodyCharSize = 1;
         }
     }
 }

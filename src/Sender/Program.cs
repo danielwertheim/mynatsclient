@@ -206,18 +206,6 @@ namespace Sender
         }
 
         private static byte[] GetBytesToAdd(int numOfBytesToAdd)
-        {
-            return new string('a', numOfBytesToAdd).Select(c => (byte)c).ToArray();
-            //const byte someAsciiByte = (byte)'a';
-            //var r = new byte[numOfBytesToAdd];
-            //byte c = 0;
-            //for (var i = 0; i < numOfBytesToAdd; i++)
-            //{
-            //    r[i] = (byte)(someAsciiByte + c);
-            //    c += 1;
-            //    c = c % 10 == 0 ? (byte)0 : c;
-            //}
-            //return r;
-        }
+            => new string('a', numOfBytesToAdd).Select(c => (byte)c).ToArray();
     }
 }
