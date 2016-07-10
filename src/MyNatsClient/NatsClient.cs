@@ -54,7 +54,7 @@ namespace MyNatsClient
             _sync = new object();
             _writeStreamSync = new Locker();
             _connectionInfo = connectionInfo.Clone();
-            _publisher = new Publisher(DoSend, DoSendAsync);
+            _publisher = new Publisher(DoSend, DoSendAsync, DoSend, DoSendAsync);
             _eventMediator = new ObservableOf<IClientEvent>();
             _opMediator = new NatsOpMediator();
 
@@ -449,7 +449,31 @@ namespace MyNatsClient
             });
         }
 
+        public void Pub(string subject, IPayload body, string replyTo = null)
+        {
+            ThrowIfDisposed();
+
+            WithWriteLock(() =>
+            {
+                DoSend(PubCmd.Generate(subject, body, replyTo));
+                if (ShouldAutoFlush)
+                    DoFlush();
+            });
+        }
+
         public async Task PubAsync(string subject, byte[] body, string replyTo = null)
+        {
+            ThrowIfDisposed();
+
+            await WithWriteLockAsync(async () =>
+            {
+                await DoSendAsync(PubCmd.Generate(subject, body, replyTo));
+                if (ShouldAutoFlush)
+                    await DoFlushAsync().ForAwait();
+            }).ForAwait();
+        }
+
+        public async Task PubAsync(string subject, IPayload body, string replyTo = null)
         {
             ThrowIfDisposed();
 
@@ -567,6 +591,17 @@ namespace MyNatsClient
             _writeStream.Write(data, 0, data.Length);
         }
 
+        private void DoSend(IPayload data)
+        {
+            ThrowIfNotConnected();
+
+            if (data.Size > _serverInfo.MaxPayload)
+                throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, data.Size);
+
+            for (var i = 0; i < data.BlockCount; i++)
+                _writeStream.Write(data[i], 0, data[i].Length);
+        }
+
         private async Task DoSendAsync(byte[] data)
         {
             ThrowIfNotConnected();
@@ -575,6 +610,17 @@ namespace MyNatsClient
                 throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, data.Length);
 
             await _writeStream.WriteAsync(data, 0, data.Length, _cancellation.Token).ForAwait();
+        }
+
+        private async Task DoSendAsync(IPayload data)
+        {
+            ThrowIfNotConnected();
+
+            if (data.Size > _serverInfo.MaxPayload)
+                throw NatsException.ExceededMaxPayload(_serverInfo.MaxPayload, data.Size);
+
+            for (var i = 0; i < data.BlockCount; i++)
+                await _writeStream.WriteAsync(data[i], 0, data.Size, _cancellation.Token).ForAwait();
         }
 
         private void WithWriteLock(Action a)
