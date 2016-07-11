@@ -1,0 +1,36 @@
+{
+	"version": "1.0.0-*",
+
+	"testRunner": "nunit",
+
+	"dependencies": {
+		"NUnit": "3.4.1",
+		"dotnet-test-nunit": "3.4.0-beta-1",
+		"FluentAssertions": "4.9.1",
+		"moq.netcore": "4.4.0-beta8",
+
+		"System.Reactive.Core": "3.0.0",
+		"System.Reactive.Linq": "3.0.0",
+		"System.Reactive.PlatformServices": "3.0.0",
+
+		"MyNatsClient.DotNetCore": { "target": "project" }
+	},
+
+	"frameworks": {
+		"netcoreapp1.0": {
+            "imports": [
+                "netcoreapp1.0",
+                "portable-net45+win8",
+				"dotnet5.6"
+            ],
+			"dependencies": {
+				"Microsoft.NETCore.App": {
+					"version": "1.0.0",
+					"type": "platform"
+				},
+				"Microsoft.NETCore.Portable.Compatibility": "1.0.1",
+				"System.Diagnostics.TraceSource": "4.0.0"
+			}
+		}
+	}
+}
