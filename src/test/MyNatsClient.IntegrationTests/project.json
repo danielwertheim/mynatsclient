@@ -1,0 +1,43 @@
+﻿{
+  "version": "1.0.0-*",
+
+  "dependencies": {
+    "MyNatsClient": "0.3.0-*",
+    "NETStandard.Library": "1.6.0",
+    "NUnit": "3.4.1",
+    "dotnet-test-nunit": "3.4.0-beta-1",
+    "FluentAssertions": "4.11.0",
+    "Moq": "4.6.25-alpha"
+  },
+
+  "testRunner": "nunit",
+
+  "frameworks": {
+    "netcoreapp1.0": {
+      "imports": [
+        "dotnet5.4"
+      ],
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "version": "1.0.0-*",
+          "type": "platform"
+        },
+        "Microsoft.CSharp": "4.0.1",
+        "System.Diagnostics.TraceSource": "4.0.0",
+        "System.Collections.Concurrent": "4.0.12",
+        "System.Collections": "4.0.11",
+        "System.Globalization": "4.0.11",
+        "System.IO": "4.1.0",
+        "System.Linq": "4.1.0",
+        "System.Net.Sockets": "4.1.0",
+        "System.Reactive": "3.0.0",
+        "System.Runtime": "4.1.0",
+        "System.Runtime.Extensions": "4.1.0",
+        "System.Runtime.InteropServices": "4.1.0",
+        "System.Threading": "4.0.11",
+        "System.Threading.Tasks": "4.0.11",
+        "System.Threading.Thread": "4.0.0"
+      }
+    }
+  }
+}
