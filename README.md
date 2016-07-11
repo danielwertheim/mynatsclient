@@ -6,7 +6,7 @@ Because I wanted one that leaves .Net4.0 behind and therefore offers `async` con
 There are some posts on this on my blog. The most interesting one would be: [MyNatsClient - It flushes, but so can you](http://danielwertheim.se/mynatsclient-it-flushes-but-so-can-you/)
 
 ## .NET Core
-MyNatsClient can, in its current shape, be compiled and distributed for .NET Core. MyNatsClient in itself does not have any dependencies on [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET). But your client will (if you want to use it). And to get that to work with a core project, you have to explicit import it as a dependency on a portable profile that RX currently supports.
+Yep!
 
 The first releases will how-ever be distributed over NuGet for .NET 4.5 and soon .NET Core.
 
