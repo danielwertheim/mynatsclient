@@ -30,6 +30,7 @@ tools/
 
 # nuget
 [Pp]ackages/
+project.lock.json
 
 # resharper
 _ReSharper.*
