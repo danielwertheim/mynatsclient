@@ -1,8 +1,8 @@
 ﻿{
-  "version": "1.0.0-*",
+  "version": "0.0.0-*",
 
   "dependencies": {
-    "MyNatsClient": "0.3.0-*",
+    "MyNatsClient": "0.0.0-*",
     "NETStandard.Library": "1.6.0",
     "NUnit": "3.4.1",
     "dotnet-test-nunit": "3.4.0-beta-1",
@@ -38,6 +38,11 @@
         "System.Threading.Tasks": "4.0.11",
         "System.Threading.Thread": "4.0.0"
       }
+    }
+  },
+  "buildOptions": {
+    "compile": {
+      "includeFiles": [ "../../GlobalAssemblyInfo.cs" ]
     }
   }
 }

@@ -1,5 +1,5 @@
 ﻿{
-  "version": "0.3.0-*",
+  "version": "0.0.0-*",
   "title": "MyNatsClient - async, reactive and simple NATS.io client",
   "description": "Provides a simple, effective sync and async library for interacting with NATS.io using DotNet. Uses IObservable so it is ReactiveX friendly.",
   "authors": [ "danielwertheim" ],
@@ -47,8 +47,13 @@
   "configurations": {
     "Release": {
       "buildOptions": {
-        "xmlDoc": true 
+        "xmlDoc": true
       }
-    } 
+    }
+  },
+  "buildOptions": {
+    "compile": {
+      "includeFiles": [ "../../GlobalAssemblyInfo.cs" ]
+    }
   }
 }
