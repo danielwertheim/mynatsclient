@@ -94,7 +94,7 @@ namespace MyNatsClient
         /// <param name="subject"></param>
         /// <param name="body"></param>
         /// <param name="replyTo"></param>
-        void Pub(string subject, string body, string replyTo);
+        void Pub(string subject, string body, string replyTo = null);
 
         /// <summary>
         /// Sync Publish of a message.
@@ -102,7 +102,7 @@ namespace MyNatsClient
         /// <param name="subject"></param>
         /// <param name="body"></param>
         /// <param name="replyTo"></param>
-        void Pub(string subject, byte[] body, string replyTo);
+        void Pub(string subject, byte[] body, string replyTo = null);
 
         /// <summary>
         /// Async Publish of a messages using <see cref="IPayload"/>.
@@ -111,7 +111,7 @@ namespace MyNatsClient
         /// <param name="subject"></param>
         /// <param name="body"></param>
         /// <param name="replyTo"></param>
-        void Pub(string subject, IPayload body, string replyTo);
+        void Pub(string subject, IPayload body, string replyTo = null);
 
         /// <summary>
         /// Async Publish of a message.
@@ -120,7 +120,7 @@ namespace MyNatsClient
         /// <param name="body"></param>
         /// <param name="replyTo"></param>
         /// <returns></returns>
-        Task PubAsync(string subject, string body, string replyTo);
+        Task PubAsync(string subject, string body, string replyTo = null);
 
         /// <summary>
         /// Async Publish of a message.
@@ -129,7 +129,7 @@ namespace MyNatsClient
         /// <param name="body"></param>
         /// <param name="replyTo"></param>
         /// <returns></returns>
-        Task PubAsync(string subject, byte[] body, string replyTo);
+        Task PubAsync(string subject, byte[] body, string replyTo = null);
 
         /// <summary>
         /// Async Publish of a messages using <see cref="IPayload"/>.
