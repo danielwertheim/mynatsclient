@@ -22,6 +22,7 @@
         "summary": "Used for working with NATS.io message broker",
         "tags": [ "NATS", "NATS.io", "messaging", "rx", "reactivex", "reactiveextensions" ],
         "owners": [ "danielwertheim" ],
+        "projectUrl": "https://github.com/danielwertheim/mynatsclient",
         "licenseUrl": "http://www.opensource.org/licenses/MIT",
         "requireLicenseAcceptance": false,
         "repository": {
