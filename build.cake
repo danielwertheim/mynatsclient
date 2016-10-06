@@ -1,71 +1,83 @@
-#tool "nuget:?package=NUnit.ConsoleRunner"
-
 #load "./buildconfig.cake"
 
 var config = BuildConfig.Create(Context, BuildSystem);
 
+Information("Branch: " + config.Branch);
+Information("BuildProfile: " + config.BuildProfile);
+Information("SemVer: " + config.SemVer);
+
 Task("Default")
     .IsDependentOn("InitOutDir")
-    .IsDependentOn("NuGet-Restore")
-    .IsDependentOn("AssemblyVersion")
+    .IsDependentOn("Restore")
+    .IsDependentOn("Bump")
     .IsDependentOn("Build")
-    .IsDependentOn("UnitTests")
-    .IsDependentOn("IntegrationTests")
-    .IsDependentOn("NuGet-Pack");
-  
+    .IsDependentOn("UnitTest");
+
+Task("CI")
+    .IsDependentOn("Default")
+    .IsDependentOn("Pack");
+
 Task("InitOutDir")
     .Does(() => {
         EnsureDirectoryExists(config.OutDir);
         CleanDirectory(config.OutDir);
     });
 
-Task("NuGet-Restore")
-    .Does(() => NuGetRestore(config.SolutionPath));
+Task("Bump")
+    .Does(() => {
+        var files = GetFiles(config.SrcDir + "projects/**/project.json");
+        foreach(var file in files)
+        {
+            Information("Processing: {0}", file);
 
-Task("AssemblyVersion").Does(() => {
-    var file = config.SrcDir + "GlobalAssemblyVersion.cs";
-    var info = ParseAssemblyInfo(file);
-    CreateAssemblyInfo(file, new AssemblyInfoSettings {
-        Version = config.BuildVersion,
-        InformationalVersion = config.SemVer
-    });
-});
-    
-Task("Build").Does(() => {
-    MSBuild(config.SolutionPath, new MSBuildSettings {
-        Verbosity = Verbosity.Minimal,
-        ToolVersion = MSBuildToolVersion.VS2015,
-        Configuration = config.BuildProfile,
-        PlatformTarget = PlatformTarget.MSIL
-    }.WithTarget("Rebuild"));
-});
-
-Task("UnitTests").Does(() => {
-    NUnit3(config.SrcDir + "**/*.UnitTests/bin/" + config.BuildProfile + "/*.UnitTests.dll", new NUnit3Settings {
-        NoResults = true,
-        NoHeader = true,
-        TeamCity = config.IsTeamCityBuild
-    });
-});
-
-Task("IntegrationTests").Does(() => {
-    NUnit3(config.SrcDir + "**/*.IntegrationTests/bin/" + config.BuildProfile + "/*.IntegrationTests.dll", new NUnit3Settings {
-        NoResults = true,
-        NoHeader = true,
-        TeamCity = config.IsTeamCityBuild
-    });
-});
-
-Task("NuGet-Pack").Does(() => {
-    foreach(var nuspec in GetFiles(config.SrcDir + "*.nuspec")) {
-        NuGetPack(nuspec, new NuGetPackSettings {
-            Version = config.SemVer,
-            BasePath = config.SrcDir,
-            OutputDirectory = config.OutDir,
-            Properties = new Dictionary<string, string>
+            var path = file.ToString();
+            var trg = new StringBuilder();
+            var regExVersion = new System.Text.RegularExpressions.Regex("\"version\":(\\s)?\"0.0.0-\\*\",");
+            using (var src = System.IO.File.OpenRead(path))
             {
-                {"Configuration", config.BuildProfile}
+                using (var reader = new StreamReader(src))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        if(line == null)
+                            continue;
+
+                        line = regExVersion.Replace(line, string.Format("\"version\": \"{0}\",", config.SemVer));
+
+                        trg.AppendLine(line);
+                    }
+                }
             }
+
+            System.IO.File.WriteAllText(path, trg.ToString());
+        }
+    });
+    
+Task("Restore")
+    .Does(() => DotNetCoreRestore(config.SrcDir));
+
+Task("Build")
+    .Does(() => DotNetCoreBuild(
+        config.SrcDir + "**/project.json",
+        new DotNetCoreBuildSettings {
+            Configuration = config.BuildProfile
+        }));
+
+Task("UnitTest").Does(() => {
+    var settings = new DotNetCoreTestSettings {
+        Configuration = config.BuildProfile
+    };
+    foreach(var testProj in GetFiles(config.SrcDir + "tests/**/*.UnitTests/project.json")) {
+        DotNetCoreTest(testProj.FullPath, settings);
+    }
+});
+
+Task("Pack").Does(() => {
+    foreach(var proj in GetFiles(config.SrcDir + "projects/**/project.json")) {
+        DotNetCorePack(proj.FullPath, new DotNetCorePackSettings {
+            Configuration = config.BuildProfile,
+            OutputDirectory = config.OutDir
         });
     }
 });
