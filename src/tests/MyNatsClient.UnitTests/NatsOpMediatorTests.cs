@@ -3,18 +3,18 @@ using System.Reactive;
 using FluentAssertions;
 using Moq;
 using MyNatsClient.Ops;
-using NUnit.Framework;
+using Xunit;
 
 namespace MyNatsClient.UnitTests
 {
     public class NatsOpMediatorTests : UnitTestsOf<NatsOpMediator>
     {
-        protected override void OnBeforeEachTest()
+        public NatsOpMediatorTests()
         {
             UnitUnderTest = new NatsOpMediator();
         }
 
-        [Test]
+        [Fact]
         public void Dispatching_Should_update_date_time_for_last_received_op()
         {
             var op = Mock.Of<IOp>();
@@ -25,7 +25,7 @@ namespace MyNatsClient.UnitTests
             UnitUnderTest.LastOpReceivedAt.Should().BeCloseTo(DateTime.UtcNow);
         }
 
-        [Test]
+        [Fact]
         public void Dispatching_Should_update_op_count()
         {
             var op = Mock.Of<IOp>();
@@ -36,7 +36,7 @@ namespace MyNatsClient.UnitTests
             UnitUnderTest.OpCount.Should().Be(2);
         }
 
-        [Test]
+        [Fact]
         public void Dispatching_MsgOp_Should_dispatch_to_both_OpStream_and_MsgOpStream()
         {
             var msgOp = new MsgOp("TestSubject", "0a3282e769e34677809db5d756dfd768", new byte[0]);
@@ -51,7 +51,7 @@ namespace MyNatsClient.UnitTests
             msgOpStreamRec.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void Dispatching_non_MsgOp_Should_not_dispatch_to_MsgOpStream()
         {
             var opStreamRec = false;

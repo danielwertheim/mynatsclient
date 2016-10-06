@@ -1,22 +1,22 @@
 ﻿using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace MyNatsClient.UnitTests
 {
     public class CredentialsTests : UnitTestsOf<Credentials>
     {
-        protected override void OnBeforeEachTest()
+        public CredentialsTests()
         {
             UnitUnderTest = new Credentials("theuser", "thepass");
         }
 
-        [Test]
+        [Fact]
         public void Empty_Should_return_same_instance()
         {
             Credentials.Empty.Should().BeSameAs(Credentials.Empty);
         }
 
-        [Test]
+        [Fact]
         public void Should_have_equals_operator()
         {
             (UnitUnderTest == new Credentials(UnitUnderTest.User, UnitUnderTest.Pass)).Should().BeTrue();
@@ -30,7 +30,7 @@ namespace MyNatsClient.UnitTests
             (new Credentials("THEUSER", "THEPASS") == new Credentials("THEUSER", "thepass")).Should().BeFalse();
         }
 
-        [Test]
+        [Fact]
         public void Should_have_not_equals_operator()
         {
             (UnitUnderTest != new Credentials(UnitUnderTest.User, UnitUnderTest.Pass)).Should().BeFalse();

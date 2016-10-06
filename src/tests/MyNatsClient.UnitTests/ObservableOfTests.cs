@@ -2,18 +2,18 @@
 using System.Threading;
 using FluentAssertions;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace MyNatsClient.UnitTests
 {
     public class ObservableOfTests : UnitTestsOf<ObservableOf<IClientEvent>>
     {
-        protected override void OnBeforeEachTest()
+        public ObservableOfTests()
         {
             UnitUnderTest = new ObservableOf<IClientEvent>();
         }
 
-        [Test]
+        [Fact]
         public void Dispatching_Should_not_fail_When_no_observers_exists()
         {
             Action a = () => UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
@@ -21,7 +21,7 @@ namespace MyNatsClient.UnitTests
             a.ShouldNotThrow();
         }
 
-        [Test]
+        [Fact]
         public void Dispatching_Should_dispatch_to_all_observers()
         {
             var callCount = 0;
@@ -40,7 +40,7 @@ namespace MyNatsClient.UnitTests
             callCount.Should().Be(2);
         }
 
-        [Test]
+        [Fact]
         public void Dispatching_Should_invoke_onError_When_exception_is_thrown_by_observer()
         {
             Exception thrown = new Exception("I FAILED!");
@@ -56,7 +56,7 @@ namespace MyNatsClient.UnitTests
             caught.Should().BeSameAs(thrown);
         }
 
-        [Test]
+        [Fact]
         public void Dispatching_Should_not_dispatch_to_a_failed_observer()
         {
             var fake = new Mock<IObserver<IClientEvent>>();
@@ -70,7 +70,7 @@ namespace MyNatsClient.UnitTests
             fake.Verify(f => f.OnError(It.IsAny<Exception>()), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void Dispatching_Should_dispatch_to_non_failed_observer_When_a_failed_observer_exists()
         {
             var nonFailingObserver = new Mock<IObserver<IClientEvent>>();
@@ -89,7 +89,7 @@ namespace MyNatsClient.UnitTests
             failingObserver.Verify(f => f.OnError(It.IsAny<Exception>()), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void Dispatching_Should_not_dispatch_to_a_disposed_observer()
         {
             var s1CallCount = 0;

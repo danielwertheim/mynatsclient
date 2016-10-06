@@ -3,21 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2836FA09-B2C4-4E84-ACAF-17CDD69A7D80}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7B9B89BC-D376-49E1-B51E-13550066C730}"
 	ProjectSection(SolutionItems) = preProject
 		global.json = global.json
 		GlobalAssemblyInfo.cs = GlobalAssemblyInfo.cs
 	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "MyNatsClient.UnitTests", "test\MyNatsClient.UnitTests\MyNatsClient.UnitTests.xproj", "{3DC7CBD6-E8CC-4F6B-B47C-C8395BA25B3F}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "MyNatsClient.UnitTests", "tests\MyNatsClient.UnitTests\MyNatsClient.UnitTests.xproj", "{3DC7CBD6-E8CC-4F6B-B47C-C8395BA25B3F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{92A220F9-8774-4C22-924F-60502D9E95CD}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{92A220F9-8774-4C22-924F-60502D9E95CD}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "MyNatsClient", "src\MyNatsClient\MyNatsClient.xproj", "{B5DDA3C3-419B-4F63-B27B-3BA4068C293F}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "MyNatsClient", "projects\MyNatsClient\MyNatsClient.xproj", "{B5DDA3C3-419B-4F63-B27B-3BA4068C293F}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "MyNatsClient.IntegrationTests", "test\MyNatsClient.IntegrationTests\MyNatsClient.IntegrationTests.xproj", "{29BBD0CB-655B-45B4-BE2A-1038BBE70E31}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "MyNatsClient.IntegrationTests", "tests\MyNatsClient.IntegrationTests\MyNatsClient.IntegrationTests.xproj", "{29BBD0CB-655B-45B4-BE2A-1038BBE70E31}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,7 +41,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3DC7CBD6-E8CC-4F6B-B47C-C8395BA25B3F} = {92A220F9-8774-4C22-924F-60502D9E95CD}
-		{B5DDA3C3-419B-4F63-B27B-3BA4068C293F} = {2836FA09-B2C4-4E84-ACAF-17CDD69A7D80}
 		{29BBD0CB-655B-45B4-BE2A-1038BBE70E31} = {92A220F9-8774-4C22-924F-60502D9E95CD}
 	EndGlobalSection
 EndGlobal

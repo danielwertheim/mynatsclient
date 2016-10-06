@@ -1,0 +1,49 @@
+﻿{
+    "title": "MyNatsClient - async, reactive and simple NATS.io client",
+    "description": "Provides a simple, effective sync and async library for interacting with NATS.io using DotNet. Uses IObservable so it is ReactiveX friendly.",
+    "authors": [ "danielwertheim" ],
+    "version": "0.0.0-*",
+    "copyright": "danielwertheim",
+    "buildOptions": {
+        "platform": "anycpu",
+        "compile": {
+            "includeFiles": [ "../../GlobalAssemblyInfo.cs" ]
+        }
+    },
+    "configurations": {
+        "Release": {
+            "buildOptions": {
+                "optimize": true,
+                "xmlDoc": true
+            }
+        }
+    },
+    "packOptions": {
+        "summary": "Used for working with NATS.io message broker",
+        "tags": [ "NATS", "NATS.io", "messaging", "rx", "reactivex", "reactiveextensions" ],
+        "owners": [ "danielwertheim" ],
+        "licenseUrl": "http://www.opensource.org/licenses/MIT",
+        "requireLicenseAcceptance": false,
+        "repository": {
+            "type": "git",
+            "url": "https://github.com/danielwertheim/mynatsclient"
+        },
+        "releaseNotes": "https://github.com/danielwertheim/mynatsclient/blob/master/ReleaseNotes.md"
+    },
+    "dependencies": {},
+    "frameworks": {
+        "netstandard1.6": {
+            "buildOptions": {
+                "define": [ "DOTNETCORE" ]
+            },
+            "dependencies": {
+                "NETStandard.Library": "1.6.0"
+            }
+        },
+        "net45": {
+            "buildOptions": {
+                "define": [ "NET" ]
+            }
+        }
+    }
+}

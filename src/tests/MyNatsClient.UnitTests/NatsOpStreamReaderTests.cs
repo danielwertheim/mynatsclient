@@ -1,16 +1,15 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Text;
 using FluentAssertions;
 using MyNatsClient.Ops;
-using NUnit.Framework;
+using Xunit;
 
 namespace MyNatsClient.UnitTests
 {
     public class NatsOpStreamReaderTests : UnitTestsOf<NatsOpStreamReader>
     {
-        [Test]
+        [Fact]
         public void Should_be_able_to_parse_different_messages_as_a_stream()
         {
             using (var stream = CreateStream(
@@ -49,7 +48,7 @@ namespace MyNatsClient.UnitTests
             }
         }
 
-        [Test]
+        [Fact]
         public void Should_be_able_to_parse_InfoOp()
         {
             using (var stream = CreateStream(
@@ -65,7 +64,7 @@ namespace MyNatsClient.UnitTests
             }
         }
 
-        [Test]
+        [Fact]
         public void Should_be_able_to_parse_OkOp()
         {
             using (var stream = CreateStream(
@@ -80,7 +79,7 @@ namespace MyNatsClient.UnitTests
             }
         }
 
-        [Test]
+        [Fact]
         public void Should_be_able_to_parse_MsgOp_with_new_line_in_them()
         {
             using (var stream = CreateStream(
@@ -100,7 +99,7 @@ namespace MyNatsClient.UnitTests
             }
         }
 
-        [Test]
+        [Fact]
         public void Should_be_able_to_parse_MsgOp_with_tab_in_them()
         {
             using (var stream = CreateStream(
@@ -120,7 +119,7 @@ namespace MyNatsClient.UnitTests
             }
         }
 
-        [Test]
+        [Fact]
         public void Should_be_able_to_parse_tab_delimitted_MsgOp()
         {
             using (var stream = CreateStream(
@@ -140,7 +139,7 @@ namespace MyNatsClient.UnitTests
             }
         }
 
-        [Test]
+        [Fact]
         public void Should_be_able_to_parse_PingOp()
         {
             using (var stream = CreateStream(
@@ -155,7 +154,7 @@ namespace MyNatsClient.UnitTests
             }
         }
 
-        [Test]
+        [Fact]
         public void Should_be_able_to_parse_PongOp()
         {
             using (var stream = CreateStream(
@@ -170,7 +169,7 @@ namespace MyNatsClient.UnitTests
             }
         }
 
-        [Test]
+        [Fact]
         public void Should_be_able_to_parse_ErrOp()
         {
             using (var stream = CreateStream(
@@ -185,7 +184,7 @@ namespace MyNatsClient.UnitTests
             }
         }
 
-        [Test]
+        [Fact]
         public void Should_be_able_to_handle_blank_ops()
         {
             using (var stream = CreateStream(

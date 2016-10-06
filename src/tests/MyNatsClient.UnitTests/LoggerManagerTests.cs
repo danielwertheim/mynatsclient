@@ -1,12 +1,12 @@
 ﻿using FluentAssertions;
 using MyNatsClient.Logging;
-using NUnit.Framework;
+using Xunit;
 
 namespace MyNatsClient.UnitTests
 {
     public class LoggerManagerTests : UnitTests
     {
-        [Test]
+        [Fact]
         public void Should_return_NullLogger_by_default()
         {
             LoggerManager.Resolve(typeof(Fake1)).Should().BeOfType<NullLogger>();

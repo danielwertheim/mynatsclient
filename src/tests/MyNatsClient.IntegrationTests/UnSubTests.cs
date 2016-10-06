@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MyNatsClient.Ops;
-using NUnit.Framework;
+using Xunit;
 
 namespace MyNatsClient.IntegrationTests
 {
@@ -14,7 +14,7 @@ namespace MyNatsClient.IntegrationTests
         private NatsClient _client2;
         private NatsClient _client3;
 
-        protected override void OnBeforeEachTest()
+        public UnSubTests()
         {
             _client1 = new NatsClient("tc1", ConnectionInfo);
             _client1.Connect();
@@ -41,8 +41,7 @@ namespace MyNatsClient.IntegrationTests
             _client3 = null;
         }
 
-        [Test]
-        [MaxTime(MaxTimeMs)]
+        [Fact]
         public async Task A_client_Should_be_able_to_unsub_from_a_subject()
         {
             const string subject = "Test";
@@ -54,7 +53,7 @@ namespace MyNatsClient.IntegrationTests
             {
                 _client1.UnSub("s1");
                 Interlocked.Increment(ref nr1ReceiveCount);
-                Sync.Set();
+                ReleaseOne();
             });
             _client1.Sub(subject, "s1");
 
@@ -62,21 +61,21 @@ namespace MyNatsClient.IntegrationTests
             {
                 await _client2.UnSubAsync("s1");
                 Interlocked.Increment(ref nr2ReceiveCount);
-                Sync.Set();
+                ReleaseOne();
             });
             _client2.Sub(subject, "s1");
 
             _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr3ReceiveCount);
-                Sync.Set();
+                ReleaseOne();
             });
             _client3.Sub(subject, "s1");
 
             _client1.Pub(subject, "mess1");
-            Sync.WaitOne();
-            Sync.WaitOne();
-            Sync.WaitOne();
+            WaitOne();
+            WaitOne();
+            WaitOne();
 
             _client3.UnSub("s1");
             await DelayAsync();
@@ -89,8 +88,7 @@ namespace MyNatsClient.IntegrationTests
             nr3ReceiveCount.Should().Be(1);
         }
 
-        [Test]
-        [MaxTime(MaxTimeMs)]
+        [Fact]
         public async Task A_client_Should_be_able_to_auto_unsub_after_n_messages_to_subject()
         {
             const string subject = "Test";
@@ -100,7 +98,7 @@ namespace MyNatsClient.IntegrationTests
             _client2.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr2ReceiveCount);
-                Sync.Set();
+                ReleaseOne();
             });
             _client2.Sub(subject, "s1");
             _client2.UnSub("s1", 2);
@@ -108,7 +106,7 @@ namespace MyNatsClient.IntegrationTests
             _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr3ReceiveCount);
-                Sync.Set();
+                ReleaseOne();
             });
             await _client3.SubAsync(subject, "s1");
             await _client3.UnSubAsync("s1", 2);
@@ -116,10 +114,10 @@ namespace MyNatsClient.IntegrationTests
             _client1.Pub(subject, "mess1");
             _client1.Pub(subject, "mess2");
 
-            Sync.WaitOne();
-            Sync.WaitOne();
-            Sync.WaitOne();
-            Sync.WaitOne();
+            WaitOne();
+            WaitOne();
+            WaitOne();
+            WaitOne();
 
             _client1.Pub(subject, "mess3");
             await DelayAsync();

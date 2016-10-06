@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MyNatsClient.Ops;
-using NUnit.Framework;
+using Xunit;
 
 namespace MyNatsClient.IntegrationTests
 {
@@ -17,7 +17,7 @@ namespace MyNatsClient.IntegrationTests
         private NatsClient _client2;
         private NatsClient _client3;
 
-        protected override void OnBeforeEachTest()
+        public PubSubTests()
         {
             _client1 = new NatsClient("tc1", ConnectionInfo);
             _client1.Connect();
@@ -44,16 +44,14 @@ namespace MyNatsClient.IntegrationTests
             _client3 = null;
         }
 
-        [Test]
-        [MaxTime(MaxTimeMs)]
+        [Fact]
         public async Task A_client_publishing_Should_succeed_When_no_subscribers_exists()
         {
             _client1.Pub("Test", "test message");
             await _client1.PubAsync("Test", "Test message");
         }
 
-        [Test]
-        [MaxTime(MaxTimeMs)]
+        [Fact]
         public async Task A_published_message_Should_be_published_and_consumed_in_full()
         {
             var interceptCount = 0;
@@ -70,7 +68,7 @@ namespace MyNatsClient.IntegrationTests
                 intercepted.Add(msg);
                 var x = Interlocked.Increment(ref interceptCount);
                 if (x == messages.Length)
-                    Sync.Set();
+                    ReleaseOne();
             });
             _client1.Sub("Test", "s1");
 
@@ -79,13 +77,12 @@ namespace MyNatsClient.IntegrationTests
             await _client1.PubAsync("Test", messages[2]);
             await _client1.PubAsync("Test", Encoding.UTF8.GetBytes(messages[3]));
 
-            Sync.WaitOne();
+            WaitOne();
             intercepted.Should().HaveCount(messages.Length);
             intercepted.Select(m => m.GetPayloadAsString()).ToArray().Should().Contain(messages);
         }
 
-        [Test]
-        [MaxTime(MaxTimeMs)]
+        [Fact]
         public void A_published_message_using_PubMany_Should_be_published_and_consumed_in_full()
         {
             var interceptCount = 0;
@@ -102,7 +99,7 @@ namespace MyNatsClient.IntegrationTests
                 intercepted.Add(msg);
                 var x = Interlocked.Increment(ref interceptCount);
                 if (x == messages.Length)
-                    Sync.Set();
+                    ReleaseOne();
             });
             _client1.Sub("Test", "s1");
 
@@ -114,13 +111,12 @@ namespace MyNatsClient.IntegrationTests
                 await p.PubAsync("Test", Encoding.UTF8.GetBytes(messages[3]));
             });
 
-            Sync.WaitOne();
+            WaitOne();
             intercepted.Should().HaveCount(messages.Length);
             intercepted.Select(m => m.GetPayloadAsString()).ToArray().Should().Contain(messages);
         }
 
-        [Test]
-        [MaxTime(MaxTimeMs)]
+        [Fact]
         public async Task A_client_publishing_Should_dispatch_to_all_subscribed_clients()
         {
             const string subject = "Test";
@@ -130,31 +126,30 @@ namespace MyNatsClient.IntegrationTests
             _client2.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr2ReceiveCount);
-                Sync.Set();
+                ReleaseOne();
             });
             _client2.Sub(subject, "s1");
 
             _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr3ReceiveCount);
-                Sync.Set();
+                ReleaseOne();
             });
             await _client3.SubAsync(subject, "s1");
 
             _client1.Pub(subject, "mess1");
-            Sync.WaitOne();
-            Sync.WaitOne();
+            WaitOne();
+            WaitOne();
 
             await _client1.PubAsync(subject, "mess2");
-            Sync.WaitOne();
-            Sync.WaitOne();
+            WaitOne();
+            WaitOne();
 
             nr2ReceiveCount.Should().Be(2);
             nr3ReceiveCount.Should().Be(2);
         }
 
-        [Test]
-        [MaxTime(MaxTimeMs)]
+        [Fact]
         public void A_client_publishing_Should_be_able_to_publish_to_it_self()
         {
             const string subject = "Test";
@@ -163,18 +158,17 @@ namespace MyNatsClient.IntegrationTests
             _client1.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr1ReceiveCount);
-                Sync.Set();
+                ReleaseOne();
             });
             _client1.Sub(subject, "s1");
 
             _client1.Pub(subject, "mess1");
-            Sync.WaitOne();
+            WaitOne();
 
             nr1ReceiveCount.Should().Be(1);
         }
 
-        [Test]
-        [MaxTime(MaxTimeMs)]
+        [Fact]
         public void A_client_Should_be_able_to_subscribe_to_the_same_subject_twice()
         {
             const string subject = "Test";
@@ -183,20 +177,19 @@ namespace MyNatsClient.IntegrationTests
             _client1.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr1ReceiveCount);
-                Sync.Set();
+                ReleaseOne();
             });
             _client1.Sub(subject, "s1");
             _client1.Sub(subject, "s2");
 
             _client1.Pub(subject, "mess1");
-            Sync.WaitOne();
-            Sync.WaitOne();
+            WaitOne();
+            WaitOne();
 
             nr1ReceiveCount.Should().Be(2);
         }
 
-        [Test]
-        [MaxTime(MaxTimeMs)]
+        [Fact]
         public void A_client_Should_be_able_to_subscribe_to_many_subjects()
         {
             var nr1ReceiveCount = 0;
@@ -204,20 +197,20 @@ namespace MyNatsClient.IntegrationTests
             _client1.OpStream.OfType<MsgOp>().Where(m => m.Subject == "Foo").Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr1ReceiveCount);
-                Sync.Set();
+                ReleaseOne();
             });
             _client1.OpStream.OfType<MsgOp>().Where(m => m.Subject == "Bar").Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr1ReceiveCount);
-                Sync.Set();
+                ReleaseOne();
             });
             _client1.Sub("Foo", "s1");
             _client1.Sub("Bar", "s2");
 
             _client1.Pub("Foo", "mess1");
             _client1.Pub("Bar", "mess2");
-            Sync.WaitOne();
-            Sync.WaitOne();
+            WaitOne();
+            WaitOne();
 
             nr1ReceiveCount.Should().Be(2);
         }

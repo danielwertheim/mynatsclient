@@ -2,7 +2,7 @@
 using System.Linq;
 using FluentAssertions;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace MyNatsClient.UnitTests
 {
@@ -10,12 +10,12 @@ namespace MyNatsClient.UnitTests
     {
         private const byte SomeAsciiByte = (byte)'a';
 
-        protected override void OnBeforeEachTest()
+        public PayloadBuilderTests()
         {
             UnitUnderTest = new PayloadBuilder();
         }
 
-        [Test]
+        [Fact]
         public void Append_Should_produce_one_block_When_appending_byte_by_byte_less_then_block_size()
         {
             var numOfBytesToAdd = PayloadBuilder.BlockSize - 1;
@@ -30,7 +30,7 @@ namespace MyNatsClient.UnitTests
             payload.Should().BeEquivalentTo(bytesToAdd);
         }
 
-        [Test]
+        [Fact]
         public void Append_Should_produce_one_block_When_appending_byte_by_byte_same_as_block_size()
         {
             var numOfBytesToAdd = PayloadBuilder.BlockSize;
@@ -45,7 +45,7 @@ namespace MyNatsClient.UnitTests
             payload.Should().BeEquivalentTo(bytesToAdd);
         }
 
-        [Test]
+        [Fact]
         public void Append_Should_produce_two_blocks_When_appending_byte_by_byte_one_more_then_block_size()
         {
             var numOfBytesToAdd = PayloadBuilder.BlockSize + 1;
@@ -60,7 +60,7 @@ namespace MyNatsClient.UnitTests
             payload.Should().BeEquivalentTo(bytesToAdd);
         }
 
-        [Test]
+        [Fact]
         public void Append_Should_produce_one_block_When_appending_bytes_by_byte_less_then_block_size()
         {
             var numOfBytesToAdd = PayloadBuilder.BlockSize - 1;
@@ -74,7 +74,7 @@ namespace MyNatsClient.UnitTests
             payload.Should().BeEquivalentTo(bytesToAdd);
         }
 
-        [Test]
+        [Fact]
         public void Append_Should_produce_one_block_When_appending_byte_by_bytes_same_as_block_size()
         {
             var numOfBytesToAdd = PayloadBuilder.BlockSize;
@@ -88,7 +88,7 @@ namespace MyNatsClient.UnitTests
             payload.Should().BeEquivalentTo(bytesToAdd);
         }
 
-        [Test]
+        [Fact]
         public void Append_Should_produce_two_blocks_When_appending_byte_by_bytes_one_more_then_block_size()
         {
             var numOfBytesToAdd = PayloadBuilder.BlockSize + 1;
@@ -102,7 +102,7 @@ namespace MyNatsClient.UnitTests
             payload.Should().BeEquivalentTo(bytesToAdd);
         }
 
-        [Test]
+        [Fact]
         public void Append_Should_produce_one_block_When_appending_payload_with_bytes_less_then_block_size()
         {
             var numOfBytesToAdd = PayloadBuilder.BlockSize - 1;
@@ -117,7 +117,7 @@ namespace MyNatsClient.UnitTests
             payload.Should().BeEquivalentTo(bytesToAdd);
         }
 
-        [Test]
+        [Fact]
         public void Append_Should_produce_one_block_When_appending_payload_with_bytes_same_as_block_size()
         {
             var numOfBytesToAdd = PayloadBuilder.BlockSize;
@@ -132,7 +132,7 @@ namespace MyNatsClient.UnitTests
             payload.Should().BeEquivalentTo(bytesToAdd);
         }
 
-        [Test]
+        [Fact]
         public void Append_Should_produce_two_blocks_When_appending_payload_with_bytes_being_one_more_then_block_size()
         {
             var bytesToAdd1 = GetBytesToAdd(PayloadBuilder.BlockSize);

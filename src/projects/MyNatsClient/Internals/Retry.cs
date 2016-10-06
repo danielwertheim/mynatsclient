@@ -1,5 +1,5 @@
 using System;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace MyNatsClient.Internals
 {
@@ -24,7 +24,7 @@ namespace MyNatsClient.Internals
                 if(duration.TotalMilliseconds + delay >= maxDurationMs)
                     break;
 
-                Thread.Sleep(delay);
+                Task.Delay(delay).Wait();
 
                 n++;
             }
