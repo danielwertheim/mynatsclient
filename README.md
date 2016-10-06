@@ -6,7 +6,7 @@ Because I wanted one that leaves .Net4.0 behind and therefore offers `async` con
 There are some posts on this on my blog. The most interesting one would be: [MyNatsClient - It flushes, but so can you](http://danielwertheim.se/mynatsclient-it-flushes-but-so-can-you/)
 
 ## DotNet Core
-Yes it does support DotNet Core.
+Yes it does support DotNet Core. From [v0.3.0-b1](https://www.nuget.org/packages/MyNatsClient/0.3.0-b1)
 
 ## License
 Have fun using it ;-) [MIT](https://github.com/danielwertheim/mynatsclient/blob/master/LICENSE.txt)
