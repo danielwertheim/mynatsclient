@@ -17,11 +17,12 @@ namespace MyNatsClient.IntegrationTests
         {
             _sync = new AutoResetEvent(false);
 
-            ConnectionInfo = new ConnectionInfo(new Host("192.168.2.20", 4222))
+            var hosts = TestSettings.GetHosts();
+
+            ConnectionInfo = new ConnectionInfo(hosts)
             {
                 AutoRespondToPing = false,
-                Verbose = false,
-                Credentials = new Credentials("test", "1q2w3e4r")
+                Verbose = false
             };
         }
 
