@@ -1,5 +1,9 @@
 # Release notes
 
+## v0.3.0 - 2016-10-xx
+- New: Support for DotNet Core.
+- New: You can now have credentials on a specific host instead of common credentials. Specific overrides common.
+
 ## v0.2.1 - 2016-06-14
 - Closed [#7](https://github.com/danielwertheim/mynatsclient/issues/9), remove dependency on JSON.Net
 - Closed [#10](https://github.com/danielwertheim/mynatsclient/issues/9), provide MyNatsClient.Rx as a convenience NuGet for bringing in MyNatsClient and Rx.
