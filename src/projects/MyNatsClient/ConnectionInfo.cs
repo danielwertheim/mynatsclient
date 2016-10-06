@@ -21,7 +21,12 @@ namespace MyNatsClient
         public ConnectionInfo Clone()
         {
             var hosts = Hosts
-                .Select(i => new Host(i.Address, i.Port))
+                .Select(i => new Host(i.Address, i.Port)
+                {
+                    Credentials = i.Credentials != null
+                        ? new Credentials(i.Credentials.User, i.Credentials.Pass)
+                        : Credentials.Empty
+                })
                 .ToArray();
 
             return new ConnectionInfo(hosts)

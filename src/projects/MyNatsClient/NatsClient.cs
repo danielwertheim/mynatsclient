@@ -200,12 +200,13 @@ namespace MyNatsClient
             }
 
             _serverInfo = NatsServerInfo.Parse(infoOp.Message);
-            if (_serverInfo.AuthRequired && _connectionInfo.Credentials == Credentials.Empty)
+            var credentials = host.HasNonEmptyCredentials() ? host.Credentials : _connectionInfo.Credentials;
+            if (_serverInfo.AuthRequired && (credentials == null || credentials == Credentials.Empty))
                 throw new NatsException($"Error while connecting to {host}. Server requires credentials to be passed. None was specified.");
 
             _opMediator.Dispatch(infoOp);
 
-            _socket.Send(ConnectCmd.Generate(_connectionInfo));
+            _socket.Send(ConnectCmd.Generate(_connectionInfo.Verbose, credentials));
 
             if (!VerifyConnectedOk(host, readOne, ref op))
                 return false;
