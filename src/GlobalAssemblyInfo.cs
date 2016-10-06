@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using System.Reflection;
+﻿using System.Reflection;
 
 #if DEBUG
 [assembly: AssemblyProduct("MyNatsClient (Debug)")]
@@ -10,7 +9,5 @@ using System.Reflection;
 #endif
 
 [assembly: AssemblyDescription("MyNatsClient - a simple client for NATS.")]
-[assembly: AssemblyCompany("Daniel Wertheim")]
+[assembly: AssemblyCompany("danielwertheim")]
 [assembly: AssemblyCopyright("Copyright © 2016 Daniel Wertheim")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]

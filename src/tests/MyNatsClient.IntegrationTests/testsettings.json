@@ -1,0 +1,14 @@
+﻿{
+    "clientIntegrationTests": {
+        "hosts": [
+            {
+                "address": "192.168.2.20",
+                "port": 4222,
+                "credentials": {
+                    "usr": "test",
+                    "pwd": "p@ssword123"  
+                } 
+            }
+        ]
+    }
+}

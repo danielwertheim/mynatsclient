@@ -15,6 +15,7 @@ node_modules/
 *.vssscc
 *.suo
 *.cache
+project.lock.json
 
 # deploy
 build/
