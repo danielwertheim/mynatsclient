@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Microsoft.Extensions.Configuration;
 using System.Linq;
 
@@ -11,7 +12,7 @@ namespace MyNatsClient.IntegrationTests
         static TestSettings()
         {
             var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory());
+                .SetBasePath(AppContext.BaseDirectory);
 
             builder.AddJsonFile("testsettings.json");
             Config = builder.Build();
