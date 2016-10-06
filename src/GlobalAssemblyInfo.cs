@@ -9,7 +9,5 @@
 #endif
 
 [assembly: AssemblyDescription("MyNatsClient - a simple client for NATS.")]
-[assembly: AssemblyCompany("Daniel Wertheim")]
+[assembly: AssemblyCompany("danielwertheim")]
 [assembly: AssemblyCopyright("Copyright © 2016 Daniel Wertheim")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]

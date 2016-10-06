@@ -17,6 +17,8 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "MyNatsClient", "projects\My
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "MyNatsClient.IntegrationTests", "tests\MyNatsClient.IntegrationTests\MyNatsClient.IntegrationTests.xproj", "{29BBD0CB-655B-45B4-BE2A-1038BBE70E31}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "MyNatsClient.Rx", "projects\MyNatsClient.Rx\MyNatsClient.Rx.xproj", "{FD8A78B1-7D0A-4418-8935-408B09E61781}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{29BBD0CB-655B-45B4-BE2A-1038BBE70E31}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29BBD0CB-655B-45B4-BE2A-1038BBE70E31}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29BBD0CB-655B-45B4-BE2A-1038BBE70E31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD8A78B1-7D0A-4418-8935-408B09E61781}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD8A78B1-7D0A-4418-8935-408B09E61781}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD8A78B1-7D0A-4418-8935-408B09E61781}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD8A78B1-7D0A-4418-8935-408B09E61781}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
