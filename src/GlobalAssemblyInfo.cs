@@ -8,6 +8,5 @@
 [assembly: AssemblyConfiguration("Release")]
 #endif
 
-[assembly: AssemblyDescription("MyNatsClient - a simple client for NATS.")]
 [assembly: AssemblyCompany("danielwertheim")]
 [assembly: AssemblyCopyright("Copyright © 2016 Daniel Wertheim")]
