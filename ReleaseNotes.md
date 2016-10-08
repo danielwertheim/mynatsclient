@@ -1,6 +1,6 @@
 # Release notes
 
-## v0.3.0 - 2016-10-xx
+## v0.3.0 - 2016-10-08
 - New: Support for DotNet Core.
 - New: You can now have credentials on a specific host instead of common credentials. Specific overrides common.
 - Fixed: `client.Pub` methods had `replyTo` as mandatory argument but it is optional.
