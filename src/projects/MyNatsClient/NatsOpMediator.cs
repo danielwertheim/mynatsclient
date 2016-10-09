@@ -6,7 +6,7 @@ namespace MyNatsClient
 {
     public class NatsOpMediator :
         IObservable<IOp>,
-        IObservable<MsgOp>,
+        IFilterableObservable<MsgOp>,
         INatsClientStats,
         IDisposable
     {
@@ -25,6 +25,11 @@ namespace MyNatsClient
         public IDisposable Subscribe(IObserver<MsgOp> observer)
         {
             return _msgOpStream.Subscribe(observer);
+        }
+
+        public IDisposable Subscribe(IObserver<MsgOp> observer, Func<MsgOp, bool> filter)
+        {
+            return _msgOpStream.Subscribe(observer, filter);
         }
 
         public void Dispatch(IOp op)

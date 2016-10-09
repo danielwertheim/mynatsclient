@@ -44,7 +44,7 @@ namespace MyNatsClient
         public string Id { get; }
         public IObservable<IClientEvent> Events => _eventMediator;
         public IObservable<IOp> OpStream => _opMediator;
-        public IObservable<MsgOp> MsgOpStream => _opMediator;
+        public IFilterableObservable<MsgOp> MsgOpStream => _opMediator;
         public INatsClientStats Stats => _opMediator;
         public NatsClientState State { get; private set; }
         public ISocketFactory SocketFactory { private get; set; }
@@ -521,14 +521,14 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
-            WithWriteLock(() => DoFlush());
+            WithWriteLock(DoFlush);
         }
 
         public async Task FlushAsync()
         {
             ThrowIfDisposed();
 
-            await WithWriteLockAsync(() => DoFlushAsync()).ForAwait();
+            await WithWriteLockAsync(DoFlushAsync).ForAwait();
         }
 
         private void DoFlush()
@@ -587,6 +587,17 @@ namespace MyNatsClient
                 await DoSendAsync(UnSubCmd.Generate(subscriptionId, maxMessages)).ForAwait();
                 await DoFlushAsync().ForAwait();
             }).ForAwait();
+        }
+
+        public Inbox CreateInbox(string subject, Action<MsgOp> onIncoming, int? unsubAfterNMessages = null)
+        {
+            ThrowIfDisposed();
+
+            var inbox = new Inbox(subject, _opMediator, new DelegatingObserver<MsgOp>(onIncoming));
+
+            Sub(inbox.Subject, inbox.SubscriptionId);
+
+            return inbox;
         }
 
         private void DoSend(byte[] data)

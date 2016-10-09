@@ -8,10 +8,12 @@ namespace MyNatsClient.IntegrationTests
     [Collection("ClientIntegrationTests")]
     public abstract class ClientIntegrationTests : IDisposable
     {
-        private const int MaxTimeMs = 2000;
+        private const int MaxTimeMs = 1500;
+        private const int DealyMs = 250;
+
         private AutoResetEvent _sync;
         protected ConnectionInfo ConnectionInfo;
-        protected async Task DelayAsync() => await Task.Delay(250);
+        protected async Task DelayAsync() => await Task.Delay(DealyMs);
 
         protected ClientIntegrationTests()
         {
