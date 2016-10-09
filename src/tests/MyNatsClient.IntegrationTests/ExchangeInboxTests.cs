@@ -6,21 +6,21 @@ using Xunit;
 
 namespace MyNatsClient.IntegrationTests
 {
-    public class InboxTests : ClientIntegrationTests
+    public class ExchangeInboxTests : ClientIntegrationTests
     {
-        private NatsClient _client;
+        private NatsExchange _exchange;
 
-        public InboxTests()
+        public ExchangeInboxTests()
         {
-            _client = new NatsClient("tc1", ConnectionInfo);
-            _client.Connect();
+            _exchange = new NatsExchange("tc1", ConnectionInfo);
+            _exchange.Connect();
         }
 
         protected override void OnAfterEachTest()
         {
-            _client?.Disconnect();
-            _client?.Dispose();
-            _client = null;
+            _exchange?.Disconnect();
+            _exchange?.Dispose();
+            _exchange = null;
         }
 
         [Fact]
@@ -30,20 +30,20 @@ namespace MyNatsClient.IntegrationTests
             const string nonInboxSubject = inboxSubject + "fail";
             var interceptedInboxSubjects = new List<string>();
 
-            _client.Sub(nonInboxSubject, "subid1");
+            _exchange.Client.Sub(nonInboxSubject, "subid1");
 
-            using (_client.CreateInbox(inboxSubject,
+            using (_exchange.CreateInbox(inboxSubject,
                 msg =>
                 {
                     interceptedInboxSubjects.Add(inboxSubject);
                     ReleaseOne();
                 }))
             {
-                await _client.PubAsync(inboxSubject, "Test1");
+                await _exchange.Client.PubAsync(inboxSubject, "Test1");
                 WaitOne();
-                await _client.PubAsync(inboxSubject, "Test2");
+                await _exchange.Client.PubAsync(inboxSubject, "Test2");
                 WaitOne();
-                await _client.PubAsync(inboxSubject + "fail", "Test2");
+                await _exchange.Client.PubAsync(inboxSubject + "fail", "Test2");
                 WaitOne();
             }
 
@@ -57,19 +57,19 @@ namespace MyNatsClient.IntegrationTests
             const string inboxSubject = "e6f12d099ec34fdba0e43b111dfb95f6";
             var interceptCount = 0;
 
-            using (_client.CreateInbox(inboxSubject, msg =>
+            using (_exchange.CreateInbox(inboxSubject, msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
             }))
             {
-                await _client.PubAsync(inboxSubject, "Test1");
+                await _exchange.Client.PubAsync(inboxSubject, "Test1");
                 WaitOne();
-                await _client.PubAsync(inboxSubject, "Test2");
+                await _exchange.Client.PubAsync(inboxSubject, "Test2");
                 WaitOne();
             }
 
-            await _client.PubAsync(inboxSubject, "Test3");
+            await _exchange.Client.PubAsync(inboxSubject, "Test3");
             WaitOne();
 
             interceptCount.Should().Be(2);

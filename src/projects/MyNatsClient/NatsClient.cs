@@ -68,6 +68,8 @@ namespace MyNatsClient
 
         public void Dispose()
         {
+            ThrowIfDisposed();
+
             Dispose(true);
             GC.SuppressFinalize(this);
             _isDisposed = true;
@@ -587,17 +589,6 @@ namespace MyNatsClient
                 await DoSendAsync(UnSubCmd.Generate(subscriptionId, maxMessages)).ForAwait();
                 await DoFlushAsync().ForAwait();
             }).ForAwait();
-        }
-
-        public Inbox CreateInbox(string subject, Action<MsgOp> onIncoming, int? unsubAfterNMessages = null)
-        {
-            ThrowIfDisposed();
-
-            var inbox = new Inbox(subject, _opMediator, new DelegatingObserver<MsgOp>(onIncoming));
-
-            Sub(inbox.Subject, inbox.SubscriptionId);
-
-            return inbox;
         }
 
         private void DoSend(byte[] data)
