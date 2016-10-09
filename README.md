@@ -62,8 +62,8 @@ using (var client = new NatsClient("myClientId", connectionInfo))
         ev.Client.UnSub("s2", 2);
     });
     
-    client.Events.OfType<ClientFailed>().Subscribe(ev
-        => Console.WriteLine($"Client failed with Exception: '{ev.Exception}'.");
+    client.Events.OfType<ClientConsumerFailed>().Subscribe(ev
+        => Console.WriteLine($"Client consumer failed with Exception: '{ev.Exception}'.");
 
     //Disconnect, either by client.Disconnect() call
     //or caused by fail.
