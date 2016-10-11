@@ -49,15 +49,15 @@ namespace MyNatsClient
         NatsClientState State { get; }
 
         /// <summary>
-        /// Disconnects the client.
-        /// </summary>
-        void Disconnect();
-
-        /// <summary>
         /// Connects the client to one of the <see cref="Host"/>
         /// specified in <see cref="ConnectionInfo"/>.
         /// </summary>
         void Connect();
+
+        /// <summary>
+        /// Disconnects the client.
+        /// </summary>
+        void Disconnect();
 
         /// <summary>
         /// Sync send of a Ping message to the server, which then
@@ -162,12 +162,26 @@ namespace MyNatsClient
 
         /// <summary>
         /// Sync send of Sub message to indicate that client should
+        /// get messages for the subject, queuegroup etc.
+        /// </summary>
+        /// <param name="subscriptionInfo"></param>
+        void Sub(SubscriptionInfo subscriptionInfo);
+
+        /// <summary>
+        /// Sync send of Sub message to indicate that client should
         /// get messages for the subject.
         /// </summary>
         /// <param name="subject"></param>
         /// <param name="subscriptionId"></param>
         /// <param name="queueGroup"></param>
         void Sub(string subject, string subscriptionId, string queueGroup = null);
+
+        /// <summary>
+        /// Async send of Sub message to indicate that client should
+        /// get messages for the subject, queuegroup etc.
+        /// </summary>
+        /// <param name="subscriptionInfo"></param>
+        Task SubAsync(SubscriptionInfo subscriptionInfo);
 
         /// <summary>
         /// Async send of Sub message to indicate that the client
@@ -181,11 +195,27 @@ namespace MyNatsClient
 
         /// <summary>
         /// Sync send of UnSub message to indicate that the client
+        /// should not receive messages anymore for the specific subcription info.
+        /// </summary>
+        /// <param name="subscriptionInfo"></param>
+        /// <param name="maxMessages"></param>
+        void UnSub(SubscriptionInfo subscriptionInfo, int? maxMessages = null);
+
+        /// <summary>
+        /// Sync send of UnSub message to indicate that the client
         /// should not receive messages anymore for the specific subject.
         /// </summary>
         /// <param name="subscriptionId"></param>
         /// <param name="maxMessages"></param>
         void UnSub(string subscriptionId, int? maxMessages = null);
+
+        /// <summary>
+        /// Async send of UnSub message to indicate that the client
+        /// should not receive messages anymore for the specific subcription info.
+        /// </summary>
+        /// <param name="subscriptionInfo"></param>
+        /// <param name="maxMessages"></param>
+        Task UnSubAsync(SubscriptionInfo subscriptionInfo, int? maxMessages = null);
 
         /// <summary>
         /// Async send of UnSub message to indicate that the client

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using EnsureThat;
 using MyNatsClient.Events;
 using MyNatsClient.Internals;
 using MyNatsClient.Internals.Commands;
@@ -547,6 +548,13 @@ namespace MyNatsClient
             await _writeStream.FlushAsync();
         }
 
+        public void Sub(SubscriptionInfo subscriptionInfo)
+        {
+            EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
+
+            Sub(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup);
+        }
+
         public void Sub(string subject, string subscriptionId, string queueGroup = null)
         {
             ThrowIfDisposed();
@@ -556,6 +564,13 @@ namespace MyNatsClient
                 DoSend(SubCmd.Generate(subject, subscriptionId, queueGroup));
                 DoFlush();
             });
+        }
+
+        public Task SubAsync(SubscriptionInfo subscriptionInfo)
+        {
+            EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
+
+            return SubAsync(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup);
         }
 
         public async Task SubAsync(string subject, string subscriptionId, string queueGroup = null)
@@ -569,6 +584,13 @@ namespace MyNatsClient
             }).ForAwait();
         }
 
+        public void UnSub(SubscriptionInfo subscriptionInfo, int? maxMessages = null)
+        {
+            EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
+
+            UnSub(subscriptionInfo.Id, maxMessages);
+        }
+
         public void UnSub(string subscriptionId, int? maxMessages = null)
         {
             ThrowIfDisposed();
@@ -578,6 +600,13 @@ namespace MyNatsClient
                 DoSend(UnSubCmd.Generate(subscriptionId, maxMessages));
                 DoFlush();
             });
+        }
+
+        public Task UnSubAsync(SubscriptionInfo subscriptionInfo, int? maxMessages = null)
+        {
+            EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
+
+            return UnSubAsync(subscriptionInfo.Id, maxMessages);
         }
 
         public async Task UnSubAsync(string subscriptionId, int? maxMessages = null)
