@@ -3,6 +3,12 @@ using EnsureThat;
 
 namespace MyNatsClient
 {
+    /// <summary>
+    /// Simple observer implementation that delgates
+    /// to injected onNext, onError and onCompleted
+    /// delegates.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class DelegatingObserver<T> : IObserver<T>
     {
         private readonly Action<T> _onNext;

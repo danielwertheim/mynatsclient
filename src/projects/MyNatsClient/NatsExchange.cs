@@ -13,6 +13,24 @@ namespace MyNatsClient
         public NatsExchange(string id, ConnectionInfo connectionInfo)
         {
             _client = new NatsClient(id, connectionInfo);
+            _client.Events.Subscribe(new DelegatingObserver<IClientEvent>(OnClientEvent));
+        }
+
+        private static void OnClientEvent(IClientEvent ev)
+        {
+            var disconnected = ev as ClientDisconnected;
+            if (disconnected == null)
+                return;
+
+            OnClientDisconnected(disconnected);
+        }
+
+        private static void OnClientDisconnected(ClientDisconnected disconnected)
+        {
+            if (disconnected.Reason != DisconnectReason.DueToFailure)
+                return;
+
+            disconnected.Client.Connect();
         }
 
         public void Dispose()
