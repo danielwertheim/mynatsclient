@@ -1,4 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading.Tasks;
+using MyNatsClient.Events;
+using MyNatsClient.Internals;
+using MyNatsClient.Internals.Extensions;
 using MyNatsClient.Ops;
 
 namespace MyNatsClient
@@ -7,6 +13,7 @@ namespace MyNatsClient
     {
         private bool _isDisposed;
         private NatsClient _client;
+        private readonly ConcurrentDictionary<string, ISubscription> _subscriptions;
 
         public INatsClient Client => _client;
 
@@ -14,6 +21,8 @@ namespace MyNatsClient
         {
             _client = new NatsClient(id, connectionInfo);
             _client.Events.Subscribe(new DelegatingObserver<IClientEvent>(OnClientEvent));
+
+            _subscriptions = new ConcurrentDictionary<string, ISubscription>();
         }
 
         private static void OnClientEvent(IClientEvent ev)
@@ -47,9 +56,17 @@ namespace MyNatsClient
             if (_isDisposed || !disposing)
                 return;
 
-            _client?.Disconnect();
-            _client?.Dispose();
-            _client = null;
+            var subscriptions = _subscriptions.Values.ToArray();
+            _subscriptions.Clear();
+
+            Try.All(
+                () => Try.DisposeAll(subscriptions),
+                () =>
+                {
+                    _client?.Disconnect();
+                    _client?.Dispose();
+                    _client = null;
+                });
         }
 
         private void ThrowIfDisposed()
@@ -62,17 +79,49 @@ namespace MyNatsClient
 
         public void Disconnect() => Client.Disconnect();
 
-        public Inbox CreateInbox(string subject, Action<MsgOp> onIncoming, int? unsubAfterNMessages = null)
+        public ISubscription Subscribe(string subject, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
+            => Subscribe(new SubscriptionInfo(subject), observer, unsubAfterNMessages);
+
+        public ISubscription Subscribe(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
         {
             ThrowIfDisposed();
 
-            var inbox = new Inbox(subject, Client.MsgOpStream, new DelegatingObserver<MsgOp>(onIncoming));
+            var subscription = CreateSubscription(subscriptionInfo, observer);
 
-            Client.Sub(inbox.Subject, inbox.SubscriptionId);
+            Client.Sub(subscription.SubscriptionInfo);
+            if (unsubAfterNMessages.HasValue)
+                Client.UnSub(subscription.SubscriptionInfo, unsubAfterNMessages);
 
-            //TODO: Keep track of inboxes in concurrent dictionary
+            return subscription;
+        }
 
-            return inbox;
+        public Task<ISubscription> SubscribeAsync(string subject, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
+            => SubscribeAsync(new SubscriptionInfo(subject), observer, unsubAfterNMessages);
+
+        public async Task<ISubscription> SubscribeAsync(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
+        {
+            ThrowIfDisposed();
+
+            var subscription = CreateSubscription(subscriptionInfo, observer);
+
+            await Client.SubAsync(subscription.SubscriptionInfo).ForAwait();
+            if (unsubAfterNMessages.HasValue)
+                await Client.UnSubAsync(subscription.SubscriptionInfo, unsubAfterNMessages).ForAwait();
+
+            return subscription;
+        }
+
+        private Subscription CreateSubscription(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
+        {
+            var subscription = new Subscription(subscriptionInfo, Client.MsgOpStream, observer, info =>
+            {
+                ISubscription tmp;
+                _subscriptions.TryRemove(info.Id, out tmp);
+            });
+            if (!_subscriptions.TryAdd(subscription.SubscriptionInfo.Id, subscription))
+                throw new NatsException($"Could not create subscription. There is already a subscription with the id '{subscription.SubscriptionInfo.Id}'; registrered.");
+
+            return subscription;
         }
     }
 }
