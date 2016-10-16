@@ -55,8 +55,9 @@ namespace MyNatsClient
             if (!subscriptions.Any())
                 return;
 
-            _subscriptions.Clear();
             Try.DisposeAll(subscriptions);
+
+            _subscriptions.Clear();
         }
 
         private void ThrowIfDisposed()
@@ -111,6 +112,8 @@ namespace MyNatsClient
             {
                 IConsumerSubscription tmp;
                 _subscriptions.TryRemove(info.Id, out tmp);
+                if (_client.State == NatsClientState.Connected && tmp != null)
+                    Swallow.Everything(() => _client.UnSub(tmp.SubscriptionInfo));
             });
             if (!_subscriptions.TryAdd(subscription.SubscriptionInfo.Id, subscription))
                 throw new NatsException($"Could not create subscription. Id='{subscriptionInfo.Id}'. Subject='{subscriptionInfo.Subject}' QueueGroup='{subscriptionInfo.QueueGroup}'; registrered.");

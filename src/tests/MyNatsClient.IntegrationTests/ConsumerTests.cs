@@ -109,5 +109,31 @@ namespace MyNatsClient.IntegrationTests
             interceptCount.Should().Be(2);
         }
 
+        [Fact]
+        public async Task Should_unsub_handler_and_client_from_broker_When_consumer_is_disposed()
+        {
+            const string subject = "4f90a7dd4971430fbf5151a1116c9cfc";
+            var interceptCount = 0;
+
+            var observer = new DelegatingObserver<MsgOp>(msg =>
+            {
+                Interlocked.Increment(ref interceptCount);
+                ReleaseOne();
+            });
+            _consumer.Subscribe(subject, observer);
+
+            await _client.PubAsync(subject, "Test1");
+            WaitOne();
+
+            _consumer.Dispose();
+            _consumer = null;
+
+            _client.MsgOpStream.Where(m => m.Subject == subject).Subscribe(observer);
+
+            await _client.PubAsync(subject, "Test2");
+            WaitOne();
+
+            interceptCount.Should().Be(1);
+        }
     }
 }
