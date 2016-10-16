@@ -199,7 +199,7 @@ namespace MyNatsClient
         /// </summary>
         /// <param name="subscriptionInfo"></param>
         /// <param name="maxMessages"></param>
-        void UnSub(SubscriptionInfo subscriptionInfo, int? maxMessages = null);
+        void Unsub(SubscriptionInfo subscriptionInfo, int? maxMessages = null);
 
         /// <summary>
         /// Sync send of UnSub message to indicate that the client
@@ -207,7 +207,7 @@ namespace MyNatsClient
         /// </summary>
         /// <param name="subscriptionId"></param>
         /// <param name="maxMessages"></param>
-        void UnSub(string subscriptionId, int? maxMessages = null);
+        void Unsub(string subscriptionId, int? maxMessages = null);
 
         /// <summary>
         /// Async send of UnSub message to indicate that the client
@@ -215,7 +215,7 @@ namespace MyNatsClient
         /// </summary>
         /// <param name="subscriptionInfo"></param>
         /// <param name="maxMessages"></param>
-        Task UnSubAsync(SubscriptionInfo subscriptionInfo, int? maxMessages = null);
+        Task UnsubAsync(SubscriptionInfo subscriptionInfo, int? maxMessages = null);
 
         /// <summary>
         /// Async send of UnSub message to indicate that the client
@@ -224,6 +224,6 @@ namespace MyNatsClient
         /// <param name="subscriptionId"></param>
         /// <param name="maxMessages"></param>
         /// <returns></returns>
-        Task UnSubAsync(string subscriptionId, int? maxMessages = null);
+        Task UnsubAsync(string subscriptionId, int? maxMessages = null);
     }
 }

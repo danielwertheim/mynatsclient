@@ -79,7 +79,7 @@ namespace MyNatsClient
             _client.Sub(subscription.SubscriptionInfo);
 
             if (unsubAfterNMessages.HasValue)
-                _client.UnSub(subscription.SubscriptionInfo, unsubAfterNMessages);
+                _client.Unsub(subscription.SubscriptionInfo, unsubAfterNMessages);
 
             return subscription;
         }
@@ -99,7 +99,7 @@ namespace MyNatsClient
             await _client.SubAsync(subscription.SubscriptionInfo).ForAwait();
 
             if (unsubAfterNMessages.HasValue)
-                await _client.UnSubAsync(subscription.SubscriptionInfo, unsubAfterNMessages).ForAwait();
+                await _client.UnsubAsync(subscription.SubscriptionInfo, unsubAfterNMessages).ForAwait();
 
             return subscription;
         }
@@ -110,7 +110,7 @@ namespace MyNatsClient
             {
                 var tmp = GetSubscriptionForUnsub(info);
                 if (tmp != null)
-                    _client.UnSub(tmp.SubscriptionInfo);
+                    _client.Unsub(tmp.SubscriptionInfo);
             });
 
             if (!_subscriptions.TryAdd(subscription.SubscriptionInfo.Id, subscription))
@@ -127,7 +127,7 @@ namespace MyNatsClient
 
             var tmp = GetSubscriptionForUnsub(subscription.SubscriptionInfo);
             if (tmp != null)
-                _client.UnSub(tmp.SubscriptionInfo);
+                _client.Unsub(tmp.SubscriptionInfo);
         }
 
         public async Task UnsubscribeAsync(IConsumerSubscription subscription)
@@ -138,7 +138,7 @@ namespace MyNatsClient
 
             var tmp = GetSubscriptionForUnsub(subscription.SubscriptionInfo);
             if (tmp != null)
-                await _client.UnSubAsync(tmp.SubscriptionInfo).ForAwait();
+                await _client.UnsubAsync(tmp.SubscriptionInfo).ForAwait();
         }
 
         private ConsumerSubscription GetSubscriptionForUnsub(SubscriptionInfo subscriptionInfo)

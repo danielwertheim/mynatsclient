@@ -51,7 +51,7 @@ namespace MyNatsClient.IntegrationTests
 
             _client1.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
-                _client1.UnSub("s1");
+                _client1.Unsub("s1");
                 Interlocked.Increment(ref nr1ReceiveCount);
                 ReleaseOne();
             });
@@ -59,7 +59,7 @@ namespace MyNatsClient.IntegrationTests
 
             _client2.OpStream.OfType<MsgOp>().Subscribe(async msg =>
             {
-                await _client2.UnSubAsync("s1");
+                await _client2.UnsubAsync("s1");
                 Interlocked.Increment(ref nr2ReceiveCount);
                 ReleaseOne();
             });
@@ -77,7 +77,7 @@ namespace MyNatsClient.IntegrationTests
             WaitOne();
             WaitOne();
 
-            _client3.UnSub("s1");
+            _client3.Unsub("s1");
             await DelayAsync();
 
             _client1.Pub(subject, "mess2");
@@ -101,7 +101,7 @@ namespace MyNatsClient.IntegrationTests
                 ReleaseOne();
             });
             _client2.Sub(subject, "s1");
-            _client2.UnSub("s1", 2);
+            _client2.Unsub("s1", 2);
 
             _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
@@ -109,7 +109,7 @@ namespace MyNatsClient.IntegrationTests
                 ReleaseOne();
             });
             await _client3.SubAsync(subject, "s1");
-            await _client3.UnSubAsync("s1", 2);
+            await _client3.UnsubAsync("s1", 2);
 
             _client1.Pub(subject, "mess1");
             _client1.Pub(subject, "mess2");
