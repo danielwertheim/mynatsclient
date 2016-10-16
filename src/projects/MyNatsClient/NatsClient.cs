@@ -105,7 +105,7 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
-            DoDisconnect(DisconnectReason.ByConsumer);
+            DoDisconnect(DisconnectReason.ByUser);
         }
 
         private void DoDisconnect(DisconnectReason reason)
