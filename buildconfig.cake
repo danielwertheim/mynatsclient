@@ -1,6 +1,7 @@
 public class BuildConfig
 {
-    private const string Version = "0.3.0";
+    private const string Version = "0.4.0";
+    private const bool IsPreRelease = true;
 
     public readonly string SrcDir = "./src/";
     public readonly string OutDir = "./build/";    
@@ -18,14 +19,12 @@ public class BuildConfig
             throw new ArgumentNullException("context");
 
         var target = context.Argument("target", "Default");
-        var branch = context.Argument("branch", string.Empty);
-        var branchIsRelease = branch.ToLower() == "release";
         var buildRevision = context.Argument("buildrevision", "0");
 
         return new BuildConfig
         {
             Target = target,
-            SemVer = Version + (branchIsRelease ? string.Empty : "-b" + buildRevision),
+            SemVer = Version + (IsPreRelease ? buildRevision : "-b" + buildRevision),
             BuildProfile = context.Argument("configuration", "Release"),
             IsTeamCityBuild = buildSystem.TeamCity.IsRunningOnTeamCity
         };
