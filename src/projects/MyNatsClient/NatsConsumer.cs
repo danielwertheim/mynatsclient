@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
+using EnsureThat;
 using MyNatsClient.Events;
 using MyNatsClient.Internals;
 using MyNatsClient.Internals.Extensions;
@@ -13,28 +14,25 @@ namespace MyNatsClient
     {
         private bool _isDisposed;
         private readonly INatsClient _client;
-        private readonly ConcurrentDictionary<string, IConsumerSubscription> _subscriptions;
+        private readonly ConcurrentDictionary<string, ConsumerSubscription> _subscriptions;
 
         public NatsConsumer(INatsClient client)
         {
             _client = client;
-            _subscriptions = new ConcurrentDictionary<string, IConsumerSubscription>();
+            _subscriptions = new ConcurrentDictionary<string, ConsumerSubscription>();
             _client.Events.Subscribe(new DelegatingObserver<IClientEvent>(OnClientEvent));
         }
 
         private void OnClientEvent(IClientEvent ev)
         {
-            var connected = ev as ClientConnected;
-            if (connected == null)
-                return;
-
-            OnClientConnected(connected);
+            if (ev is ClientConnected)
+                OnClientConnected(ev);
         }
 
-        private void OnClientConnected(ClientConnected ev)
+        private void OnClientConnected(IClientEvent ev)
         {
             foreach (var subscription in _subscriptions.Values)
-                _client.Sub(subscription.SubscriptionInfo);
+                ev.Client.Sub(subscription.SubscriptionInfo);
         }
 
         public void Dispose()
@@ -110,15 +108,45 @@ namespace MyNatsClient
         {
             var subscription = new ConsumerSubscription(subscriptionInfo, _client.MsgOpStream, observer, info =>
             {
-                IConsumerSubscription tmp;
-                _subscriptions.TryRemove(info.Id, out tmp);
-                if (_client.State == NatsClientState.Connected && tmp != null)
+                var tmp = GetSubscriptionForUnsub(info);
+                if (tmp != null)
                     _client.UnSub(tmp.SubscriptionInfo);
             });
+
             if (!_subscriptions.TryAdd(subscription.SubscriptionInfo.Id, subscription))
-                throw new NatsException($"Could not create subscription. Id='{subscriptionInfo.Id}'. Subject='{subscriptionInfo.Subject}' QueueGroup='{subscriptionInfo.QueueGroup}'; registrered.");
+                throw new NatsException($"Could not create subscription. Id='{subscriptionInfo.Id}'. Subject='{subscriptionInfo.Subject}' QueueGroup='{subscriptionInfo.QueueGroup}'.");
 
             return subscription;
+        }
+
+        public void Unsubscribe(IConsumerSubscription subscription)
+        {
+            ThrowIfDisposed();
+
+            EnsureArg.IsNotNull(subscription, nameof(subscription));
+
+            var tmp = GetSubscriptionForUnsub(subscription.SubscriptionInfo);
+            if (tmp != null)
+                _client.UnSub(tmp.SubscriptionInfo);
+        }
+
+        public async Task UnsubscribeAsync(IConsumerSubscription subscription)
+        {
+            ThrowIfDisposed();
+
+            EnsureArg.IsNotNull(subscription, nameof(subscription));
+
+            var tmp = GetSubscriptionForUnsub(subscription.SubscriptionInfo);
+            if (tmp != null)
+                await _client.UnSubAsync(tmp.SubscriptionInfo).ForAwait();
+        }
+
+        private ConsumerSubscription GetSubscriptionForUnsub(SubscriptionInfo subscriptionInfo)
+        {
+            ConsumerSubscription tmp;
+            return _subscriptions.TryRemove(subscriptionInfo.Id, out tmp) && _client.State == NatsClientState.Connected
+                ? tmp
+                : null;
         }
     }
 }

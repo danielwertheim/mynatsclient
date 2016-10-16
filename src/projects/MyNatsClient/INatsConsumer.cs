@@ -41,5 +41,18 @@ namespace MyNatsClient
         /// <param name="unsubAfterNMessages">Pass a value to automatically unsubscribe after N messages.</param>
         /// <returns></returns>
         Task<IConsumerSubscription> SubscribeAsync(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer, int? unsubAfterNMessages = null);
+
+        /// <summary>
+        /// Unsubscribe of previously registrered subscription.
+        /// </summary>
+        /// <param name="subscription"></param>
+        void Unsubscribe(IConsumerSubscription subscription);
+
+        /// <summary>
+        /// Async unsubscribe of previously registrered subscription.
+        /// </summary>
+        /// <param name="subscription"></param>
+        /// <returns></returns>
+        Task UnsubscribeAsync(IConsumerSubscription subscription);
     }
 }
