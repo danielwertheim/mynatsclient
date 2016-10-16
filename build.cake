@@ -2,7 +2,6 @@
 
 var config = BuildConfig.Create(Context, BuildSystem);
 
-Information("Branch: " + config.Branch);
 Information("BuildProfile: " + config.BuildProfile);
 Information("SemVer: " + config.SemVer);
 

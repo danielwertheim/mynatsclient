@@ -6,7 +6,6 @@ public class BuildConfig
     public readonly string OutDir = "./build/";    
     
     public string Target { get; private set; }
-    public string Branch { get; private set; }
     public string SemVer { get; private set; }
     public string BuildProfile { get; private set; }
     public bool IsTeamCityBuild { get; private set; }
@@ -26,7 +25,6 @@ public class BuildConfig
         return new BuildConfig
         {
             Target = target,
-            Branch = branch,
             SemVer = Version + (branchIsRelease ? string.Empty : "-b" + buildRevision),
             BuildProfile = context.Argument("configuration", "Release"),
             IsTeamCityBuild = buildSystem.TeamCity.IsRunningOnTeamCity
