@@ -4,24 +4,8 @@ using MyNatsClient.Ops;
 
 namespace MyNatsClient
 {
-    public interface INatsExchange
+    public interface INatsConsumer
     {
-        /// <summary>
-        /// Gets the underlying client that you can use to access lowest level features.
-        /// </summary>
-        INatsClient Client { get; }
-
-        /// <summary>
-        /// Connects the client to one of the <see cref="Host"/>
-        /// specified in <see cref="ConnectionInfo"/>.
-        /// </summary>
-        void Connect();
-
-        /// <summary>
-        /// Disconnects the client.
-        /// </summary>
-        void Disconnect();
-
         /// <summary>
         /// Creates a <see cref="ISubscription"/> that consumes <see cref="MsgOp"/> stream for a certain subject.
         /// </summary>

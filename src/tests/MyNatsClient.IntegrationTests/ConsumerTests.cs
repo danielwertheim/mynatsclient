@@ -7,21 +7,26 @@ using Xunit;
 
 namespace MyNatsClient.IntegrationTests
 {
-    public class ExchangeSubscribeTests : ClientIntegrationTests
+    public class ConsumerTests : ClientIntegrationTests
     {
-        private NatsExchange _exchange;
+        private NatsClient _client;
+        private NatsConsumer _consumer;
 
-        public ExchangeSubscribeTests()
+        public ConsumerTests()
         {
-            _exchange = new NatsExchange("tc1", ConnectionInfo);
-            _exchange.Connect();
+            _client = new NatsClient("tc1", ConnectionInfo);
+            _consumer = new NatsConsumer(_client);
+            _client.Connect();
         }
 
         protected override void OnAfterEachTest()
         {
-            _exchange?.Disconnect();
-            _exchange?.Dispose();
-            _exchange = null;
+            _consumer?.Dispose();
+            _consumer = null;
+
+            _client?.Disconnect();
+            _client?.Dispose();
+            _client = null;
         }
 
         [Fact]
@@ -31,20 +36,20 @@ namespace MyNatsClient.IntegrationTests
             const string otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            _exchange.Client.Sub(otherSubject, "subid1");
+            _client.Sub(otherSubject, "subid1");
 
             var observer = new DelegatingObserver<MsgOp>(msg =>
             {
                 interceptedSubjects.Add(subject);
                 ReleaseOne();
             });
-            using (_exchange.Subscribe(subject, observer))
+            using (_consumer.Subscribe(subject, observer))
             {
-                await _exchange.Client.PubAsync(subject, "Test1");
+                await _client.PubAsync(subject, "Test1");
                 WaitOne();
-                await _exchange.Client.PubAsync(subject, "Test2");
+                await _client.PubAsync(subject, "Test2");
                 WaitOne();
-                await _exchange.Client.PubAsync(subject + "fail", "Test2");
+                await _client.PubAsync(otherSubject, "Test3");
                 WaitOne();
             }
 
@@ -63,15 +68,15 @@ namespace MyNatsClient.IntegrationTests
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
             });
-            using (_exchange.Subscribe(subject, observer))
+            using (_consumer.Subscribe(subject, observer))
             {
-                await _exchange.Client.PubAsync(subject, "Test1");
+                await _client.PubAsync(subject, "Test1");
                 WaitOne();
-                await _exchange.Client.PubAsync(subject, "Test2");
+                await _client.PubAsync(subject, "Test2");
                 WaitOne();
             }
 
-            await _exchange.Client.PubAsync(subject, "Test3");
+            await _client.PubAsync(subject, "Test3");
             WaitOne();
 
             interceptCount.Should().Be(2);

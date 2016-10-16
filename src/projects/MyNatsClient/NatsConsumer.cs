@@ -2,44 +2,23 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
-using MyNatsClient.Events;
 using MyNatsClient.Internals;
 using MyNatsClient.Internals.Extensions;
 using MyNatsClient.Ops;
 
 namespace MyNatsClient
 {
-    public class NatsExchange : IDisposable, INatsExchange
+    public class NatsConsumer : IDisposable, INatsConsumer
     {
         private bool _isDisposed;
-        private NatsClient _client;
+        private readonly INatsClient _client;
         private readonly ConcurrentDictionary<string, ISubscription> _subscriptions;
 
-        public INatsClient Client => _client;
-
-        public NatsExchange(string id, ConnectionInfo connectionInfo)
+        public NatsConsumer(INatsClient client)
         {
-            _client = new NatsClient(id, connectionInfo);
-            _client.Events.Subscribe(new DelegatingObserver<IClientEvent>(OnClientEvent));
+            _client = client;
 
             _subscriptions = new ConcurrentDictionary<string, ISubscription>();
-        }
-
-        private static void OnClientEvent(IClientEvent ev)
-        {
-            var disconnected = ev as ClientDisconnected;
-            if (disconnected == null)
-                return;
-
-            OnClientDisconnected(disconnected);
-        }
-
-        private static void OnClientDisconnected(ClientDisconnected disconnected)
-        {
-            if (disconnected.Reason != DisconnectReason.DueToFailure)
-                return;
-
-            disconnected.Client.Connect();
         }
 
         public void Dispose()
@@ -56,17 +35,12 @@ namespace MyNatsClient
             if (_isDisposed || !disposing)
                 return;
 
-            var subscriptions = _subscriptions.Values.ToArray();
-            _subscriptions.Clear();
+            var subscriptions = _subscriptions.Values.Cast<IDisposable>().ToArray();
+            if (!subscriptions.Any())
+                return;
 
-            Try.All(
-                () => Try.DisposeAll(subscriptions),
-                () =>
-                {
-                    _client?.Disconnect();
-                    _client?.Dispose();
-                    _client = null;
-                });
+            _subscriptions.Clear();
+            Try.DisposeAll(subscriptions);
         }
 
         private void ThrowIfDisposed()
@@ -74,10 +48,6 @@ namespace MyNatsClient
             if (_isDisposed)
                 throw new ObjectDisposedException(GetType().Name);
         }
-
-        public void Connect() => Client.Connect();
-
-        public void Disconnect() => Client.Disconnect();
 
         public ISubscription Subscribe(string subject, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
             => Subscribe(new SubscriptionInfo(subject), observer, unsubAfterNMessages);
@@ -88,9 +58,9 @@ namespace MyNatsClient
 
             var subscription = CreateSubscription(subscriptionInfo, observer);
 
-            Client.Sub(subscription.SubscriptionInfo);
+            _client.Sub(subscription.SubscriptionInfo);
             if (unsubAfterNMessages.HasValue)
-                Client.UnSub(subscription.SubscriptionInfo, unsubAfterNMessages);
+                _client.UnSub(subscription.SubscriptionInfo, unsubAfterNMessages);
 
             return subscription;
         }
@@ -104,22 +74,22 @@ namespace MyNatsClient
 
             var subscription = CreateSubscription(subscriptionInfo, observer);
 
-            await Client.SubAsync(subscription.SubscriptionInfo).ForAwait();
+            await _client.SubAsync(subscription.SubscriptionInfo).ForAwait();
             if (unsubAfterNMessages.HasValue)
-                await Client.UnSubAsync(subscription.SubscriptionInfo, unsubAfterNMessages).ForAwait();
+                await _client.UnSubAsync(subscription.SubscriptionInfo, unsubAfterNMessages).ForAwait();
 
             return subscription;
         }
 
         private Subscription CreateSubscription(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
         {
-            var subscription = new Subscription(subscriptionInfo, Client.MsgOpStream, observer, info =>
+            var subscription = new Subscription(subscriptionInfo, _client.MsgOpStream, observer, info =>
             {
                 ISubscription tmp;
                 _subscriptions.TryRemove(info.Id, out tmp);
             });
             if (!_subscriptions.TryAdd(subscription.SubscriptionInfo.Id, subscription))
-                throw new NatsException($"Could not create subscription. There is already a subscription with the id '{subscription.SubscriptionInfo.Id}'; registrered.");
+                throw new NatsException($"Could not create subscription. Id='{subscriptionInfo.Id}'. Subject='{subscriptionInfo.Subject}' QueueGroup='{subscriptionInfo.QueueGroup}'; registrered.");
 
             return subscription;
         }
