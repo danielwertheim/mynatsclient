@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
+using MyNatsClient.Events;
 using MyNatsClient.Internals;
 using MyNatsClient.Internals.Extensions;
 using MyNatsClient.Ops;
@@ -18,7 +19,22 @@ namespace MyNatsClient
         {
             _client = client;
             _subscriptions = new ConcurrentDictionary<string, IConsumerSubscription>();
+            _client.Events.Subscribe(new DelegatingObserver<IClientEvent>(OnClientEvent));
+        }
 
+        private void OnClientEvent(IClientEvent ev)
+        {
+            var connected = ev as ClientConnected;
+            if (connected == null)
+                return;
+
+            OnClientConnected(connected);
+        }
+
+        private void OnClientConnected(ClientConnected ev)
+        {
+            foreach (var subscription in _subscriptions.Values)
+                _client.Sub(subscription.SubscriptionInfo);
         }
 
         public void Dispose()
@@ -58,7 +74,11 @@ namespace MyNatsClient
 
             var subscription = CreateSubscription(subscriptionInfo, observer);
 
+            if (_client.State != NatsClientState.Connected)
+                return subscription;
+
             _client.Sub(subscription.SubscriptionInfo);
+
             if (unsubAfterNMessages.HasValue)
                 _client.UnSub(subscription.SubscriptionInfo, unsubAfterNMessages);
 
@@ -74,7 +94,11 @@ namespace MyNatsClient
 
             var subscription = CreateSubscription(subscriptionInfo, observer);
 
+            if (_client.State != NatsClientState.Connected)
+                return subscription;
+
             await _client.SubAsync(subscription.SubscriptionInfo).ForAwait();
+
             if (unsubAfterNMessages.HasValue)
                 await _client.UnSubAsync(subscription.SubscriptionInfo, unsubAfterNMessages).ForAwait();
 

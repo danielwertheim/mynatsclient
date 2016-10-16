@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -81,5 +83,31 @@ namespace MyNatsClient.IntegrationTests
 
             interceptCount.Should().Be(2);
         }
+
+        [Fact]
+        public async Task Should_resubscribe_When_client_reconnects()
+        {
+            const string subject = "4f90a7dd4971430fbf5151a1116c9cfc";
+            var interceptCount = 0;
+
+            var observer = new DelegatingObserver<MsgOp>(msg =>
+            {
+                Interlocked.Increment(ref interceptCount);
+                ReleaseOne();
+            });
+            using (_consumer.Subscribe(subject, observer))
+            {
+                await _client.PubAsync(subject, "Test1");
+                WaitOne();
+                _client.Disconnect();
+
+                _client.Connect();
+                await _client.PubAsync(subject, "Test2");
+                WaitOne();
+            }
+
+            interceptCount.Should().Be(2);
+        }
+
     }
 }
