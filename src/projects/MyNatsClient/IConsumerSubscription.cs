@@ -2,7 +2,7 @@ using System;
 
 namespace MyNatsClient
 {
-    public interface ISubscription : IDisposable
+    public interface IConsumerSubscription : IDisposable
     {
         SubscriptionInfo SubscriptionInfo { get; }
     }

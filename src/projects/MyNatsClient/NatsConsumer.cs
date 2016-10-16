@@ -12,13 +12,13 @@ namespace MyNatsClient
     {
         private bool _isDisposed;
         private readonly INatsClient _client;
-        private readonly ConcurrentDictionary<string, ISubscription> _subscriptions;
+        private readonly ConcurrentDictionary<string, IConsumerSubscription> _subscriptions;
 
         public NatsConsumer(INatsClient client)
         {
             _client = client;
+            _subscriptions = new ConcurrentDictionary<string, IConsumerSubscription>();
 
-            _subscriptions = new ConcurrentDictionary<string, ISubscription>();
         }
 
         public void Dispose()
@@ -49,10 +49,10 @@ namespace MyNatsClient
                 throw new ObjectDisposedException(GetType().Name);
         }
 
-        public ISubscription Subscribe(string subject, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
+        public IConsumerSubscription Subscribe(string subject, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
             => Subscribe(new SubscriptionInfo(subject), observer, unsubAfterNMessages);
 
-        public ISubscription Subscribe(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
+        public IConsumerSubscription Subscribe(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
         {
             ThrowIfDisposed();
 
@@ -65,10 +65,10 @@ namespace MyNatsClient
             return subscription;
         }
 
-        public Task<ISubscription> SubscribeAsync(string subject, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
+        public Task<IConsumerSubscription> SubscribeAsync(string subject, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
             => SubscribeAsync(new SubscriptionInfo(subject), observer, unsubAfterNMessages);
 
-        public async Task<ISubscription> SubscribeAsync(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
+        public async Task<IConsumerSubscription> SubscribeAsync(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
         {
             ThrowIfDisposed();
 
@@ -81,11 +81,11 @@ namespace MyNatsClient
             return subscription;
         }
 
-        private Subscription CreateSubscription(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
+        private ConsumerSubscription CreateSubscription(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
         {
-            var subscription = new Subscription(subscriptionInfo, _client.MsgOpStream, observer, info =>
+            var subscription = new ConsumerSubscription(subscriptionInfo, _client.MsgOpStream, observer, info =>
             {
-                ISubscription tmp;
+                IConsumerSubscription tmp;
                 _subscriptions.TryRemove(info.Id, out tmp);
             });
             if (!_subscriptions.TryAdd(subscription.SubscriptionInfo.Id, subscription))

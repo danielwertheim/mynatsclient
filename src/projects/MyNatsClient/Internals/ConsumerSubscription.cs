@@ -4,7 +4,7 @@ using MyNatsClient.Ops;
 
 namespace MyNatsClient.Internals
 {
-    internal class Subscription : ISubscription
+    internal class ConsumerSubscription : IConsumerSubscription
     {
         private IDisposable _subscription;
         private bool _isDisposed;
@@ -12,7 +12,11 @@ namespace MyNatsClient.Internals
 
         public SubscriptionInfo SubscriptionInfo { get; }
 
-        internal Subscription(SubscriptionInfo subscriptionInfo, IFilterableObservable<MsgOp> messageStream, IObserver<MsgOp> observer, Action<SubscriptionInfo> onDisposing = null)
+        internal ConsumerSubscription(
+            SubscriptionInfo subscriptionInfo,
+            IFilterableObservable<MsgOp> messageStream,
+            IObserver<MsgOp> observer,
+            Action<SubscriptionInfo> onDisposing = null)
         {
             EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
             EnsureArg.IsNotNull(messageStream, nameof(messageStream));
