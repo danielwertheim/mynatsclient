@@ -1,6 +1,6 @@
 # MyNatsClient
 ## Why a new one when there's an official project?
-Because I wanted one that leaves .Net4.0 behind and therefore offers `async` constructs. And I also wanted one that is reactive and supports [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET), by being based around `IObservable<T>`. And I also wanted to keep as much of the domain language of NATS as possible, but not strictly be following/limited to the APIs of other NATS client, but instead offer one that fits the .NET domain.
+Because I wanted one that leaves .Net4.0 behind and therefore offers `async` constructs. And I also wanted one that is reactive and supports [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET), by being based around `IObservable<T>`. And I also wanted to keep as much of the domain language of NATS as possible, but not strictly be following/limited to the APIs of other NATS client, but instead offer one that fits the .NET domain and one that is a .NET client first and foremost and not a port.
 
 ## Metrics
 There are some posts on this on my blog. The most interesting one would be: [MyNatsClient - It flushes, but so can you](http://danielwertheim.se/mynatsclient-it-flushes-but-so-can-you/)
@@ -29,7 +29,7 @@ For convenience, if you want a consumer that makes use of Reactive Extensions, u
 install-package MyNatsClient.Rx
 ```
 
-## Consumer sample
+## Usage
 Just some simple code showing usage.
 
 ```csharp
@@ -131,6 +131,68 @@ using (var client = new NatsClient("myClientId", connectionInfo))
 }
 ```
 
+## NatsConsumer
+The `NatsConsumer` introduced in `v0.4.0` allows a simplified consuming experience. Using the `NatsClient`, you need to subscribe to a `subject` against the broker as well as an in-process handler against the observable `Client.MsgOpStream`. With the `NatsConsumer` this is done for you:
+
+```csharp
+var consumer = new NatsConsumer(client);
+
+//Subscribe will create subscription both against the NATS-broker
+//and the in-process observable message stream
+consumer.Subscribe("mySubject", myHandler);
+//or async
+await consumer.SubscribeAsync("mysubject", myHandler);
+```
+
+To `unsubscribe`, you can do **any of the following**:
+
+- Dispose the `IConsumerSubscription` returned by the `consumer.Subscribe` or `consumer.SubscribeAsync` methods.
+- Dispose the `NatsConsumer` and it will take care of the subscriptions.
+- Pass the `IConsumerSubscription` to any of the `consumer.Unsubscribe(subscription)` or `consumer.UnsubscribeAsync(subscription)`
+
+**NOTE** it's perfectly fine to do both e.g. `subscription.Dispose` as well as `consumer.Dispose` or e.g. `consumer.Unsubscribe` and then `subscription.Dispose`.
+
+## Client.Events
+The events aren't normal events, the events are distributed via `client.Events` which is an `IObservable<IClientEvent>`. The events are:
+
+* ClientConnected
+* ClientDisconnected
+* ClientConsumerFailed
+
+### ClientConnected
+Signals that the client is connected and ready for use. You can react on this to subscribe to `subjects`:
+
+```csharp
+client.Events.OfType<ClientConnected>().Subscribe(async ev =>
+{
+    await ev.Client.SubAsync("foo", "s1");
+    await ev.Client.SubAsync("foo", "s2");
+    await ev.Client.SubAsync("bar", "s3");
+
+    //Make it automatically unsub after two messages
+    await ev.Client.UnSubAsync("s2", 2);
+});
+```
+
+### ClientDisconnected
+You can use the `ClientDisconnected.Reason` to see if you manually should reconnect the client:
+
+```csharp
+client.Events.OfType<ClientDisconnected>().Subscribe(ev =>
+{
+    if (ev.Reason != DisconnectReason.DueToFailure)
+        return;
+
+    ev.Client.Connect();
+});
+```
+
+### ClientConsumerFailed
+This would be dispatched from the client, if the `Consumer` (internal part that continuously reads from server and dispatches messages) gets an `ErrOp` or if there's an `Exception`. E.g. if there's an unhandled exception from one of your subscribers.
+
+## Connection behaviour
+When creating the `ConnectionInfo` you can specify one or more `hosts`. It will try to get a connection to one of the servers. This is picked randomly and if no connection can be established to any of the hosts, an `NatsException` will be thrown.
+
 ## Auth
 You specify credentials on the `ConnectionInfo` object:
 
@@ -212,47 +274,6 @@ LoggerManager.Resolve = loggerForType => new MyLogger();
 
 The `loggerForType` being passed could be used for passing to NLog to get Logger per class etc.
 
-## Client.Events
-The events aren't normal events, the events are distributed via `client.Events` which is an `IObservable<IClientEvent>`. The events are:
-
-* ClientConnected
-* ClientDisconnected
-* ClientConsumerFailed
-
-### ClientConnected
-Signals that the client is connected and ready for use. You can react on this to subscribe to `subjects`:
-
-```csharp
-client.Events.OfType<ClientConnected>().Subscribe(async ev =>
-{
-    await ev.Client.SubAsync("foo", "s1");
-    await ev.Client.SubAsync("foo", "s2");
-    await ev.Client.SubAsync("bar", "s3");
-
-    //Make it automatically unsub after two messages
-    await ev.Client.UnSubAsync("s2", 2);
-});
-```
-
-### ClientDisconnected
-You can use the `ClientDisconnected.Reason` to see if you manually should reconnect the client:
-
-```csharp
-client.Events.OfType<ClientDisconnected>().Subscribe(ev =>
-{
-    if (ev.Reason != DisconnectReason.DueToFailure)
-        return;
-
-    ev.Client.Connect();
-});
-```
-
-### ClientConsumerFailed
-This would be dispatched from the client, if the `Consumer` (internal part that continuously reads from server and dispatches messages) gets an `ErrOp` or if there's an `Exception`. E.g. if there's an unhandled exception from one of your subscribers.
-
-## Connection behaviour
-When creating the `ConnectionInfo` you can specify one or more `hosts`. It will try to get a connection to one of the servers. This is picked randomly and if no connection can be established to any of the hosts, an `NatsException` will be thrown.
-
 ## Reads and Writes
 The client uses one `Socket` but two `NetworkStreams`. One stream for writes and one for reads. The client only locks on writes.
 
@@ -274,12 +295,14 @@ Task PubAsync(string subject, byte[] body, string replyTo);
 void Sub(string subject, string subscriptionId, string queueGroup = null);
 Task SubAsync(string subject, string subscriptionId, string queueGroup = null);
 
-void UnSub(string subscriptionId, int? maxMessages = null);
-Task UnSubAsync(string subscriptionId, int? maxMessages = null);
+void Unsub(string subscriptionId, int? maxMessages = null);
+Task UnsubAsync(string subscriptionId, int? maxMessages = null);
 ```
 
-## Consuming
-The Consumer is the part that consumes the readstream. It tries to parse the incoming data to `IOp` implementations: `ErrOp`, `InfoOp`, `MsgOp`, `PingOp`, `PongOp`; which you consume via `client.OpStream.Subscribe(...)` or for `MsgOp`ONLY, use the `client.MsgOpStream.Subscribe(...)`. The Sample client is using [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) and with this in place, you can do stuff like:
+## Observable message streams
+The message streams are exposed as `Observables`. So you can use [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) to consume e.g. the `client.OpStream` for `IOp` implementations: `ErrOp`, `InfoOp`, `MsgOp`, `PingOp`, `PongOp`. You do this using `client.OpStream.Subscribe(...)`. For `MsgOp`ONLY, use the `client.MsgOpStream.Subscribe(...)`.
+
+For convenience you can install the `MyNatsClient.Rx` [NuGet package](http://www.nuget.org/packages/mynatsclient.rx), which then lets you do stuff like:
 
 ```csharp
 //Subscribe to OpStream ALL ops e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
@@ -338,7 +361,7 @@ The `client.IncomingOps.Subscribe(...)` returns an `IDisposable`. If you dispose
 
 This will happen automatically if your subscription is causing an unhandled exception.
 
-**PLEASE NOTE!** The NATS subscription is still there. Use `client.UnSub(...)` or `client.UnSubAsync(...)` to let the server know that your client should not receive messages for a certain subject anymore.
+**PLEASE NOTE!** The NATS subscription is still there. Use `client.Unsub(...)` or `client.UnsubAsync(...)` to let the server know that your client should not receive messages for a certain subject anymore.
 
 ### Consumer pings and stuff
 The Consumer looks at `client.Stats.LastOpReceivedAt` to see if it has taken to long time since it heard from the server.
