@@ -24,7 +24,7 @@ public class BuildConfig
         return new BuildConfig
         {
             Target = target,
-            SemVer = Version + (IsPreRelease ? buildRevision : "-b" + buildRevision),
+            SemVer = Version + (IsPreRelease ? "-b" + buildRevision : string.Empty),
             BuildProfile = context.Argument("configuration", "Release"),
             IsTeamCityBuild = buildSystem.TeamCity.IsRunningOnTeamCity
         };
