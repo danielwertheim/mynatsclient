@@ -211,10 +211,16 @@ This would be dispatched from the client, if the `Consumer` (internal part that 
 When creating the `ConnectionInfo` you can specify one or more `hosts`. It will try to get a connection to one of the servers. This is picked randomly and if no connection can be established to any of the hosts, an `NatsException` will be thrown.
 
 ## Auth
-You specify credentials on the `ConnectionInfo` object:
+You specify credentials on the `ConnectionInfo` object or on individual hosts:
 
 ```csharp
-var cnInfo = new ConnectionInfo(...)
+var hosts = new [] {
+    new Host("192.168.2.1"),
+    new Host("192.168.2.2") {
+        Credentials = new Credentials("foo", "bar")
+    }
+};
+var cnInfo = new ConnectionInfo(hosts)
 {
     Credentials = new Credentials("test", "p@ssword1234")
 };
