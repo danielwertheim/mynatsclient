@@ -1,6 +1,6 @@
 public class BuildConfig
 {
-    private const string Version = "0.4.0";
+    private const string Version = "0.5.0";
     private const bool IsPreRelease = false;
 
     public readonly string SrcDir = "./src/";
