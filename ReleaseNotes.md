@@ -1,5 +1,9 @@
 # Release notes
 
+## v0.5.0 - 2016-10-17
+- **New:** `NatsConsumer.Subscribe()` now also accepts a handler with definition `Action<MsgOp>` and not only an `IObserver<MsgOp>`.
+- **New:** The overloads of `NatsClient.Sub|SubAsync` that takes a `SubscriptionInfo` now makes an automatical call to `UnSub|UnSubAsync` if the `maxMessages` option has been specified.
+
 ## v0.4.0 - 2016-10-16
 - **New:** Introducing `NatsConsumer` for simplified experience around message consumption. See README for more info.
 - **Changed:** `client.UnSub` is now `client.Unsub` and `client.UnSubAsync` is now `client.Unsubasync`.
@@ -13,7 +17,7 @@
 - **Closed:** [#7](https://github.com/danielwertheim/mynatsclient/issues/9), remove dependency on JSON.Net
 - **Closed:** [#10](https://github.com/danielwertheim/mynatsclient/issues/9), provide MyNatsClient.Rx as a convenience NuGet for bringing in MyNatsClient and Rx.
 
-##** v0.1.2 - 2016-06-12
+## v0.1.2 - 2016-06-12
 - **Fixed:** [#9](https://github.com/danielwertheim/mynatsclient/issues/9), with mix up of QueueGroup and ReplyTo
 
 ## v0.1.1 - 2016-06-12

@@ -139,9 +139,23 @@ var consumer = new NatsConsumer(client);
 
 //Subscribe will create subscription both against the NATS-broker
 //and the in-process observable message stream
-consumer.Subscribe("mySubject", myHandler);
+consumer.Subscribe("mySubject", msg => {});
 //or async
-await consumer.SubscribeAsync("mysubject", myHandler);
+await consumer.SubscribeAsync("mysubject", msg => {});
+```
+
+You can also inject an `IObserver<MsgOp>` so that you could inject logic for `OnException` and `OnCompleted`.
+
+```csharp
+var observer = new DelegatingObserver<MsgOp>(
+    msg => {},
+    ex => {},
+    () => {}
+);
+
+consumer.Subscribe("mySubject", observer);
+//or async
+await consumer.SubscribeAsync("mysubject", observer);
 ```
 
 To `unsubscribe`, you can do **any of the following**:
@@ -149,6 +163,9 @@ To `unsubscribe`, you can do **any of the following**:
 - Dispose the `IConsumerSubscription` returned by the `consumer.Subscribe` or `consumer.SubscribeAsync` methods.
 - Dispose the `NatsConsumer` and it will take care of the subscriptions.
 - Pass the `IConsumerSubscription` to any of the `consumer.Unsubscribe(subscription)` or `consumer.UnsubscribeAsync(subscription)`
+
+### Auto unsubscribe
+When using any of the `Subscribe|SubscribeAsync`overloads that take a `SubscriptionInfo`, then you can optionally specify `maxMessages`, which will send an `Unsub` to the broker with this argument for the subject, so that you only receive max number of messages on that subscription.
 
 **NOTE** it's perfectly fine to do both e.g. `subscription.Dispose` as well as `consumer.Dispose` or e.g. `consumer.Unsubscribe` and then `subscription.Dispose`.
 
