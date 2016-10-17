@@ -1,13 +1,34 @@
 using System.Linq;
+using EnsureThat;
 
 namespace MyNatsClient
 {
     public class ConnectionInfo
     {
+        /// <summary>
+        /// Gets the hosts that a client can randomly connect to.
+        /// </summary>
         public Host[] Hosts { get; }
+
+        /// <summary>
+        /// Gets or sets value indicating if client should
+        /// respond to server pings automatically.
+        /// Default is true.
+        /// </summary>
         public bool AutoRespondToPing { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the credentials used when connecting against the hosts.
+        /// </summary>
+        /// <remarks>You can specify host specific credentials on each host.</remarks>
         public Credentials Credentials { get; set; } = Credentials.Empty;
-        public bool Verbose { get; set; }
+
+        /// <summary>
+        /// Gets or sets value if verbose output should be used.
+        /// Default is false.
+        /// </summary>
+        public bool Verbose { get; set; } = false;
+
         public PubFlushMode PubFlushMode { get; set; } = PubFlushMode.Auto;
         public SocketOptions SocketOptions { get; set; } = new SocketOptions();
 
@@ -15,6 +36,8 @@ namespace MyNatsClient
 
         public ConnectionInfo(Host[] hosts)
         {
+            EnsureArg.HasItems(hosts, nameof(hosts));
+
             Hosts = hosts;
         }
 
