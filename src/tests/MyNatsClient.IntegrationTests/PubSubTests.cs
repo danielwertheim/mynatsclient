@@ -45,14 +45,14 @@ namespace MyNatsClient.IntegrationTests
         }
 
         [Fact]
-        public async Task A_client_publishing_Should_succeed_When_no_subscribers_exists()
+        public async Task Client_Should_be_able_to_publish_When_no_subscribers_exists()
         {
             _client1.Pub("Test", "test message");
             await _client1.PubAsync("Test", "Test message");
         }
 
         [Fact]
-        public async Task A_published_message_Should_be_published_and_consumed_in_full()
+        public async Task Client_Should_be_able_to_publish_and_consume_messages_When_publishing_one_by_one()
         {
             var interceptCount = 0;
             var intercepted = new List<MsgOp>();
@@ -83,7 +83,7 @@ namespace MyNatsClient.IntegrationTests
         }
 
         [Fact]
-        public void A_published_message_using_PubMany_Should_be_published_and_consumed_in_full()
+        public void Client_Should_be_able_to_publish_and_consume_messages_When_publishing_batch()
         {
             var interceptCount = 0;
             var intercepted = new List<MsgOp>();
@@ -117,7 +117,7 @@ namespace MyNatsClient.IntegrationTests
         }
 
         [Fact]
-        public async Task A_client_publishing_Should_dispatch_to_all_subscribed_clients()
+        public async Task Client_Should_dispatch_to_all_subscribed_clients()
         {
             const string subject = "Test";
             var nr2ReceiveCount = 0;
@@ -150,7 +150,7 @@ namespace MyNatsClient.IntegrationTests
         }
 
         [Fact]
-        public void A_client_publishing_Should_be_able_to_publish_to_it_self()
+        public void Client_Should_be_able_to_publish_to_it_self()
         {
             const string subject = "Test";
             var nr1ReceiveCount = 0;
@@ -169,7 +169,7 @@ namespace MyNatsClient.IntegrationTests
         }
 
         [Fact]
-        public void A_client_Should_be_able_to_subscribe_to_the_same_subject_twice()
+        public void Client_Should_be_able_to_subscribe_to_the_same_subject_twice()
         {
             const string subject = "Test";
             var nr1ReceiveCount = 0;
@@ -190,7 +190,7 @@ namespace MyNatsClient.IntegrationTests
         }
 
         [Fact]
-        public void A_client_Should_be_able_to_subscribe_to_many_subjects()
+        public void Client_Should_be_able_to_subscribe_to_many_subjects()
         {
             var nr1ReceiveCount = 0;
 

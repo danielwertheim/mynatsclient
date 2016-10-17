@@ -550,9 +550,17 @@ namespace MyNatsClient
 
         public void Sub(SubscriptionInfo subscriptionInfo)
         {
+            ThrowIfDisposed();
+
             EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
 
-            Sub(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup);
+            WithWriteLock(() =>
+            {
+                DoSend(SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup));
+                if (subscriptionInfo.MaxMessages.HasValue)
+                    DoSend(UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages));
+                DoFlush();
+            });
         }
 
         public void Sub(string subject, string subscriptionId, string queueGroup = null)
@@ -566,11 +574,19 @@ namespace MyNatsClient
             });
         }
 
-        public Task SubAsync(SubscriptionInfo subscriptionInfo)
+        public async Task SubAsync(SubscriptionInfo subscriptionInfo)
         {
+            ThrowIfDisposed();
+
             EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
 
-            return SubAsync(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup);
+            await WithWriteLockAsync(async () =>
+            {
+                await DoSendAsync(SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup)).ForAwait();
+                if (subscriptionInfo.MaxMessages.HasValue)
+                    await DoSendAsync(UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages)).ForAwait();
+                await DoFlushAsync().ForAwait();
+            }).ForAwait();
         }
 
         public async Task SubAsync(string subject, string subscriptionId, string queueGroup = null)
@@ -584,11 +600,11 @@ namespace MyNatsClient
             }).ForAwait();
         }
 
-        public void Unsub(SubscriptionInfo subscriptionInfo, int? maxMessages = null)
+        public void Unsub(SubscriptionInfo subscriptionInfo)
         {
             EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
 
-            Unsub(subscriptionInfo.Id, maxMessages);
+            Unsub(subscriptionInfo.Id, subscriptionInfo.MaxMessages);
         }
 
         public void Unsub(string subscriptionId, int? maxMessages = null)
@@ -602,11 +618,11 @@ namespace MyNatsClient
             });
         }
 
-        public Task UnsubAsync(SubscriptionInfo subscriptionInfo, int? maxMessages = null)
+        public Task UnsubAsync(SubscriptionInfo subscriptionInfo)
         {
             EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
 
-            return UnsubAsync(subscriptionInfo.Id, maxMessages);
+            return UnsubAsync(subscriptionInfo.Id, subscriptionInfo.MaxMessages);
         }
 
         public async Task UnsubAsync(string subscriptionId, int? maxMessages = null)

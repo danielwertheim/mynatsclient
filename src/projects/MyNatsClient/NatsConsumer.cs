@@ -64,10 +64,16 @@ namespace MyNatsClient
                 throw new ObjectDisposedException(GetType().Name);
         }
 
-        public IConsumerSubscription Subscribe(string subject, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
-            => Subscribe(new SubscriptionInfo(subject), observer, unsubAfterNMessages);
+        public IConsumerSubscription Subscribe(string subject, Action<MsgOp> handler)
+            => Subscribe(new SubscriptionInfo(subject), new DelegatingObserver<MsgOp>(handler));
 
-        public IConsumerSubscription Subscribe(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
+        public IConsumerSubscription Subscribe(string subject, IObserver<MsgOp> observer)
+            => Subscribe(new SubscriptionInfo(subject), observer);
+
+        public IConsumerSubscription Subscribe(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler)
+            => Subscribe(subscriptionInfo, new DelegatingObserver<MsgOp>(handler));
+
+        public IConsumerSubscription Subscribe(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
         {
             ThrowIfDisposed();
 
@@ -78,16 +84,16 @@ namespace MyNatsClient
 
             _client.Sub(subscription.SubscriptionInfo);
 
-            if (unsubAfterNMessages.HasValue)
-                _client.Unsub(subscription.SubscriptionInfo, unsubAfterNMessages);
-
             return subscription;
         }
 
-        public Task<IConsumerSubscription> SubscribeAsync(string subject, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
-            => SubscribeAsync(new SubscriptionInfo(subject), observer, unsubAfterNMessages);
+        public Task<IConsumerSubscription> SubscribeAsync(string subject, IObserver<MsgOp> observer)
+            => SubscribeAsync(new SubscriptionInfo(subject), observer);
 
-        public async Task<IConsumerSubscription> SubscribeAsync(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer, int? unsubAfterNMessages = null)
+        public Task<IConsumerSubscription> SubscribeAsync(string subject, Action<MsgOp> handler)
+            => SubscribeAsync(new SubscriptionInfo(subject), new DelegatingObserver<MsgOp>(handler));
+
+        public async Task<IConsumerSubscription> SubscribeAsync(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
         {
             ThrowIfDisposed();
 
@@ -98,11 +104,11 @@ namespace MyNatsClient
 
             await _client.SubAsync(subscription.SubscriptionInfo).ForAwait();
 
-            if (unsubAfterNMessages.HasValue)
-                await _client.UnsubAsync(subscription.SubscriptionInfo, unsubAfterNMessages).ForAwait();
-
             return subscription;
         }
+
+        public Task<IConsumerSubscription> SubscribeAsync(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler)
+            => SubscribeAsync(subscriptionInfo, new DelegatingObserver<MsgOp>(handler));
 
         private ConsumerSubscription CreateSubscription(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
         {

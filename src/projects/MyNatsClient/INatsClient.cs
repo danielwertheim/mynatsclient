@@ -198,15 +198,14 @@ namespace MyNatsClient
         /// should not receive messages anymore for the specific subcription info.
         /// </summary>
         /// <param name="subscriptionInfo"></param>
-        /// <param name="maxMessages"></param>
-        void Unsub(SubscriptionInfo subscriptionInfo, int? maxMessages = null);
+        void Unsub(SubscriptionInfo subscriptionInfo);
 
         /// <summary>
         /// Sync send of UnSub message to indicate that the client
         /// should not receive messages anymore for the specific subject.
         /// </summary>
         /// <param name="subscriptionId"></param>
-        /// <param name="maxMessages"></param>
+        /// <param name="maxMessages">Number of messages to wait for before automatically unsubscribing</param>
         void Unsub(string subscriptionId, int? maxMessages = null);
 
         /// <summary>
@@ -214,15 +213,14 @@ namespace MyNatsClient
         /// should not receive messages anymore for the specific subcription info.
         /// </summary>
         /// <param name="subscriptionInfo"></param>
-        /// <param name="maxMessages"></param>
-        Task UnsubAsync(SubscriptionInfo subscriptionInfo, int? maxMessages = null);
+        Task UnsubAsync(SubscriptionInfo subscriptionInfo);
 
         /// <summary>
         /// Async send of UnSub message to indicate that the client
         /// should not receive messages anymore for the specific subject.
         /// </summary>
         /// <param name="subscriptionId"></param>
-        /// <param name="maxMessages"></param>
+        /// <param name="maxMessages">Number of messages to wait for before automatically unsubscribing</param>
         /// <returns></returns>
         Task UnsubAsync(string subscriptionId, int? maxMessages = null);
     }

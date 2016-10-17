@@ -42,7 +42,7 @@ namespace MyNatsClient.IntegrationTests
         }
 
         [Fact]
-        public async Task A_client_Should_be_able_to_unsub_from_a_subject()
+        public async Task Client_Should_be_able_to_unsub_from_a_subject()
         {
             const string subject = "Test";
             var nr1ReceiveCount = 0;
@@ -89,7 +89,7 @@ namespace MyNatsClient.IntegrationTests
         }
 
         [Fact]
-        public async Task A_client_Should_be_able_to_auto_unsub_after_n_messages_to_subject()
+        public async Task Client_Should_be_able_to_auto_unsub_after_n_messages_to_subject()
         {
             const string subject = "Test";
             var nr2ReceiveCount = 0;
