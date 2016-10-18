@@ -42,7 +42,7 @@ namespace MyNatsClient.IntegrationTests
 
             var observer = new DelegatingObserver<MsgOp>(msg =>
             {
-                interceptedSubjects.Add(subject);
+                interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
             });
             using (_consumer.Subscribe(subject, observer))
@@ -70,7 +70,7 @@ namespace MyNatsClient.IntegrationTests
 
             var observer = new DelegatingObserver<MsgOp>(msg =>
             {
-                interceptedSubjects.Add(subject);
+                interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
             });
             using (await _consumer.SubscribeAsync(subject, observer))
@@ -98,7 +98,7 @@ namespace MyNatsClient.IntegrationTests
 
             Action<MsgOp> handler = msg =>
             {
-                interceptedSubjects.Add(subject);
+                interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
             };
             using (_consumer.Subscribe(subject, handler))
@@ -126,7 +126,7 @@ namespace MyNatsClient.IntegrationTests
 
             Action<MsgOp> handler = msg =>
             {
-                interceptedSubjects.Add(subject);
+                interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
             };
             using (await _consumer.SubscribeAsync(subject, handler))
@@ -274,6 +274,31 @@ namespace MyNatsClient.IntegrationTests
             WaitOne();
 
             interceptCount.Should().Be(1);
+        }
+
+        [Fact]
+        public async Task Should_be_able_to_subscribe_using_wildcard_When_subscribing_synchronously_using_handler()
+        {
+            const string subjectNs = "foo.tests.";
+            var interceptedSubjects = new List<string>();
+
+            Action<MsgOp> handler = msg =>
+            {
+                interceptedSubjects.Add(msg.Subject);
+                ReleaseOne();
+            };
+            using (_consumer.Subscribe(subjectNs + "*", handler))
+            {
+                await _client.PubAsync(subjectNs + "type1", "Test1");
+                WaitOne();
+                await _client.PubAsync(subjectNs + "type2", "Test2");
+                WaitOne();
+                await _client.PubAsync(subjectNs + "type3", "Test3");
+                WaitOne();
+            }
+
+            interceptedSubjects.Should().HaveCount(3);
+            interceptedSubjects.Should().OnlyContain(i => i.StartsWith(subjectNs));
         }
     }
 }

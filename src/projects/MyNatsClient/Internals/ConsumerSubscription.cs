@@ -23,7 +23,7 @@ namespace MyNatsClient.Internals
             EnsureArg.IsNotNull(observer, nameof(observer));
 
             SubscriptionInfo = subscriptionInfo;
-            _subscription = messageStream.Subscribe(observer, ev => ev.Subject == SubscriptionInfo.Subject);
+            _subscription = messageStream.Subscribe(observer, msg => SubscriptionInfo.Matches(msg.Subject));
             _onDisposing = onDisposing;
         }
 
