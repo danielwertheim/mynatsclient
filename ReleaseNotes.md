@@ -1,5 +1,8 @@
 # Release notes
 
+## v0.5.1 - 2016-10-18
+- **Fixed:** `NatsConsumer.Subscribe()` now support wildcard `"*"` and full wildcard `">"`.
+
 ## v0.5.0 - 2016-10-17
 - **New:** `NatsConsumer.Subscribe()` now also accepts a handler with definition `Action<MsgOp>` and not only an `IObserver<MsgOp>`.
 - **New:** The overloads of `NatsClient.Sub|SubAsync` that takes a `SubscriptionInfo` now makes an automatical call to `UnSub|UnSubAsync` if the `maxMessages` option has been specified.
