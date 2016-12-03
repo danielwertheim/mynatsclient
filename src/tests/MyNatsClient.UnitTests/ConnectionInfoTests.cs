@@ -7,7 +7,7 @@ namespace MyNatsClient.UnitTests
     {
         public ConnectionInfoTests()
         {
-            UnitUnderTest = new ConnectionInfo(new[] { new Host("localhost", 4222) });
+            UnitUnderTest = new ConnectionInfo(new Host("localhost"));
         }
 
         [Fact]
@@ -31,11 +31,25 @@ namespace MyNatsClient.UnitTests
         [Fact]
         public void Clone_Should_clone_all_properties()
         {
-            UnitUnderTest.Credentials = new Credentials("theuser", "thepass");
+            var other = new ConnectionInfo(new[] { new Host("192.168.1.20", 4223) })
+            {
+                Credentials = new Credentials("tester", "p@ssword"),
+                Verbose = !UnitUnderTest.Verbose,
+                AutoReconnectOnFailure = !UnitUnderTest.AutoReconnectOnFailure,
+                AutoRespondToPing = !UnitUnderTest.AutoRespondToPing,
+                PubFlushMode = UnitUnderTest.PubFlushMode,
+                SocketOptions = new SocketOptions
+                {
+                    ReceiveBufferSize = 1000,
+                    ReceiveTimeoutMs = 100,
+                    SendBufferSize = 2000,
+                    SendTimeoutMs = 200
+                }
+            };
 
-            var cloned = UnitUnderTest.Clone();
+            var cloned = other.Clone();
 
-            cloned.ShouldBeEquivalentTo(UnitUnderTest);
+            cloned.ShouldBeEquivalentTo(other);
         }
     }
 }

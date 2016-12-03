@@ -22,6 +22,7 @@ namespace MyNatsClient
         private const int ConsumerMaxMsSilenceFromServer = 60000;
         private const int TryConnectMaxCycleDelayMs = 200;
         private const int TryConnectMaxDurationMs = 2000;
+        private const int MaxReconnectDueToFailureAttempts = 5;
 
         private readonly object _sync;
         private readonly ConnectionInfo _connectionInfo;
@@ -65,6 +66,39 @@ namespace MyNatsClient
             Id = id;
             State = NatsClientState.Disconnected;
             SocketFactory = new SocketFactory();
+
+            SubscribeToClientEventsForInternalUse();
+        }
+
+        private void SubscribeToClientEventsForInternalUse()
+        {
+            if (!_connectionInfo.AutoReconnectOnFailure)
+                return;
+
+            Events.Subscribe(new DelegatingObserver<IClientEvent>(ev =>
+            {
+                var disco = ev as ClientDisconnected;
+                if (disco == null || disco.Reason != DisconnectReason.DueToFailure)
+                    return;
+
+                try
+                {
+                    var attempts = 0;
+                    while (State == NatsClientState.Disconnected && attempts < MaxReconnectDueToFailureAttempts)
+                    {
+                        attempts += 1;
+                        Logger.Debug($"Trying to reconnect after disconnection due to failure. attempt={attempts.ToString()}");
+                        Connect();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Failed while trying to reconnect client.", ex);
+                }
+
+                if (State == NatsClientState.Disconnected)
+                    _eventMediator.Dispatch(new ClientAutoReconnectFailed(this));
+            }));
         }
 
         public void Dispose()

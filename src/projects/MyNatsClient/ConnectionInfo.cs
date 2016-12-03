@@ -18,6 +18,13 @@ namespace MyNatsClient
         public bool AutoRespondToPing { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets value indicating if client should
+        /// try and auto reconnect on failure.
+        /// Default is false.
+        /// </summary>
+        public bool AutoReconnectOnFailure { get; set; } = false;
+
+        /// <summary>
         /// Gets or sets the credentials used when connecting against the hosts.
         /// </summary>
         /// <remarks>You can specify host specific credentials on each host.</remarks>
@@ -55,6 +62,7 @@ namespace MyNatsClient
             return new ConnectionInfo(hosts)
             {
                 AutoRespondToPing = AutoRespondToPing,
+                AutoReconnectOnFailure = AutoReconnectOnFailure,
                 Credentials = new Credentials(Credentials.User, Credentials.Pass),
                 Verbose = Verbose,
                 PubFlushMode = PubFlushMode,
