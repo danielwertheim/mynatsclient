@@ -83,7 +83,7 @@ namespace MyNatsClient
 
                 for (var i = 0; i < testParts.Length; i++)
                 {
-                    if (!testParts[i].Equals(_subjectParts[i], StringComparison.Ordinal) && _subjectParts[i] != "*")
+                    if (!testParts[i].Equals(_subjectParts[i], StringComparison.Ordinal) && !string.Equals(_subjectParts[i], "*", StringComparison.Ordinal))
                         return false;
                 }
 
