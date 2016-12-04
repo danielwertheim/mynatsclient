@@ -1,8 +1,8 @@
 ﻿namespace MyNatsClient
 {
     /// <summary>
-    /// Determines the clients flush behavior
-    /// when Pub or PubAsync is called writes.
+    /// Determines the clients flush behavior when sending messages.
+    /// E.g. when Pub or PubAsync is called.
     /// </summary>
     public enum PubFlushMode
     {

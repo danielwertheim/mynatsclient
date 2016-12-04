@@ -36,7 +36,13 @@ namespace MyNatsClient
         /// </summary>
         public bool Verbose { get; set; } = false;
 
+        /// <summary>
+        /// Gets or sets value determining how the clients flush behavior
+        /// should be when sending messages. E.g. when Pub or PubAsync is called.
+        /// Default is Auto (will Flush after each Pub or PubAsync).
+        /// </summary>
         public PubFlushMode PubFlushMode { get; set; } = PubFlushMode.Auto;
+
         public SocketOptions SocketOptions { get; set; } = new SocketOptions();
 
         public ConnectionInfo(Host host) : this(new[] { host }) { }
