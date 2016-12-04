@@ -23,6 +23,12 @@ namespace MyNatsClient.UnitTests
         }
 
         [Fact]
+        public void Defaults_Should_not_have_auto_reconnect_on_failure()
+        {
+            UnitUnderTest.AutoReconnectOnFailure.Should().BeFalse();
+        }
+
+        [Fact]
         public void Defaults_Should_not_auto_respond_to_pings()
         {
             UnitUnderTest.AutoRespondToPing.Should().BeTrue();
