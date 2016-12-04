@@ -1,5 +1,8 @@
 # Release notes
 
+## v0.6.0 - 2016-12-04
+- **New:** `ConnectionInfo.AutoReconnectOnFailure=true|false` default is `false`. Will try and reconnect if the client fails. If no reconnect can be made, an `ClientAutoReconnectFailed` will be dispatched.
+
 ## v0.5.1 - 2016-10-18
 - **Fixed:** `NatsConsumer.Subscribe()` now support wildcard `"*"` and full wildcard `">"`.
 
