@@ -8,13 +8,13 @@ using Xunit;
 
 namespace MyNatsClient.IntegrationTests
 {
-    public class UnSubTests : ClientIntegrationTests
+    public class ClientUnSubTests : ClientIntegrationTests
     {
         private NatsClient _client1;
         private NatsClient _client2;
         private NatsClient _client3;
 
-        public UnSubTests()
+        public ClientUnSubTests()
         {
             _client1 = new NatsClient("tc1", ConnectionInfo);
             _client1.Connect();

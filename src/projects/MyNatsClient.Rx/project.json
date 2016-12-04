@@ -1,4 +1,4 @@
-﻿{
+{
     "title": "MyNatsClient.Rx - async, reactive and simple NATS.io client",
     "description": "Convenience package that installs MyNatsClient and ReactiveExtensions (System.Reactive). MyNatsClient provides a simple, effective sync and async library for interacting with NATS.io using DotNet. Uses IObservable so it is ReactiveX friendly.",
     "authors": [ "danielwertheim" ],
@@ -29,13 +29,13 @@
             "dependencies": {
                 "NETStandard.Library": "1.6.0",
                 "MyNatsClient": "*",
-                "System.Reactive": "3.0.0"
+                "System.Reactive": "3.1.1"
             }
         },
         "net45": {
             "dependencies": {
                 "MyNatsClient": "*",
-                "System.Reactive": "3.0.0"
+                "System.Reactive": "3.1.1"
             }
         }
     }

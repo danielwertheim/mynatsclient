@@ -18,6 +18,13 @@ namespace MyNatsClient
         public bool AutoRespondToPing { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets value indicating if client should
+        /// try and auto reconnect on failure.
+        /// Default is false.
+        /// </summary>
+        public bool AutoReconnectOnFailure { get; set; } = false;
+
+        /// <summary>
         /// Gets or sets the credentials used when connecting against the hosts.
         /// </summary>
         /// <remarks>You can specify host specific credentials on each host.</remarks>
@@ -29,7 +36,13 @@ namespace MyNatsClient
         /// </summary>
         public bool Verbose { get; set; } = false;
 
+        /// <summary>
+        /// Gets or sets value determining how the clients flush behavior
+        /// should be when sending messages. E.g. when Pub or PubAsync is called.
+        /// Default is Auto (will Flush after each Pub or PubAsync).
+        /// </summary>
         public PubFlushMode PubFlushMode { get; set; } = PubFlushMode.Auto;
+
         public SocketOptions SocketOptions { get; set; } = new SocketOptions();
 
         public ConnectionInfo(Host host) : this(new[] { host }) { }
@@ -55,6 +68,7 @@ namespace MyNatsClient
             return new ConnectionInfo(hosts)
             {
                 AutoRespondToPing = AutoRespondToPing,
+                AutoReconnectOnFailure = AutoReconnectOnFailure,
                 Credentials = new Credentials(Credentials.User, Credentials.Pass),
                 Verbose = Verbose,
                 PubFlushMode = PubFlushMode,

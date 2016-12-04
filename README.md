@@ -42,6 +42,7 @@ var connectionInfo = new ConnectionInfo(
     })
 {
     AutoRespondToPing = true,
+    AutoReconnectOnFailure = false,
     Verbose = false,
     Credentials = new Credentials("testuser", "p@ssword1234")
 };
@@ -67,15 +68,14 @@ using (var client = new NatsClient("myClientId", connectionInfo))
 
     //Disconnect, either by client.Disconnect() call
     //or caused by fail.
-    //No auto reconnect exists yet, you can call connect
-    //and resubscribe.
     client.Events.OfType<ClientDisconnected>().Subscribe(ev =>
     {
         Console.WriteLine($"Client was disconnected due to reason '{ev.Reason}'");
         if (ev.Reason != DisconnectReason.DueToFailure)
             return;
 
-        ev.Client.Connect();        
+        //Not needed if you use `ConnectionInfo.AutoReconnectOnFailure`.
+        ev.Client.Connect();
     });
 
     //Subscribe to OpStream to get ALL ops e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
@@ -200,12 +200,24 @@ client.Events.OfType<ClientDisconnected>().Subscribe(ev =>
     if (ev.Reason != DisconnectReason.DueToFailure)
         return;
 
+    //Not needed if you use `ConnectionInfo.AutoReconnectOnFailure`.
+    ev.Client.Connect();
+});
+```
+
+### ClientAutoReconnectFailed
+If you use `ConnectionInfo.AutoReconnectOnFailure` and the client can not auto reconnect within a few attempts, this event will be raised.
+
+```csharp
+client.Events.OfType<ClientAutoReconnectFailed>().Subscribe(ev =>
+{
+    //Maybe manually try and connect again or something
     ev.Client.Connect();
 });
 ```
 
 ### ClientConsumerFailed
-This would be dispatched from the client, if the `Consumer` (internal part that continuously reads from server and dispatches messages) gets an `ErrOp` or if there's an `Exception`. E.g. if there's an unhandled exception from one of your subscribers.
+This would be dispatched from the client, if the `Consumer` (internal part that continuously reads from server and dispatches messages) gets an `ErrOp` or if there's an `Exception`. E.g. if there's an unhandled exception from one of your **subscribed observers**.
 
 ## Connection behaviour
 When creating the `ConnectionInfo` you can specify one or more `hosts`. It will try to get a connection to one of the servers. This is picked randomly and if no connection can be established to any of the hosts, an `NatsException` will be thrown.
