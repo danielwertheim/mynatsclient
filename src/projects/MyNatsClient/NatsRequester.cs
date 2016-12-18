@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using EnsureThat;
+using MyNatsClient.Internals;
 using MyNatsClient.Ops;
 
 namespace MyNatsClient
@@ -9,6 +10,7 @@ namespace MyNatsClient
     {
         private readonly string _clientInbox;
         private readonly INatsClient _client;
+        private ObservableOf<MsgOp> _responses;
 
         public NatsRequester(INatsClient client)
         {
@@ -16,14 +18,15 @@ namespace MyNatsClient
 
             _client = client;
             _clientInbox = Guid.NewGuid().ToString("N");
-            _client.Sub($"{_clientInbox}.>", _clientInbox);
+            _responses = new ObservableOf<MsgOp>();
+            _client.Sub($"{_clientInbox}.>", msg => _responses.Dispatch(msg));
         }
 
         public async Task<MsgOp> RequestAsync(string subject, string body)
         {
             var taskComp = new TaskCompletionSource<MsgOp>();
             var requestId = Guid.NewGuid().ToString("N");
-            var subscription = _client.MsgOpStream.Subscribe(
+            var subscription = _responses.Subscribe(
                 new DelegatingObserver<MsgOp>(msg =>
                 {
                     Console.WriteLine(2);
@@ -40,6 +43,18 @@ namespace MyNatsClient
             });
         }
 
-        public void Dispose() => _client.Unsub(_clientInbox);
+        public void Dispose()
+        {
+            Try.All(
+                () =>
+                {
+                    _client.Unsub(_clientInbox);
+                },
+                () =>
+                {
+                    _responses?.Dispose();
+                    _responses = null;
+                });
+        }
     }
 }

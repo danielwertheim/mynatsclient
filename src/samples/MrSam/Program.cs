@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reactive.Linq;
 using MyNatsClient;
 
 namespace MrSam
@@ -14,12 +13,11 @@ namespace MrSam
             _client = new NatsClient("testid", cnInfo);
             _client.Connect();
 
-            _client.MsgOpStream.Where(msg => msg.Subject == "getTemp").Subscribe(msg =>
+            _client.Sub("getTemp", msg =>
             {
                 var parts = msg.GetPayloadAsString().Split('@');
                 _client.Pub(msg.ReplyTo, $"Temp is {TempService.Get(parts[0], parts[1])}C");
             });
-            _client.Sub("getTemp", "s2");
 
             using (var request = new NatsRequester(_client))
             {
