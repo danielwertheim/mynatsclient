@@ -715,9 +715,10 @@ namespace MyNatsClient
         {
             var subscription = ClientSubscription.Create(subscriptionInfo, subscriptionFactory(MsgOpStream), info =>
             {
-                var tmp = RemoveSubscription(info);
-                if (tmp != null)
-                    Swallow.Everything(() => Unsub(tmp.SubscriptionInfo));
+                if (!TryRemoveSubscription(info))
+                    return;
+
+                Swallow.Everything(() => Unsub(info));
             });
 
             if (!_subscriptions.TryAdd(subscription.SubscriptionInfo.Id, subscription))
@@ -726,45 +727,14 @@ namespace MyNatsClient
             return subscription;
         }
 
-        public void Unsubscribe(IClientSubscription subscription)
-        {
-            ThrowIfDisposed();
-
-            EnsureArg.IsNotNull(subscription, nameof(subscription));
-
-            var tmp = RemoveSubscription(subscription.SubscriptionInfo);
-            if (tmp == null)
-                return;
-
-            Unsub(tmp.SubscriptionInfo);
-        }
-
-        public async Task UnsubscribeAsync(IClientSubscription subscription)
-        {
-            ThrowIfDisposed();
-
-            EnsureArg.IsNotNull(subscription, nameof(subscription));
-
-            var tmp = RemoveSubscription(subscription.SubscriptionInfo);
-            if (tmp == null)
-                return;
-
-            await UnsubAsync(tmp.SubscriptionInfo).ForAwait();
-        }
-
-        private ClientSubscription RemoveSubscription(SubscriptionInfo subscriptionInfo)
-        {
-            ClientSubscription tmp;
-            return _subscriptions.TryRemove(subscriptionInfo.Id, out tmp)
-                ? tmp
-                : null;
-        }
-
         public void Unsub(SubscriptionInfo subscriptionInfo)
         {
             EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
 
             ThrowIfDisposed();
+
+            if (!TryRemoveSubscription(subscriptionInfo))
+                return;
 
             if (State != NatsClientState.Connected)
                 return;
@@ -785,6 +755,9 @@ namespace MyNatsClient
 
             ThrowIfDisposed();
 
+            if (!TryRemoveSubscription(subscriptionInfo))
+                return;
+
             if (State != NatsClientState.Connected)
                 return;
 
@@ -796,6 +769,15 @@ namespace MyNatsClient
                 await DoSendAsync(UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages)).ForAwait();
                 await DoFlushAsync().ForAwait();
             }).ForAwait();
+        }
+
+        private bool TryRemoveSubscription(SubscriptionInfo subscriptionInfo)
+        {
+            ClientSubscription tmp;
+
+            _subscriptions.TryRemove(subscriptionInfo.Id, out tmp);
+
+            return tmp != null;
         }
 
         private void DoSend(byte[] data)

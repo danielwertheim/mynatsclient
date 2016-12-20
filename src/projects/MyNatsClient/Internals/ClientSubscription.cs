@@ -1,6 +1,5 @@
 using System;
 using EnsureThat;
-using MyNatsClient.Ops;
 
 namespace MyNatsClient.Internals
 {
@@ -15,17 +14,21 @@ namespace MyNatsClient.Internals
         private ClientSubscription(
             SubscriptionInfo subscriptionInfo,
             IDisposable subscription,
-            Action<SubscriptionInfo> onDisposing = null)
+            Action<SubscriptionInfo> onDisposing)
         {
             EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
             EnsureArg.IsNotNull(subscription, nameof(subscription));
+            EnsureArg.IsNotNull(onDisposing, nameof(onDisposing));
 
             SubscriptionInfo = subscriptionInfo;
             _subscription = subscription;
             _onDisposing = onDisposing;
         }
 
-        internal static ClientSubscription Create(SubscriptionInfo subscriptionInfo, IDisposable subscription, Action<SubscriptionInfo> onDisposing = null)
+        internal static ClientSubscription Create(
+            SubscriptionInfo subscriptionInfo,
+            IDisposable subscription,
+            Action<SubscriptionInfo> onDisposing)
         {
             return new ClientSubscription(
                 subscriptionInfo,
