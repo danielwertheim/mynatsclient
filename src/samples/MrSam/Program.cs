@@ -9,7 +9,7 @@ namespace MrSam
 
         public static void Main(string[] args)
         {
-            var cnInfo = new ConnectionInfo(new Host("192.168.2.20"));
+            var cnInfo = new ConnectionInfo("192.168.2.20");
             _client = new NatsClient("testid", cnInfo);
             _client.Connect();
 

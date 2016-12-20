@@ -45,7 +45,11 @@ namespace MyNatsClient
 
         public SocketOptions SocketOptions { get; set; } = new SocketOptions();
 
-        public ConnectionInfo(Host host) : this(new[] { host }) { }
+        public ConnectionInfo(string host, int? port = null)
+            : this(new Host(host, port)) { }
+
+        public ConnectionInfo(Host host)
+            : this(new[] { host }) { }
 
         public ConnectionInfo(Host[] hosts)
         {
