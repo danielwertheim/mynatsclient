@@ -182,7 +182,16 @@ namespace MyNatsClient
         Task FlushAsync();
 
         /// <summary>
-        /// Creates a <see cref="IClientSubscription"/> that consumes <see cref="MsgOp"/> stream for a certain subject.
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// </summary>
+        /// <param name="subject">The subject that this subscription should be consuming.</param>
+        /// <returns></returns>
+        /// <remarks>You still need to setup a manual subscription against <see cref="MsgOpStream"/> with a handler.</remarks>
+        IClientSubscription Sub(string subject);
+
+        /// <summary>
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="handler"/>.
         /// </summary>
         /// <param name="subject">The subject that this subscription should be consuming.</param>
         /// <param name="handler">The action that will be invoked by observer for each <see cref="MsgOp"/> message in the stream.</param>
@@ -190,7 +199,8 @@ namespace MyNatsClient
         IClientSubscription Sub(string subject, Action<MsgOp> handler);
 
         /// <summary>
-        /// Creates a <see cref="IClientSubscription"/> that consumes <see cref="MsgOp"/> stream for a certain subject.
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="observer"/>.
         /// </summary>
         /// <param name="subject">The subject that this subscription should be consuming.</param>
         /// <param name="observer">The observer that will observe the stream of <see cref="MsgOp"/> for this subscription.</param>
@@ -198,7 +208,8 @@ namespace MyNatsClient
         IClientSubscription Sub(string subject, IObserver<MsgOp> observer);
 
         /// <summary>
-        /// Creates a <see cref="IClientSubscription"/> that consumes <see cref="MsgOp"/> stream for a certain subject.
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// Also sets up a subscripion that consumes <see cref="MsgOp"/>.
         /// </summary>
         /// <param name="subject">The subject that this subscription should be consuming.</param>
         /// <param name="subscriptionFactory">Should return a disposable subscription that will be invoked when unsub is perfored.</param>
@@ -206,7 +217,16 @@ namespace MyNatsClient
         IClientSubscription Sub(string subject, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory);
 
         /// <summary>
-        /// Creates a <see cref="IClientSubscription"/> that consumes <see cref="MsgOp"/> stream for a certain subject.
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// </summary>
+        /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
+        /// <returns></returns>
+        /// <remarks>You still need to setup a manual subscription against <see cref="MsgOpStream"/> with a handler.</remarks>
+        IClientSubscription Sub(SubscriptionInfo subscriptionInfo);
+
+        /// <summary>
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="handler"/>.
         /// </summary>
         /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
         /// <param name="handler">The action that will be invoked by observer for each <see cref="MsgOp"/> message in the stream.</param>
@@ -214,7 +234,8 @@ namespace MyNatsClient
         IClientSubscription Sub(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler);
 
         /// <summary>
-        /// Creates a <see cref="IClientSubscription"/> that consumes <see cref="MsgOp"/> stream for a certain subject.
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="observer"/>.
         /// </summary>
         /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
         /// <param name="observer">The observer that will observe the stream of <see cref="MsgOp"/> for this subscription.</param>
@@ -222,7 +243,8 @@ namespace MyNatsClient
         IClientSubscription Sub(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer);
 
         /// <summary>
-        /// Creates a <see cref="IClientSubscription"/> that consumes <see cref="MsgOp"/> stream for a certain subject.
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream.
         /// </summary>
         /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
         /// <param name="subscriptionFactory">Should return a disposable subscription that will be invoked when unsub is perfored.</param>
@@ -230,7 +252,16 @@ namespace MyNatsClient
         IClientSubscription Sub(SubscriptionInfo subscriptionInfo, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory);
 
         /// <summary>
-        /// Creates a <see cref="IClientSubscription"/> that consumes <see cref="MsgOp"/> stream for a certain subject.
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// </summary>
+        /// <param name="subject">The subject that this subscription should be consuming.</param>
+        /// <returns></returns>
+        /// <remarks>You still need to setup a manual subscription against <see cref="MsgOpStream"/> with a handler.</remarks>
+        Task<IClientSubscription> SubAsync(string subject);
+
+        /// <summary>
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="handler"/>.
         /// </summary>
         /// <param name="subject">The subject that this subscription should be consuming.</param>
         /// <param name="handler">The action that will be invoked by observer for each <see cref="MsgOp"/> message in the stream.</param>
@@ -238,7 +269,8 @@ namespace MyNatsClient
         Task<IClientSubscription> SubAsync(string subject, Action<MsgOp> handler);
 
         /// <summary>
-        /// Creates a <see cref="IClientSubscription"/> that consumes <see cref="MsgOp"/> stream for a certain subject.
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="observer"/>.
         /// </summary>
         /// <param name="subject">The subject that this subscription should be consuming.</param>
         /// <param name="observer">The observer that will observe the stream of <see cref="MsgOp"/> for this subscription.</param>
@@ -246,7 +278,8 @@ namespace MyNatsClient
         Task<IClientSubscription> SubAsync(string subject, IObserver<MsgOp> observer);
 
         /// <summary>
-        /// Creates a <see cref="IClientSubscription"/> that consumes <see cref="MsgOp"/> stream for a certain subject.
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream.
         /// </summary>
         /// <param name="subject">The subject that this subscription should be consuming.</param>
         /// <param name="subscriptionFactory">Should return a disposable subscription that will be invoked when unsub is perfored.</param>
@@ -254,7 +287,16 @@ namespace MyNatsClient
         Task<IClientSubscription> SubAsync(string subject, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory);
 
         /// <summary>
-        /// Creates a <see cref="IClientSubscription"/> that consumes <see cref="MsgOp"/> stream for a certain subject.
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// </summary>
+        /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
+        /// <returns></returns>
+        /// <remarks>You still need to setup a manual subscription against <see cref="MsgOpStream"/> with a handler.</remarks>
+        Task<IClientSubscription> SubAsync(SubscriptionInfo subscriptionInfo);
+
+        /// <summary>
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="handler"/>.
         /// </summary>
         /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
         /// <param name="handler">The action that will be invoked by observer for each <see cref="MsgOp"/> message in the stream.</param>
@@ -262,7 +304,8 @@ namespace MyNatsClient
         Task<IClientSubscription> SubAsync(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler);
 
         /// <summary>
-        /// Creates a <see cref="IClientSubscription"/> that consumes <see cref="MsgOp"/> stream for a certain subject.
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="observer"/>.
         /// </summary>
         /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
         /// <param name="observer">The observer that will observe the stream of <see cref="MsgOp"/> for this subscription.</param>
@@ -270,7 +313,8 @@ namespace MyNatsClient
         Task<IClientSubscription> SubAsync(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer);
 
         /// <summary>
-        /// Creates a <see cref="IClientSubscription"/> that consumes <see cref="MsgOp"/> stream for a certain subject.
+        /// Creates a <see cref="IClientSubscription"/> which sets up a subscription against the NATS server.
+        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream.
         /// </summary>
         /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
         /// <param name="subscriptionFactory">Should return a disposable subscription that will be invoked when unsub is perfored.</param>
@@ -278,15 +322,15 @@ namespace MyNatsClient
         Task<IClientSubscription> SubAsync(SubscriptionInfo subscriptionInfo, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory);
 
         /// <summary>
-        /// Sync send of UnSub message to indicate that the client
-        /// should not receive messages anymore for the specific subcription info.
+        /// Unsubscribes from the server as well as any previosly created <see cref="IClientSubscription"/>
+        /// with any associated subscription (handler, observer) against <see cref="MsgOpStream"/>.
         /// </summary>
         /// <param name="subscriptionInfo"></param>
         void Unsub(SubscriptionInfo subscriptionInfo);
 
         /// <summary>
-        /// Async send of UnSub message to indicate that the client
-        /// should not receive messages anymore for the specific subcription info.
+        /// Unsubscribes from the server as well as any previosly created <see cref="IClientSubscription"/>
+        /// with any associated subscription (handler, observer) against <see cref="MsgOpStream"/>.
         /// </summary>
         /// <param name="subscriptionInfo"></param>
         Task UnsubAsync(SubscriptionInfo subscriptionInfo);

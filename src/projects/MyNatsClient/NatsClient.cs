@@ -96,7 +96,12 @@ namespace MyNatsClient
         private void OnClientConnected()
         {
             foreach (var subscription in _subscriptions.Values)
-                Sub(subscription.SubscriptionInfo);
+            {
+                if (State != NatsClientState.Connected)
+                    break;
+
+                DoSub(subscription.SubscriptionInfo);
+            }
         }
 
         private void OnClientDisconnected(ClientDisconnected disconnectedEvent)
@@ -215,7 +220,7 @@ namespace MyNatsClient
                     var hosts = new Queue<Host>(_connectionInfo.Hosts.GetRandomized());
                     while (hosts.Any())
                     {
-                        if (ConnectTo(hosts.Dequeue()))
+                        if (DoConnectTo(hosts.Dequeue()))
                             break;
                     }
 
@@ -239,7 +244,7 @@ namespace MyNatsClient
         }
 
         //TODO: SSL
-        private bool ConnectTo(Host host)
+        private bool DoConnectTo(Host host)
         {
             _socket = _socket ?? SocketFactory.Create(_connectionInfo.SocketOptions);
             _socket.Connect(host.Address, host.Port);
@@ -623,6 +628,12 @@ namespace MyNatsClient
             await _writeStream.FlushAsync();
         }
 
+        public IClientSubscription Sub(string subject)
+            => Sub(new SubscriptionInfo(subject));
+
+        public IClientSubscription Sub(SubscriptionInfo subscriptionInfo)
+            => Sub(subscriptionInfo, msgs => Disposable.Empty);
+
         public IClientSubscription Sub(string subject, Action<MsgOp> handler)
             => Sub(new SubscriptionInfo(subject), new DelegatingObserver<MsgOp>(handler));
 
@@ -647,25 +658,21 @@ namespace MyNatsClient
             if (State != NatsClientState.Connected)
                 return subscription;
 
-            Sub(subscription.SubscriptionInfo);
+            DoSub(subscriptionInfo);
 
             return subscription;
         }
 
-        private void Sub(SubscriptionInfo subscriptionInfo)
+        private void DoSub(SubscriptionInfo subscriptionInfo) => WithWriteLock(() =>
         {
-            ThrowIfDisposed();
+            DoSend(SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup));
+            if (subscriptionInfo.MaxMessages.HasValue)
+                DoSend(UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages));
+            DoFlush();
+        });
 
-            EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
-
-            WithWriteLock(() =>
-            {
-                DoSend(SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup));
-                if (subscriptionInfo.MaxMessages.HasValue)
-                    DoSend(UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages));
-                DoFlush();
-            });
-        }
+        public Task<IClientSubscription> SubAsync(string subject)
+            => SubAsync(new SubscriptionInfo(subject));
 
         public Task<IClientSubscription> SubAsync(string subject, Action<MsgOp> handler)
             => SubAsync(new SubscriptionInfo(subject), new DelegatingObserver<MsgOp>(handler));
@@ -675,6 +682,9 @@ namespace MyNatsClient
 
         public Task<IClientSubscription> SubAsync(string subject, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
             => SubAsync(new SubscriptionInfo(subject), subscriptionFactory);
+
+        public Task<IClientSubscription> SubAsync(SubscriptionInfo subscriptionInfo)
+            => SubAsync(subscriptionInfo, msgs => Disposable.Empty);
 
         public Task<IClientSubscription> SubAsync(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler)
             => SubAsync(subscriptionInfo, new DelegatingObserver<MsgOp>(handler));
@@ -691,25 +701,19 @@ namespace MyNatsClient
             if (State != NatsClientState.Connected)
                 return subscription;
 
-            await SubAsync(subscription.SubscriptionInfo).ForAwait();
+            await DoSubAsync(subscriptionInfo).ForAwait();
 
             return subscription;
         }
 
-        private async Task SubAsync(SubscriptionInfo subscriptionInfo)
+        private async Task DoSubAsync(SubscriptionInfo subscriptionInfo) => await WithWriteLockAsync(async () =>
         {
-            ThrowIfDisposed();
-
-            EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
-
-            await WithWriteLockAsync(async () =>
-            {
-                await DoSendAsync(SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup)).ForAwait();
-                if (subscriptionInfo.MaxMessages.HasValue)
-                    await DoSendAsync(UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages)).ForAwait();
-                await DoFlushAsync().ForAwait();
-            }).ForAwait();
-        }
+            await DoSendAsync(SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup))
+                .ForAwait();
+            if (subscriptionInfo.MaxMessages.HasValue)
+                await DoSendAsync(UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages)).ForAwait();
+            await DoFlushAsync().ForAwait();
+        }).ForAwait();
 
         private ClientSubscription CreateMsgOpSubscription(SubscriptionInfo subscriptionInfo, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
         {
