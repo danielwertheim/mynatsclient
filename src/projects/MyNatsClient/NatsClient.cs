@@ -24,6 +24,7 @@ namespace MyNatsClient
         private const int TryConnectMaxCycleDelayMs = 200;
         private const int TryConnectMaxDurationMs = 2000;
         private const int MaxReconnectDueToFailureAttempts = 5;
+        private const int WaitForConsumerCompleteMs = 100;
 
         private readonly object _sync;
         private readonly ConnectionInfo _connectionInfo;
@@ -204,12 +205,12 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
-            if (State == NatsClientState.Connected || State == NatsClientState.Connecting)
+            if (State == NatsClientState.Connected)
                 return;
 
             lock (_sync)
             {
-                if (State == NatsClientState.Connected || State == NatsClientState.Connecting)
+                if (State == NatsClientState.Connected)
                     return;
 
                 State = NatsClientState.Connecting;
@@ -240,7 +241,8 @@ namespace MyNatsClient
                 }
             }
 
-            OnConnected();
+            if (State == NatsClientState.Connected)
+                OnConnected();
         }
 
         //TODO: SSL
@@ -331,15 +333,15 @@ namespace MyNatsClient
                 _readStream != null &&
                 _readStream.CanRead;
 
-            while (_socketIsConnected() && !_consumerIsCancelled() && errOp == null)
+            while (shouldRead() && errOp == null)
             {
-                if (!shouldRead())
-                    break;
-
                 try
                 {
                     foreach (var op in _reader.ReadOp())
                     {
+                        if (op == null)
+                            continue;
+
                         if (_connectionInfo.AutoRespondToPing && op is PingOp)
                             Pong();
 
@@ -352,10 +354,13 @@ namespace MyNatsClient
                 }
                 catch (IOException ioex)
                 {
+                    if (!shouldRead())
+                        break;
+
                     var ex = ioex.InnerException as SocketException;
                     if (ex != null)
                     {
-                        if (ex.SocketErrorCode == SocketError.Interrupted && _consumerIsCancelled())
+                        if (ex.SocketErrorCode == SocketError.Interrupted)
                             break;
 
                         if (ex.SocketErrorCode != SocketError.TimedOut)
@@ -404,27 +409,28 @@ namespace MyNatsClient
         {
             lock (_sync)
             {
-                Try.All(
+                Swallow.Everything(
                     () =>
                     {
-                        _cancellation?.Cancel();
-                        _cancellation?.Dispose();
+                        if (_cancellation == null)
+                            return;
+
+                        if (!_cancellation.IsCancellationRequested)
+                            _cancellation.Cancel(false);
+
                         _cancellation = null;
                     },
                     () =>
                     {
-#if !NETSTANDARD1_6
-                        _writeStream?.Close();
-#endif
-                        _writeStream?.Dispose();
-                        _writeStream = null;
-                    },
-                    () =>
-                    {
-                        if (_consumer == null || !_consumer.IsCompleted)
+                        if (_consumer == null)
                             return;
+
+                        if (!_consumer.IsCompleted)
+                            _consumer.Wait(WaitForConsumerCompleteMs);
+
 #if !NETSTANDARD1_6
-                        _consumer.Dispose();
+                        if (_consumer.IsCompleted)
+                            _consumer.Dispose();
 #endif
                         _consumer = null;
                     },
@@ -438,21 +444,22 @@ namespace MyNatsClient
                     },
                     () =>
                     {
-                        if (_socket == null)
-                            return;
-
-                        if (_socket.Connected)
-                        {
-                            _socket?.Shutdown(SocketShutdown.Both);
 #if !NETSTANDARD1_6
-                            _socket?.Close();
+                        _writeStream?.Close();
 #endif
-                        }
-
+                        _writeStream?.Dispose();
+                        _writeStream = null;
+                    },
+                    () =>
+                    {
+                        _socket?.Shutdown(SocketShutdown.Both);
+#if !NETSTANDARD1_6
+                        _socket?.Close();
+#endif
+                        //_socket?.Disconnect(false);
                         _socket?.Dispose();
                         _socket = null;
                     });
-
                 _serverInfo = null;
             }
         }
