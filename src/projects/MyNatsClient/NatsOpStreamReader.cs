@@ -10,6 +10,7 @@ namespace MyNatsClient
 {
     public class NatsOpStreamReader
     {
+        private const char EmptyOpMarkerChar = '\0';
         private const char DelimMarker1 = ' ';
         private const char DelimMarker2 = '\t';
         private const char Cr = '\r';
@@ -24,6 +25,7 @@ namespace MyNatsClient
 
         public IEnumerable<IOp> ReadOp()
         {
+            var sb = new StringBuilder();
             var opMarkerChars = new char[4];
             var i = -1;
 
@@ -45,15 +47,15 @@ namespace MyNatsClient
 
                 var op = new string(opMarkerChars.ToArray(), 0, i + 1);
                 i = -1;
-                opMarkerChars[0] = '\0';
-                opMarkerChars[1] = '\0';
-                opMarkerChars[2] = '\0';
-                opMarkerChars[3] = '\0';
+                opMarkerChars[0] = EmptyOpMarkerChar;
+                opMarkerChars[1] = EmptyOpMarkerChar;
+                opMarkerChars[2] = EmptyOpMarkerChar;
+                opMarkerChars[3] = EmptyOpMarkerChar;
 
                 switch (op)
                 {
                     case "MSG":
-                        yield return ParseMsgOp(_stream);
+                        yield return ParseMsgOp(_stream, sb);
                         break;
                     case "PING":
                         yield return ParsePingOp(_stream);
@@ -65,14 +67,16 @@ namespace MyNatsClient
                         yield return ParseOkOp(_stream);
                         break;
                     case "INFO":
-                        yield return ParseInfoOp(_stream);
+                        yield return ParseInfoOp(_stream, sb);
                         break;
                     case "-ERR":
-                        yield return ParseErrorOp(_stream);
+                        yield return ParseErrorOp(_stream, sb);
                         break;
                     default:
                         throw CreateUnsupportedOpException(op);
                 }
+
+                sb.Clear();
             }
         }
 
@@ -82,9 +86,9 @@ namespace MyNatsClient
         private static Exception CreateParserException(string op, char expected, char got)
             => new Exception($"Error while parsing {op}. Expected char code '{(byte)expected}' got '{(byte)got}'.");
 
-        private static InfoOp ParseInfoOp(Stream stream)
+        private static InfoOp ParseInfoOp(Stream stream, StringBuilder sb)
         {
-            var msg = new StringBuilder();
+            var msg = sb;
             while (true)
             {
                 var c = stream.ReadChar();
@@ -129,9 +133,9 @@ namespace MyNatsClient
             return PongOp.Instance;
         }
 
-        private static ErrOp ParseErrorOp(Stream stream)
+        private static ErrOp ParseErrorOp(Stream stream, StringBuilder sb)
         {
-            var msg = new StringBuilder();
+            var msg = sb;
             while (true)
             {
                 var c = stream.ReadChar();
@@ -149,11 +153,11 @@ namespace MyNatsClient
             return new ErrOp(msg.ToString());
         }
 
-        private static MsgOp ParseMsgOp(Stream stream)
+        private static MsgOp ParseMsgOp(Stream stream, StringBuilder sb)
         {
             var segments = new string[3];
             var segmentsI = -1;
-            var segment = new StringBuilder();
+            var segment = sb;
             int payloadSize;
             char burn;
 
