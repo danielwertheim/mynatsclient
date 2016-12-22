@@ -639,27 +639,28 @@ namespace MyNatsClient
             => Sub(new SubscriptionInfo(subject));
 
         public IClientSubscription Sub(SubscriptionInfo subscriptionInfo)
-            => Sub(subscriptionInfo, msgs => Disposable.Empty);
+            => SubWithObservableSubscription(subscriptionInfo, msgs => Disposable.Empty);
 
-        public IClientSubscription Sub(string subject, Action<MsgOp> handler)
-            => Sub(new SubscriptionInfo(subject), new DelegatingObserver<MsgOp>(handler));
+        public IClientSubscription SubWithHandler(string subject, Action<MsgOp> handler)
+            => SubWithObserver(new SubscriptionInfo(subject), new DelegatingObserver<MsgOp>(handler));
 
-        public IClientSubscription Sub(string subject, IObserver<MsgOp> observer)
-            => Sub(new SubscriptionInfo(subject), observer);
+        public IClientSubscription SubWithObserver(string subject, IObserver<MsgOp> observer)
+            => SubWithObserver(new SubscriptionInfo(subject), observer);
 
-        public IClientSubscription Sub(string subject, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
-            => Sub(new SubscriptionInfo(subject), subscriptionFactory);
+        public IClientSubscription SubWithObservableSubscription(string subject, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
+            => SubWithObservableSubscription(new SubscriptionInfo(subject), subscriptionFactory);
 
-        public IClientSubscription Sub(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler)
-            => Sub(subscriptionInfo, new DelegatingObserver<MsgOp>(handler));
+        public IClientSubscription SubWithHandler(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler)
+            => SubWithObserver(subscriptionInfo, new DelegatingObserver<MsgOp>(handler));
 
-        public IClientSubscription Sub(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
-            => Sub(subscriptionInfo, msgStream => msgStream.Subscribe(observer, msg => subscriptionInfo.Matches(msg.Subject)));
+        public IClientSubscription SubWithObserver(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
+            => SubWithObservableSubscription(subscriptionInfo, msgStream => msgStream.Subscribe(observer, msg => subscriptionInfo.Matches(msg.Subject)));
 
-        public IClientSubscription Sub(SubscriptionInfo subscriptionInfo, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
+        public IClientSubscription SubWithObservableSubscription(SubscriptionInfo subscriptionInfo, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
         {
             ThrowIfDisposed();
 
+            //TODO: You should not need to have factory
             var subscription = CreateMsgOpSubscription(subscriptionInfo, subscriptionFactory);
 
             if (State != NatsClientState.Connected)
@@ -681,25 +682,25 @@ namespace MyNatsClient
         public Task<IClientSubscription> SubAsync(string subject)
             => SubAsync(new SubscriptionInfo(subject));
 
-        public Task<IClientSubscription> SubAsync(string subject, Action<MsgOp> handler)
-            => SubAsync(new SubscriptionInfo(subject), new DelegatingObserver<MsgOp>(handler));
+        public Task<IClientSubscription> SubWithHandlerAsync(string subject, Action<MsgOp> handler)
+            => SubWithObserverAsync(new SubscriptionInfo(subject), new DelegatingObserver<MsgOp>(handler));
 
-        public Task<IClientSubscription> SubAsync(string subject, IObserver<MsgOp> observer)
-            => SubAsync(new SubscriptionInfo(subject), observer);
+        public Task<IClientSubscription> SubWithObserverAsync(string subject, IObserver<MsgOp> observer)
+            => SubWithObserverAsync(new SubscriptionInfo(subject), observer);
 
-        public Task<IClientSubscription> SubAsync(string subject, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
-            => SubAsync(new SubscriptionInfo(subject), subscriptionFactory);
+        public Task<IClientSubscription> SubWithObservableSubscriptionAsync(string subject, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
+            => SubWithObservableSubscriptionAsync(new SubscriptionInfo(subject), subscriptionFactory);
 
         public Task<IClientSubscription> SubAsync(SubscriptionInfo subscriptionInfo)
-            => SubAsync(subscriptionInfo, msgs => Disposable.Empty);
+            => SubWithObservableSubscriptionAsync(subscriptionInfo, msgs => Disposable.Empty);
 
-        public Task<IClientSubscription> SubAsync(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler)
-            => SubAsync(subscriptionInfo, new DelegatingObserver<MsgOp>(handler));
+        public Task<IClientSubscription> SubWithHandlerAsync(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler)
+            => SubWithObserverAsync(subscriptionInfo, new DelegatingObserver<MsgOp>(handler));
 
-        public Task<IClientSubscription> SubAsync(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
-            => SubAsync(subscriptionInfo, msgStream => msgStream.Subscribe(observer, msg => subscriptionInfo.Matches(msg.Subject)));
+        public Task<IClientSubscription> SubWithObserverAsync(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
+            => SubWithObservableSubscriptionAsync(subscriptionInfo, msgStream => msgStream.Subscribe(observer, msg => subscriptionInfo.Matches(msg.Subject)));
 
-        public async Task<IClientSubscription> SubAsync(SubscriptionInfo subscriptionInfo, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
+        public async Task<IClientSubscription> SubWithObservableSubscriptionAsync(SubscriptionInfo subscriptionInfo, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
         {
             ThrowIfDisposed();
 

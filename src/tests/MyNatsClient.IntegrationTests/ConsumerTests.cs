@@ -38,7 +38,7 @@ namespace MyNatsClient.IntegrationTests
             const string otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            _client.Sub(otherSubject, "subid1");
+            _client.SubWithObservableSubscription((SubscriptionInfo) otherSubject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "subid1");
 
             var observer = new DelegatingObserver<MsgOp>(msg =>
             {
@@ -66,7 +66,7 @@ namespace MyNatsClient.IntegrationTests
             const string otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            _client.Sub(otherSubject, "subid1");
+            _client.SubWithObservableSubscription((SubscriptionInfo) otherSubject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "subid1");
 
             var observer = new DelegatingObserver<MsgOp>(msg =>
             {
@@ -94,7 +94,7 @@ namespace MyNatsClient.IntegrationTests
             const string otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            _client.Sub(otherSubject, "subid1");
+            _client.SubWithObservableSubscription((SubscriptionInfo) otherSubject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "subid1");
 
             Action<MsgOp> handler = msg =>
             {
@@ -122,7 +122,7 @@ namespace MyNatsClient.IntegrationTests
             const string otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            _client.Sub(otherSubject, "subid1");
+            _client.SubWithObservableSubscription((SubscriptionInfo) otherSubject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "subid1");
 
             Action<MsgOp> handler = msg =>
             {

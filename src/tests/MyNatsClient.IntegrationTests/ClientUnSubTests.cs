@@ -55,7 +55,7 @@ namespace MyNatsClient.IntegrationTests
                 Interlocked.Increment(ref nr1ReceiveCount);
                 ReleaseOne();
             });
-            _client1.Sub(subject, "s1");
+            _client1.SubWithObservableSubscription((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
 
             _client2.OpStream.OfType<MsgOp>().Subscribe(async msg =>
             {
@@ -63,14 +63,14 @@ namespace MyNatsClient.IntegrationTests
                 Interlocked.Increment(ref nr2ReceiveCount);
                 ReleaseOne();
             });
-            _client2.Sub(subject, "s1");
+            _client2.SubWithObservableSubscription((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
 
             _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr3ReceiveCount);
                 ReleaseOne();
             });
-            _client3.Sub(subject, "s1");
+            _client3.SubWithObservableSubscription((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
 
             _client1.Pub(subject, "mess1");
             WaitOne();
@@ -100,7 +100,7 @@ namespace MyNatsClient.IntegrationTests
                 Interlocked.Increment(ref nr2ReceiveCount);
                 ReleaseOne();
             });
-            _client2.Sub(subject, "s1");
+            _client2.SubWithObservableSubscription((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
             _client2.Unsub("s1", 2);
 
             _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
@@ -108,7 +108,7 @@ namespace MyNatsClient.IntegrationTests
                 Interlocked.Increment(ref nr3ReceiveCount);
                 ReleaseOne();
             });
-            await _client3.SubAsync(subject, "s1");
+            await _client3.SubWithObservableSubscriptionAsync((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
             await _client3.UnsubAsync("s1", 2);
 
             _client1.Pub(subject, "mess1");

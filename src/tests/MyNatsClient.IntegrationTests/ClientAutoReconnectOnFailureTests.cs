@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MyNatsClient.Events;
+using MyNatsClient.Ops;
 using Xunit;
 
 namespace MyNatsClient.IntegrationTests
@@ -39,7 +40,7 @@ namespace MyNatsClient.IntegrationTests
             _client = new NatsClient("tc1", _cnInfoWithAutoReconnect);
             _client.Connect();
 
-            await _client.SubAsync(subject, "s1");
+            await _client.SubWithObservableSubscriptionAsync((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
 
             _client.Events.OfType<ClientDisconnected>()
                 .Where(ev => ev.Reason == DisconnectReason.DueToFailure)
@@ -82,7 +83,7 @@ namespace MyNatsClient.IntegrationTests
             _client = new NatsClient("tc1", _cnInfoWithNoAutoReconnect);
             _client.Connect();
 
-            await _client.SubAsync(subject, "s1");
+            await _client.SubWithObservableSubscriptionAsync((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
 
             _client.Events.OfType<ClientDisconnected>()
                 .Where(ev => ev.Reason == DisconnectReason.DueToFailure)
@@ -126,7 +127,7 @@ namespace MyNatsClient.IntegrationTests
             _client = new NatsClient("tc1", _cnInfoWithAutoReconnect);
             _client.Connect();
 
-            await _client.SubAsync(subject, "s1");
+            await _client.SubWithObservableSubscriptionAsync((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
 
             _client.Events.OfType<ClientDisconnected>()
                 .Subscribe(ev =>

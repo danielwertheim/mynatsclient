@@ -20,7 +20,7 @@ namespace MyNatsClient
             _client = client;
             _clientInbox = Guid.NewGuid().ToString("N");
             _responses = new ObservableOf<MsgOp>();
-            _inboxSubscription = _client.Sub($"{_clientInbox}.>", msg => _responses.Dispatch(msg));
+            _inboxSubscription = _client.SubWithHandler($"{_clientInbox}.>", msg => _responses.Dispatch(msg));
         }
 
         public async Task<MsgOp> RequestAsync(string subject, string body)

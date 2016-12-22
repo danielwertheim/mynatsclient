@@ -13,7 +13,7 @@ namespace MrSam
             _client = new NatsClient("testid", cnInfo);
             _client.Connect();
 
-            _client.Sub("getTemp", msg =>
+            _client.SubWithHandler("getTemp", msg =>
             {
                 var parts = msg.GetPayloadAsString().Split('@');
                 _client.Pub(msg.ReplyTo, $"Temp is {TempService.Get(parts[0], parts[1])}C");
