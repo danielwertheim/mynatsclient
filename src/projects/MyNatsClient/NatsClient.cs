@@ -110,6 +110,9 @@ namespace MyNatsClient
             if (disconnectedEvent == null || disconnectedEvent.Reason != DisconnectReason.DueToFailure)
                 return;
 
+            if(!_connectionInfo.AutoReconnectOnFailure)
+                return;
+
             try
             {
                 var attempts = 0;
