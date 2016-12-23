@@ -149,26 +149,26 @@ namespace MyNatsClient
         /// <param name="p"></param>
         void PubMany(Action<IPublisher> p);
 
-        ///// <summary>
-        ///// Async request response.
-        ///// </summary>
-        ///// <param name="subject"></param>
-        ///// <param name="body"></param>
-        //MsgOp RequestAsync(string subject, string body);
+        /// <summary>
+        /// Async request response.
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="body"></param>
+        Task<MsgOp> RequestAsync(string subject, string body);
 
-        ///// <summary>
-        ///// Async request response.
-        ///// </summary>
-        ///// <param name="subject"></param>
-        ///// <param name="body"></param>
-        //MsgOp RequestAsync(string subject, byte[] body);
+        /// <summary>
+        /// Async request response.
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="body"></param>
+        Task<MsgOp> RequestAsync(string subject, byte[] body);
 
-        ///// <summary>
-        ///// Async request response.
-        ///// </summary>
-        ///// <param name="subject"></param>
-        ///// <param name="body"></param>
-        //MsgOp RequestAsync(string subject, IPayload body);
+        /// <summary>
+        /// Async request response.
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="body"></param>
+        Task<MsgOp> RequestAsync(string subject, IPayload body);
 
         /// <summary>
         /// Flushes the write stream.

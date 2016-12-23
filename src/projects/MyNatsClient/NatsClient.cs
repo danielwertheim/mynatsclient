@@ -42,6 +42,7 @@ namespace MyNatsClient
         private Task _consumer;
         private CancellationTokenSource _cancellation;
         private NatsServerInfo _serverInfo;
+        private Lazy<ClientInbox> _inbox;
         private bool _isDisposed;
 
         private bool ShouldAutoFlush => _connectionInfo.PubFlushMode != PubFlushMode.Manual;
@@ -53,6 +54,7 @@ namespace MyNatsClient
         public INatsClientStats Stats => _opMediator;
         public NatsClientState State { get; private set; }
         public ISocketFactory SocketFactory { private get; set; }
+        private ClientInbox Inbox => _inbox.Value;
 
         public NatsClient(string id, ConnectionInfo connectionInfo)
         {
@@ -63,6 +65,7 @@ namespace MyNatsClient
             _publisher = new Publisher(DoSend, DoSendAsync, DoSend, DoSendAsync);
             _eventMediator = new ObservableOf<IClientEvent>();
             _opMediator = new NatsOpMediator();
+            _inbox = new Lazy<ClientInbox>(() => new ClientInbox(this), LazyThreadSafetyMode.ExecutionAndPublication);
 
             _socketIsConnected = () => _socket != null && _socket.Connected;
             _consumerIsCancelled = () => _cancellation == null || _cancellation.IsCancellationRequested;
@@ -148,14 +151,28 @@ namespace MyNatsClient
 
             Release();
 
-            var subscriptions = _subscriptions.Values.Cast<IDisposable>().ToArray();
-            Try.DisposeAll(subscriptions);
-            _subscriptions.Clear();
+            Try.All(
+                () =>
+                {
+                    if (_inbox == null)
+                        return;
 
-            Try.DisposeAll(_writeStreamSync, _eventMediator, _opMediator);
-            _writeStreamSync = null;
-            _eventMediator = null;
-            _opMediator = null;
+                    _inbox.Value.Dispose();
+                    _inbox = null;
+                },
+                () =>
+                {
+                    var subscriptions = _subscriptions.Values.Cast<IDisposable>().ToArray();
+                    _subscriptions.Clear();
+                    Try.DisposeAll(subscriptions);
+                },
+                () =>
+                {
+                    Try.DisposeAll(_writeStreamSync, _eventMediator, _opMediator);
+                    _writeStreamSync = null;
+                    _eventMediator = null;
+                    _opMediator = null;
+                });
         }
 
         private void ThrowIfDisposed()
@@ -396,7 +413,7 @@ namespace MyNatsClient
             if (!t.IsFaulted)
                 return;
 
-            var ex = t.Exception?.GetBaseException();
+            var ex = t.Exception?.GetBaseException() ?? t.Exception;
             if (ex == null)
                 return;
 
@@ -549,7 +566,7 @@ namespace MyNatsClient
 
             await WithWriteLockAsync(async () =>
             {
-                await DoSendAsync(PubCmd.Generate(subject, body, replyTo));
+                await DoSendAsync(PubCmd.Generate(subject, body, replyTo)).ForAwait();
                 if (ShouldAutoFlush)
                     await DoFlushAsync().ForAwait();
             }).ForAwait();
@@ -561,7 +578,7 @@ namespace MyNatsClient
 
             await WithWriteLockAsync(async () =>
             {
-                await DoSendAsync(PubCmd.Generate(subject, body, replyTo));
+                await DoSendAsync(PubCmd.Generate(subject, body, replyTo)).ForAwait();
                 if (ShouldAutoFlush)
                     await DoFlushAsync().ForAwait();
             }).ForAwait();
@@ -573,7 +590,7 @@ namespace MyNatsClient
 
             await WithWriteLockAsync(async () =>
             {
-                await DoSendAsync(PubCmd.Generate(subject, body, replyTo));
+                await DoSendAsync(PubCmd.Generate(subject, body, replyTo)).ForAwait();
                 if (ShouldAutoFlush)
                     await DoFlushAsync().ForAwait();
             }).ForAwait();
@@ -589,6 +606,69 @@ namespace MyNatsClient
                 if (ShouldAutoFlush)
                     DoFlush();
             });
+        }
+
+        public async Task<MsgOp> RequestAsync(string subject, string body)
+        {
+            ThrowIfDisposed();
+
+            EnsureArg.IsNotNullOrWhiteSpace(subject, nameof(subject));
+            EnsureArg.IsNotNullOrWhiteSpace(body, nameof(body));
+
+            return await DoRequestAsync(subject, NatsEncoder.GetBytes(body)).ForAwait();
+        }
+
+        public async Task<MsgOp> RequestAsync(string subject, byte[] body)
+        {
+            ThrowIfDisposed();
+
+            EnsureArg.IsNotNullOrWhiteSpace(subject, nameof(subject));
+            EnsureArg.HasItems(body, nameof(body));
+
+            return await DoRequestAsync(subject, body).ForAwait();
+        }
+
+        public async Task<MsgOp> RequestAsync(string subject, IPayload body)
+        {
+            ThrowIfDisposed();
+
+            EnsureArg.IsNotNullOrWhiteSpace(subject, nameof(subject));
+            EnsureArg.IsNotNull(body, nameof(body));
+
+            return await DoRequestAsync(subject, body.Blocks.SelectMany(b => b).ToArray()).ForAwait();
+        }
+
+        private async Task<MsgOp> DoRequestAsync(string subject, byte[] body)
+        {
+            var requestReplyAddress = $"{Inbox.Address}.{Guid.NewGuid():N}";
+            var taskComp = new TaskCompletionSource<MsgOp>();
+            var requestSubscription = Inbox.Responses.Subscribe(
+                new DelegatingObserver<MsgOp>(msg => taskComp.SetResult(msg), ex => taskComp.SetException(ex)),
+                msg => msg.Subject == requestReplyAddress);
+
+            await WithWriteLockAsync(async () =>
+            {
+                await DoSendAsync(PubCmd.Generate(subject, body, requestReplyAddress)).ForAwait();
+                await DoFlushAsync().ForAwait();
+            }).ForAwait();
+
+            return await taskComp.Task
+                .ContinueWith(t =>
+                {
+                    requestSubscription?.Dispose();
+
+                    if (!t.IsFaulted)
+                        return t.Result;
+
+                    var ex = t.Exception?.GetBaseException() ?? t.Exception;
+                    if (ex == null)
+                        return t.Result;
+
+                    Logger.Error("Exception while performing request.", ex);
+
+                    throw ex;
+                })
+                .ForAwait();
         }
 
         public void Flush()
