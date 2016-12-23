@@ -1,5 +1,18 @@
 # Release notes
 
+## v0.7.0 - 2016-12-23
+Theme for this release has been "SIMPLIFY".
+
+- **New**: All subscribe methods on the client now remembers subscriptions. So, if the client disconnects and reconnects, the subscriptions will get re-subscribed against the NATS server.
+- **New**: All subscribe methods now returns an `ISubscription` which can be (not necessary) used to unsub, just by calling `subscription.Dispose()` or by calling `client.Unsub(subscription.SubscriptionInfo)`.
+- **New**: Setup subscription to both NATS-server and in-process `IObservable<MsgOp>` stream in a single call using: `client.SubscribeWithHandler|SubscribeWithHandlerAsync` or `client.SubscribeWithObserver|SubscribeWithObserverAsync`.
+- **New**: `client.RequestAsync` assists with implementing request-response messaging pattern.
+- **Removed**: `NatsConsumer` as those features now are exposed by the `NatsClient` instead.
+- **Removed**: Some overloads of `client.Sub` and `client.Unsub`.
+- **Fixed**: Issue with not being able to do: `client.Connect()`, `client.Disconnect()` and `client.Connect()` really fast.
+- **Fixed**: Issue with always trying to do auto reconnect upon failure.
+- **Fixed**: Issue with missed `ConfigureAwait(false)`.
+
 ## v0.6.0 - 2016-12-04
 - **New:** `ConnectionInfo.AutoReconnectOnFailure=true|false` default is `false`. Will try and reconnect if the client fails. If no reconnect can be made, an `ClientAutoReconnectFailed` will be dispatched.
 
