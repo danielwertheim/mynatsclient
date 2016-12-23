@@ -3,7 +3,7 @@ using EnsureThat;
 
 namespace MyNatsClient.Internals
 {
-    internal class ClientSubscription : IClientSubscription
+    internal class Subscription : ISubscription
     {
         private IDisposable _subscription;
         private bool _isDisposed;
@@ -11,7 +11,7 @@ namespace MyNatsClient.Internals
 
         public SubscriptionInfo SubscriptionInfo { get; }
 
-        private ClientSubscription(
+        private Subscription(
             SubscriptionInfo subscriptionInfo,
             IDisposable subscription,
             Action<SubscriptionInfo> onDisposing)
@@ -25,12 +25,12 @@ namespace MyNatsClient.Internals
             _onDisposing = onDisposing;
         }
 
-        internal static ClientSubscription Create(
+        internal static Subscription Create(
             SubscriptionInfo subscriptionInfo,
             IDisposable subscription,
             Action<SubscriptionInfo> onDisposing)
         {
-            return new ClientSubscription(
+            return new Subscription(
                 subscriptionInfo,
                 subscription,
                 onDisposing);

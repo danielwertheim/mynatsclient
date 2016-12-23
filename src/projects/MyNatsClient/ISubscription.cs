@@ -11,7 +11,7 @@ namespace MyNatsClient
     /// If you forget to explicitly dispose, the <see cref="INatsClient"/>
     /// that created this subscribtion, will clean it when disposed.
     /// </remarks>
-    public interface IClientSubscription : IDisposable
+    public interface ISubscription : IDisposable
     {
         SubscriptionInfo SubscriptionInfo { get; }
     }

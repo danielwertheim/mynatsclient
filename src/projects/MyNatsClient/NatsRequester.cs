@@ -10,7 +10,7 @@ namespace MyNatsClient
     {
         private readonly string _clientInbox;
         private readonly INatsClient _client;
-        private readonly IClientSubscription _inboxSubscription;
+        private readonly ISubscription _inboxSubscription;
         private ObservableOf<MsgOp> _responses;
 
         public NatsRequester(INatsClient client)
