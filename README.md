@@ -11,11 +11,6 @@ Yes it does support DotNet Core. From [v0.3.0-b1](https://www.nuget.org/packages
 ## License
 Have fun using it ;-) [MIT](https://github.com/danielwertheim/mynatsclient/blob/master/LICENSE.txt)
 
-## Issues, Questions etc.
-Found any Issues? Cool, then someone is using it. Just report them under Issues.
-
-Have any questions? Awesome. Ping me on Twitter @danielwertheim.
-
 ## Install NuGet Package
 If you just want the client and not the Reactive Extensions packages, use:
 
@@ -29,8 +24,36 @@ For convenience, if you want a consumer that makes use of Reactive Extensions, u
 install-package MyNatsClient.Rx
 ```
 
-## Usage
+## Simplest usage
 Just some simple code showing usage.
+
+```csharp
+var connectionInfo = new ConnectionInfo("192.168.1.176")
+{
+    AutoReconnectOnFailure = true
+};
+
+using(var client = new NatsClient("clientId1", connectionInfo))
+{
+    //Pub-Sub sample
+    await client.SubWithHandlerAsync("tick", msg => {
+        Console.WriteLine($"Clock ticked. Tick is {msg.GetPayloadAsString()}");
+    });
+
+    await client.PubAsync("tick", getNextTick());
+
+    //Request-Response sample
+    await client.SubWithHandlerAsync("getTemp", msg => {
+        client.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
+    });
+
+    var response = await client.RequestAsync("getTemp", "stockholm@sweden");
+    Console.WriteLine($"Temp in Stockholm is {response.GetPayloadAsString()}");
+}
+```
+
+## Advanced usage
+Some code showing more advanced usage.
 
 ```csharp
 var connectionInfo = new ConnectionInfo(
@@ -53,29 +76,22 @@ using (var client = new NatsClient("myClientId", connectionInfo))
 {
     //You can subscribe to dispatched client events
     //to react on something that happened to the client
-    client.Events.OfType<ClientConnected>().Subscribe(ev =>
-    {
-        Console.WriteLine("Client connected!");
-        ev.Client.Sub("foo", "s1");
-        ev.Client.Sub("bar", "s2");
-
-        //Make it automatically unsub after two messages
-        ev.Client.UnSub("s2", 2);
-    });
+    client.Events.OfType<ClientConnected>().Subscribe(ev
+        => Console.WriteLine("Client connected!"););
     
     client.Events.OfType<ClientConsumerFailed>().Subscribe(ev
         => Console.WriteLine($"Client consumer failed with Exception: '{ev.Exception}'.");
 
-    //Disconnect, either by client.Disconnect() call
-    //or caused by fail.
+    //Disconnected, either by client.Disconnect() call
+    //or caused by fail in your handlers.
     client.Events.OfType<ClientDisconnected>().Subscribe(ev =>
     {
         Console.WriteLine($"Client was disconnected due to reason '{ev.Reason}'");
         if (ev.Reason != DisconnectReason.DueToFailure)
             return;
 
-        //Not needed if you use `ConnectionInfo.AutoReconnectOnFailure`.
-        ev.Client.Connect();
+        if(!connectionInfo.AutoReconnectOnFailure)
+            ev.Client.Connect();
     });
 
     //Subscribe to OpStream to get ALL ops e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
@@ -112,60 +128,47 @@ using (var client = new NatsClient("myClientId", connectionInfo))
         Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
     });
 
+    var subscription = client.MsgOpStream.Subscribe(msg =>
+    {
+        //Will handle MsgOp matching Subject 'foo'
+    }, msg => msg.Subject == "foo");
+
     client.Connect();
 
     Console.WriteLine("Hit key to UnSub from foo.");
     Console.ReadKey();
-    client.UnSub("s1");
+
+    //Either...
+    client.UnSub(subscription.SubscriptionInfo);
+    //Or...
+    subscription.Dispose();
 
     Console.WriteLine("Hit key to Disconnect.");
     Console.ReadKey();
     client.Disconnect();
-
-    Console.WriteLine("Hit key to Connect.");
-    Console.ReadKey();
-    client.Connect();
-
-    Console.WriteLine("Hit key to Shutdown.");
-    Console.ReadKey();
 }
 ```
 
-## NatsConsumer
-The `NatsConsumer` introduced in `v0.4.0` allows a simplified consuming experience. Using the `NatsClient`, you need to subscribe to a `subject` against the broker as well as an in-process handler against the observable `Client.MsgOpStream`. With the `NatsConsumer` this is done for you:
+## Subscribing & Unsubscribing
+The Client will keep track of subscriptions done. And you can set them up before connecting. Once it gets connected, it will register the subscriptions against the NATS server. If you make use of `ConnectionInfo.AutoReconnectOnFailure` it will also re-subscribe in the event of exceptions.
 
-```csharp
-var consumer = new NatsConsumer(client);
+When subscribing to a subject using the client, you will be returned a `ISubscription`. The methods for subscribing are:
 
-//Subscribe will create subscription both against the NATS-broker
-//and the in-process observable message stream
-consumer.Subscribe("mySubject", msg => {});
-//or async
-await consumer.SubscribeAsync("mysubject", msg => {});
-```
+- `client.Sub(subscriptionInfo)`
+- `client.SubAsync(subscriptionInfo)`
+- `client.SubWithHandler(subscriptionInfo, msg => {})`
+- `client.SubWithHandlerAsync(subscriptionInfo, msg => {})`
+- `client.SubWithObserver(subscriptionInfo, observer)`
+- `client.SubWithObserverAsync(subscriptionInfo, observer)`
+- `client.SubWithObservableSubscription(subscriptionInfo, msgs => msgs.Subscribe(...))`
+- `client.SubWithObservableSubscriptionAsync(subscriptionInfo, msgs => msgs.Subscribe(...))`
 
-You can also inject an `IObserver<MsgOp>` so that you could inject logic for `OnException` and `OnCompleted`.
+To `Unsubscribe`, you can do **any of the following**:
 
-```csharp
-var observer = new DelegatingObserver<MsgOp>(
-    msg => {},
-    ex => {},
-    () => {}
-);
-
-consumer.Subscribe("mySubject", observer);
-//or async
-await consumer.SubscribeAsync("mysubject", observer);
-```
-
-To `unsubscribe`, you can do **any of the following**:
-
-- Dispose the `IConsumerSubscription` returned by the `consumer.Subscribe` or `consumer.SubscribeAsync` methods.
-- Dispose the `NatsConsumer` and it will take care of the subscriptions.
-- Pass the `IConsumerSubscription` to any of the `consumer.Unsubscribe(subscription)` or `consumer.UnsubscribeAsync(subscription)`
-
-### Auto unsubscribe
-When using any of the `Subscribe|SubscribeAsync`overloads that take a `SubscriptionInfo`, then you can optionally specify `maxMessages`, which will send an `Unsub` to the broker with this argument for the subject, so that you only receive max number of messages on that subscription.
+- Dispose the `ISubscription` returned by any of the subscribing methods listed above.
+- Dispose the `NatsClient` and it will take care of the subscriptions.
+- Pass the `ISubscription.SubscriptionInfo` to any of the `client.Unsub|UnsubAsync` methods
+- Create the subscription using a `SubscriptionInfo` with `MaxMessages`, then it will auto unsubscribe after receiving the messages.
 
 **NOTE** it's perfectly fine to do both e.g. `subscription.Dispose` as well as `consumer.Dispose` or e.g. `consumer.Unsubscribe` and then `subscription.Dispose`.
 
@@ -177,18 +180,10 @@ The events aren't normal events, the events are distributed via `client.Events` 
 * ClientConsumerFailed
 
 ### ClientConnected
-Signals that the client is connected and ready for use. You can react on this to subscribe to `subjects`:
+Signals that the client is connected and ready for use.
 
 ```csharp
-client.Events.OfType<ClientConnected>().Subscribe(async ev =>
-{
-    await ev.Client.SubAsync("foo", "s1");
-    await ev.Client.SubAsync("foo", "s2");
-    await ev.Client.SubAsync("bar", "s3");
-
-    //Make it automatically unsub after two messages
-    await ev.Client.UnSubAsync("s2", 2);
-});
+client.Events.OfType<ClientConnected>().Subscribe(async ev => { });
 ```
 
 ### ClientDisconnected
@@ -201,7 +196,8 @@ client.Events.OfType<ClientDisconnected>().Subscribe(ev =>
         return;
 
     //Not needed if you use `ConnectionInfo.AutoReconnectOnFailure`.
-    ev.Client.Connect();
+    if(!connectionInfo.AutoReconnectOnFailure)
+        ev.Client.Connect();
 });
 ```
 
@@ -314,25 +310,6 @@ The client uses one `Socket` but two `NetworkStreams`. One stream for writes and
 
 ## Synchronous and Asynchronous
 The Client has both synchronous and asynchronous methods. They are pure versions and **NOT sync over async**. All async versions uses `ConfigureAwait(false)`.
-
-```csharp
-void Ping();
-Task PingAsync();
-
-void Pong();
-Task PongAsync();
-
-void Pub(string subject, string body, string replyTo);
-void Pub(string subject, byte[] body, string replyTo);
-Task PubAsync(string subject, string body, string replyTo);
-Task PubAsync(string subject, byte[] body, string replyTo);
-
-void Sub(string subject, string subscriptionId, string queueGroup = null);
-Task SubAsync(string subject, string subscriptionId, string queueGroup = null);
-
-void Unsub(string subscriptionId, int? maxMessages = null);
-Task UnsubAsync(string subscriptionId, int? maxMessages = null);
-```
 
 ## Observable message streams
 The message streams are exposed as `Observables`. So you can use [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) to consume e.g. the `client.OpStream` for `IOp` implementations: `ErrOp`, `InfoOp`, `MsgOp`, `PingOp`, `PongOp`. You do this using `client.OpStream.Subscribe(...)`. For `MsgOp`ONLY, use the `client.MsgOpStream.Subscribe(...)`.
