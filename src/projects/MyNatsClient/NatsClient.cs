@@ -389,23 +389,19 @@ namespace MyNatsClient
 
             DoDisconnect(DisconnectReason.DueToFailure);
 
-            if (t.IsFaulted)
-            {
-                var ex = t.Exception?.GetBaseException();
-                if (ex == null)
-                    return;
-
-                Logger.Error("Consumer exception.", ex);
-                OnConsumerFailed(ex);
-            }
-            else
-            {
-                var errOp = t.Result;
-                if (errOp == null)
-                    return;
-
+            var errOp = t.Result;
+            if (errOp != null)
                 _opMediator.Dispatch(errOp);
-            }
+
+            if (!t.IsFaulted)
+                return;
+
+            var ex = t.Exception?.GetBaseException();
+            if (ex == null)
+                return;
+
+            Logger.Error("Consumer exception.", ex);
+            OnConsumerFailed(ex);
         }
 
         private void Release()
