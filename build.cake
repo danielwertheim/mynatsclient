@@ -10,7 +10,8 @@ Task("Default")
     .IsDependentOn("Restore")
     .IsDependentOn("Bump")
     .IsDependentOn("Build")
-    .IsDependentOn("UnitTest");
+    .IsDependentOn("UnitTest")
+    .IsDependentOn("IntegrationTest");
 
 Task("CI")
     .IsDependentOn("Default")
@@ -68,6 +69,15 @@ Task("UnitTest").Does(() => {
         Configuration = config.BuildProfile
     };
     foreach(var testProj in GetFiles(config.SrcDir + "tests/**/*.UnitTests/project.json")) {
+        DotNetCoreTest(testProj.FullPath, settings);
+    }
+});
+
+Task("IntegrationTest").Does(() => {
+    var settings = new DotNetCoreTestSettings {
+        Configuration = config.BuildProfile
+    };
+    foreach(var testProj in GetFiles(config.SrcDir + "tests/**/*.IntegrationTests/project.json")) {
         DotNetCoreTest(testProj.FullPath, settings);
     }
 });

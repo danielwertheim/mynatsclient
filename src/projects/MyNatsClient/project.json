@@ -6,6 +6,7 @@
     "copyright": "danielwertheim",
     "buildOptions": {
         "platform": "anycpu",
+        "nowarn": [ "CS1591" ],
         "compile": {
             "includeFiles": [ "../../GlobalAssemblyInfo.cs" ]
         }

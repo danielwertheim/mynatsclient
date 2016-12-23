@@ -39,7 +39,7 @@ namespace MyNatsClient.IntegrationTests
             _client = new NatsClient("tc1", _cnInfoWithAutoReconnect);
             _client.Connect();
 
-            await _client.SubAsync(subject, "s1");
+            await _client.SubAsync(subject);
 
             _client.Events.OfType<ClientDisconnected>()
                 .Where(ev => ev.Reason == DisconnectReason.DueToFailure)
@@ -82,7 +82,7 @@ namespace MyNatsClient.IntegrationTests
             _client = new NatsClient("tc1", _cnInfoWithNoAutoReconnect);
             _client.Connect();
 
-            await _client.SubAsync(subject, "s1");
+            await _client.SubAsync(subject);
 
             _client.Events.OfType<ClientDisconnected>()
                 .Where(ev => ev.Reason == DisconnectReason.DueToFailure)
@@ -126,7 +126,7 @@ namespace MyNatsClient.IntegrationTests
             _client = new NatsClient("tc1", _cnInfoWithAutoReconnect);
             _client.Connect();
 
-            await _client.SubAsync(subject, "s1");
+            await _client.SubAsync(subject);
 
             _client.Events.OfType<ClientDisconnected>()
                 .Subscribe(ev =>

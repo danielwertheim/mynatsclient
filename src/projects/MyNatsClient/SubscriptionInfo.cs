@@ -47,7 +47,7 @@ namespace MyNatsClient
             if (_wildCardPos > -1 && _fullWildCardPos > -1)
                 throw new ArgumentException("Subject can not contain both the wildcard and full wildcard character.", nameof(subject));
 
-            Id = Guid.NewGuid().ToString("N");
+            Id = Guid.NewGuid().ToString("N"); //TODO: Shorten. Inject instead and keep track of subs per client and...
             Subject = subject;
             QueueGroup = queueGroup;
             MaxMessages = maxMessages;

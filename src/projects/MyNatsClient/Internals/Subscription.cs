@@ -1,10 +1,9 @@
 using System;
 using EnsureThat;
-using MyNatsClient.Ops;
 
 namespace MyNatsClient.Internals
 {
-    internal class ConsumerSubscription : IConsumerSubscription
+    internal class Subscription : ISubscription
     {
         private IDisposable _subscription;
         private bool _isDisposed;
@@ -12,19 +11,29 @@ namespace MyNatsClient.Internals
 
         public SubscriptionInfo SubscriptionInfo { get; }
 
-        internal ConsumerSubscription(
+        private Subscription(
             SubscriptionInfo subscriptionInfo,
-            IFilterableObservable<MsgOp> messageStream,
-            IObserver<MsgOp> observer,
-            Action<SubscriptionInfo> onDisposing = null)
+            IDisposable subscription,
+            Action<SubscriptionInfo> onDisposing)
         {
             EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
-            EnsureArg.IsNotNull(messageStream, nameof(messageStream));
-            EnsureArg.IsNotNull(observer, nameof(observer));
+            EnsureArg.IsNotNull(subscription, nameof(subscription));
+            EnsureArg.IsNotNull(onDisposing, nameof(onDisposing));
 
             SubscriptionInfo = subscriptionInfo;
-            _subscription = messageStream.Subscribe(observer, msg => SubscriptionInfo.Matches(msg.Subject));
+            _subscription = subscription;
             _onDisposing = onDisposing;
+        }
+
+        internal static Subscription Create(
+            SubscriptionInfo subscriptionInfo,
+            IDisposable subscription,
+            Action<SubscriptionInfo> onDisposing)
+        {
+            return new Subscription(
+                subscriptionInfo,
+                subscription,
+                onDisposing);
         }
 
         public void Dispose()
@@ -42,7 +51,7 @@ namespace MyNatsClient.Internals
             Try.All(
                 () =>
                 {
-                    Try.DisposeAll(_subscription);
+                    _subscription?.Dispose();
                     _subscription = null;
                 },
                 () =>
