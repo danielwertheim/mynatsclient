@@ -25,6 +25,7 @@ namespace MyNatsClient
         private const int TryConnectMaxDurationMs = 2000;
         private const int MaxReconnectDueToFailureAttempts = 5;
         private const int WaitForConsumerCompleteMs = 100;
+        private const int DefaultRequestTimeOutMs = 5000;
 
         private readonly object _sync;
         private readonly ConnectionInfo _connectionInfo;
@@ -292,7 +293,7 @@ namespace MyNatsClient
             _serverInfo = NatsServerInfo.Parse(infoOp.Message);
             var credentials = host.HasNonEmptyCredentials() ? host.Credentials : _connectionInfo.Credentials;
             if (_serverInfo.AuthRequired && (credentials == null || credentials == Credentials.Empty))
-                throw new NatsException($"Error while connecting to {host}. Server requires credentials to be passed. None was specified.");
+                throw NatsException.MissingCredentials(host.ToString());
 
             _opMediator.Dispatch(infoOp);
 
@@ -608,37 +609,37 @@ namespace MyNatsClient
             });
         }
 
-        public async Task<MsgOp> RequestAsync(string subject, string body)
+        public async Task<MsgOp> RequestAsync(string subject, string body, int? timeOutMs = null)
         {
             ThrowIfDisposed();
 
             EnsureArg.IsNotNullOrWhiteSpace(subject, nameof(subject));
             EnsureArg.IsNotNullOrWhiteSpace(body, nameof(body));
 
-            return await DoRequestAsync(subject, NatsEncoder.GetBytes(body)).ForAwait();
+            return await DoRequestAsync(subject, NatsEncoder.GetBytes(body), timeOutMs).ForAwait();
         }
 
-        public async Task<MsgOp> RequestAsync(string subject, byte[] body)
+        public async Task<MsgOp> RequestAsync(string subject, byte[] body, int? timeOutMs = null)
         {
             ThrowIfDisposed();
 
             EnsureArg.IsNotNullOrWhiteSpace(subject, nameof(subject));
             EnsureArg.HasItems(body, nameof(body));
 
-            return await DoRequestAsync(subject, body).ForAwait();
+            return await DoRequestAsync(subject, body, timeOutMs).ForAwait();
         }
 
-        public async Task<MsgOp> RequestAsync(string subject, IPayload body)
+        public async Task<MsgOp> RequestAsync(string subject, IPayload body, int? timeOutMs = null)
         {
             ThrowIfDisposed();
 
             EnsureArg.IsNotNullOrWhiteSpace(subject, nameof(subject));
             EnsureArg.IsNotNull(body, nameof(body));
 
-            return await DoRequestAsync(subject, body.Blocks.SelectMany(b => b).ToArray()).ForAwait();
+            return await DoRequestAsync(subject, body.Blocks.SelectMany(b => b).ToArray(), timeOutMs).ForAwait();
         }
 
-        private async Task<MsgOp> DoRequestAsync(string subject, byte[] body)
+        private async Task<MsgOp> DoRequestAsync(string subject, byte[] body, int? timeOutMs)
         {
             var requestReplyAddress = $"{Inbox.Address}.{Guid.NewGuid():N}";
             var taskComp = new TaskCompletionSource<MsgOp>();
@@ -651,6 +652,10 @@ namespace MyNatsClient
                 await DoSendAsync(PubCmd.Generate(subject, body, requestReplyAddress)).ForAwait();
                 await DoFlushAsync().ForAwait();
             }).ForAwait();
+
+            Task.WaitAny(new[] { Task.Delay(timeOutMs ?? DefaultRequestTimeOutMs),  taskComp.Task }, _cancellation.Token);
+            if (!taskComp.Task.IsCompleted)
+                throw NatsException.RequestTimedOut();
 
             return await taskComp.Task
                 .ContinueWith(t =>
@@ -800,7 +805,7 @@ namespace MyNatsClient
             });
 
             if (!_subscriptions.TryAdd(subscription.SubscriptionInfo.Id, subscription))
-                throw new NatsException($"Could not create subscription. Id='{subscriptionInfo.Id}'. Subject='{subscriptionInfo.Subject}' QueueGroup='{subscriptionInfo.QueueGroup}'.");
+                throw NatsException.CouldNotCreateSubscription(subscription.SubscriptionInfo);
 
             return subscription;
         }

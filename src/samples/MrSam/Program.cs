@@ -10,7 +10,7 @@ namespace MrSam
         public static void Main(string[] args)
         {
             var cnInfo = new ConnectionInfo("192.168.2.20");
-            _client = new NatsClient("testid", cnInfo);
+            _client = new NatsClient("myclient", cnInfo);
             _client.Connect();
 
             _client.SubWithHandler("getTemp", msg =>
@@ -19,18 +19,23 @@ namespace MrSam
                 _client.Pub(msg.ReplyTo, $"Temp is {TempService.Get(parts[0], parts[1])}C");
             });
 
-            using (var request = new NatsRequester(_client))
+            //int c = 0;
+
+            while (true)
             {
-                while (true)
-                {
-                    Console.WriteLine("Query? (y=yes;n=no)");
-                    if (Console.ReadKey().KeyChar == 'n')
-                        break;
+                Console.WriteLine("Query? (y=yes;n=no)");
+                if (Console.ReadKey().KeyChar == 'n')
+                    break;
 
-                    Console.WriteLine();
+                Console.WriteLine();
 
-                    Console.WriteLine($"Got reply: {request.RequestAsync("getTemp", "STOCKHOLM@SWEDEN").Result.GetPayloadAsString()}");
-                }
+                //c++;
+                Console.WriteLine($"Got reply: {_client.RequestAsync("getTemp", "STOCKHOLM@SWEDEN").Result.GetPayloadAsString()}");
+                //if (c % 5 == 0)
+                //{
+                //    _client.Disconnect();
+                //    _client.Connect();
+                //}
             }
 
             _client.Disconnect();
