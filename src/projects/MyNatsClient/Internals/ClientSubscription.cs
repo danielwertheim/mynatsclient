@@ -51,7 +51,7 @@ namespace MyNatsClient.Internals
             Try.All(
                 () =>
                 {
-                    Try.DisposeAll(_subscription);
+                    _subscription?.Dispose();
                     _subscription = null;
                 },
                 () =>

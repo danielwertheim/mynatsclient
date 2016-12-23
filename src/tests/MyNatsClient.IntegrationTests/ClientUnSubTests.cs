@@ -48,36 +48,39 @@ namespace MyNatsClient.IntegrationTests
             var nr1ReceiveCount = 0;
             var nr2ReceiveCount = 0;
             var nr3ReceiveCount = 0;
+            var subInfo1 = new SubscriptionInfo(subject);
+            var subInfo2 = new SubscriptionInfo(subject);
+            var subInfo3 = new SubscriptionInfo(subject);
 
             _client1.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
-                _client1.Unsub("s1");
+                _client1.Unsub(subInfo1);
                 Interlocked.Increment(ref nr1ReceiveCount);
                 ReleaseOne();
             });
-            _client1.SubWithObservableSubscription((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
+            _client1.Sub(subInfo1);
 
             _client2.OpStream.OfType<MsgOp>().Subscribe(async msg =>
             {
-                await _client2.UnsubAsync("s1");
+                await _client2.UnsubAsync(subInfo2);
                 Interlocked.Increment(ref nr2ReceiveCount);
                 ReleaseOne();
             });
-            _client2.SubWithObservableSubscription((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
+            _client2.Sub(subInfo2);
 
             _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr3ReceiveCount);
                 ReleaseOne();
             });
-            _client3.SubWithObservableSubscription((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
+            _client3.Sub(subInfo3);
 
             _client1.Pub(subject, "mess1");
             WaitOne();
             WaitOne();
             WaitOne();
 
-            _client3.Unsub("s1");
+            _client3.Unsub(subInfo3);
             await DelayAsync();
 
             _client1.Pub(subject, "mess2");
@@ -94,22 +97,22 @@ namespace MyNatsClient.IntegrationTests
             const string subject = "Test";
             var nr2ReceiveCount = 0;
             var nr3ReceiveCount = 0;
+            var subInfo2 = new SubscriptionInfo(subject, maxMessages: 2);
+            var subInfo3 = new SubscriptionInfo(subject, maxMessages: 2);
 
             _client2.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr2ReceiveCount);
                 ReleaseOne();
             });
-            _client2.SubWithObservableSubscription((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
-            _client2.Unsub("s1", 2);
+            _client2.Sub(subInfo2);
 
             _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr3ReceiveCount);
                 ReleaseOne();
             });
-            await _client3.SubWithObservableSubscriptionAsync((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
-            await _client3.UnsubAsync("s1", 2);
+            _client3.Sub(subInfo3);
 
             _client1.Pub(subject, "mess1");
             _client1.Pub(subject, "mess2");

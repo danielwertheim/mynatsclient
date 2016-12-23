@@ -110,7 +110,7 @@ namespace MyNatsClient
             if (disconnectedEvent == null || disconnectedEvent.Reason != DisconnectReason.DueToFailure)
                 return;
 
-            if(!_connectionInfo.AutoReconnectOnFailure)
+            if (!_connectionInfo.AutoReconnectOnFailure)
                 return;
 
             try
@@ -659,7 +659,6 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
-            //TODO: You should not need to have factory
             var subscription = CreateMsgOpSubscription(subscriptionInfo, subscriptionFactory);
 
             if (State != NatsClientState.Connected)
@@ -673,8 +672,10 @@ namespace MyNatsClient
         private void DoSub(SubscriptionInfo subscriptionInfo) => WithWriteLock(() =>
         {
             DoSend(SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup));
+
             if (subscriptionInfo.MaxMessages.HasValue)
                 DoSend(UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages));
+
             DoFlush();
         });
 
@@ -715,10 +716,11 @@ namespace MyNatsClient
 
         private async Task DoSubAsync(SubscriptionInfo subscriptionInfo) => await WithWriteLockAsync(async () =>
         {
-            await DoSendAsync(SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup))
-                .ForAwait();
+            await DoSendAsync(SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup)).ForAwait();
+
             if (subscriptionInfo.MaxMessages.HasValue)
                 await DoSendAsync(UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages)).ForAwait();
+
             await DoFlushAsync().ForAwait();
         }).ForAwait();
 

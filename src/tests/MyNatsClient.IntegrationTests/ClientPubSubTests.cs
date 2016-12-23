@@ -70,7 +70,7 @@ namespace MyNatsClient.IntegrationTests
                 if (x == messages.Length)
                     ReleaseOne();
             });
-            _client1.SubWithObservableSubscription((SubscriptionInfo) "Test", (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
+            _client1.Sub("Test");
 
             _client1.Pub("Test", messages[0]);
             _client1.Pub("Test", Encoding.UTF8.GetBytes(messages[1]));
@@ -101,7 +101,7 @@ namespace MyNatsClient.IntegrationTests
                 if (x == messages.Length)
                     ReleaseOne();
             });
-            _client1.SubWithObservableSubscription((SubscriptionInfo) "Test", (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
+            _client1.Sub("Test");
 
             _client1.PubMany(async p =>
             {
@@ -128,14 +128,14 @@ namespace MyNatsClient.IntegrationTests
                 Interlocked.Increment(ref nr2ReceiveCount);
                 ReleaseOne();
             });
-            _client2.SubWithObservableSubscription((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
+            _client2.Sub(subject);
 
             _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
             {
                 Interlocked.Increment(ref nr3ReceiveCount);
                 ReleaseOne();
             });
-            await _client3.SubWithObservableSubscriptionAsync((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
+            await _client3.SubAsync(subject);
 
             _client1.Pub(subject, "mess1");
             WaitOne();
@@ -160,7 +160,7 @@ namespace MyNatsClient.IntegrationTests
                 Interlocked.Increment(ref nr1ReceiveCount);
                 ReleaseOne();
             });
-            _client1.SubWithObservableSubscription((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
+            _client1.Sub(subject);
 
             _client1.Pub(subject, "mess1");
             WaitOne();
@@ -179,8 +179,8 @@ namespace MyNatsClient.IntegrationTests
                 Interlocked.Increment(ref nr1ReceiveCount);
                 ReleaseOne();
             });
-            _client1.SubWithObservableSubscription((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
-            _client1.SubWithObservableSubscription((SubscriptionInfo) subject, (Func<IFilterableObservable<MsgOp>, IDisposable>) "s2");
+            _client1.Sub(subject);
+            _client1.Sub(subject);
 
             _client1.Pub(subject, "mess1");
             WaitOne();
@@ -204,8 +204,8 @@ namespace MyNatsClient.IntegrationTests
                 Interlocked.Increment(ref nr1ReceiveCount);
                 ReleaseOne();
             });
-            _client1.SubWithObservableSubscription((SubscriptionInfo) "Foo", (Func<IFilterableObservable<MsgOp>, IDisposable>) "s1");
-            _client1.SubWithObservableSubscription((SubscriptionInfo) "Bar", (Func<IFilterableObservable<MsgOp>, IDisposable>) "s2");
+            _client1.Sub("Foo");
+            _client1.Sub("Bar");
 
             _client1.Pub("Foo", "mess1");
             _client1.Pub("Bar", "mess2");
