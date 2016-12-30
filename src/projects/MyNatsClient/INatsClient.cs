@@ -44,9 +44,9 @@ namespace MyNatsClient
         INatsClientStats Stats { get; }
 
         /// <summary>
-        /// Gets current State of the client. <see cref="NatsClientState"/>.
+        /// Gets value indicating if the client is connected or not.
         /// </summary>
-        NatsClientState State { get; }
+        bool IsConnected { get; }
 
         /// <summary>
         /// Connects the client to one of the <see cref="Host"/>
