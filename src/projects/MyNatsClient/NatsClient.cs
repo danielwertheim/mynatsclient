@@ -136,10 +136,10 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
-            DoDisconnect(DisconnectReason.ByUser);
+            Disconnect(DisconnectReason.ByUser);
         }
 
-        private void DoDisconnect(DisconnectReason reason)
+        private void Disconnect(DisconnectReason reason)
         {
             if (IsConnected)
             {
@@ -222,7 +222,7 @@ namespace MyNatsClient
 
                     var silenceDeltaMs = DateTime.UtcNow.Subtract(Stats.LastOpReceivedAt).TotalMilliseconds;
                     if (silenceDeltaMs >= ConsumerMaxMsSilenceFromServer)
-                        throw NatsException.ConnectionFoundStale(_connection.ServerInfo.Host, _connection.ServerInfo.Port);
+                        throw NatsException.ConnectionFoundIdling(_connection.ServerInfo.Host, _connection.ServerInfo.Port);
 
                     if (silenceDeltaMs >= ConsumerPingAfterMsSilenceFromServer)
                         Ping();
@@ -238,7 +238,7 @@ namespace MyNatsClient
             if (!t.IsFaulted)
                 return;
 
-            DoDisconnect(DisconnectReason.DueToFailure);
+            Disconnect(DisconnectReason.DueToFailure);
 
             var ex = t.Exception?.GetBaseException() ?? t.Exception;
             if (ex == null)

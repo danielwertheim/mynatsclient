@@ -8,6 +8,6 @@ namespace MyNatsClient
         public const string ExceededMaxPayload = "ExceededMaxPayload";
         public const string NoDataReceivedFromServer = "NoDataReceivedFromServer";
         public const string RequestTimedOut = "RequestTimedOut";
-        public const string ConnectionFoundStale = "ConnectionFoundStale";
+        public const string ConnectionFoundIdling = "ConnectionFoundIdling";
     }
 }

@@ -33,7 +33,7 @@ namespace MyNatsClient
         internal static NatsException CouldNotCreateSubscription(SubscriptionInfo subscriptionInfo)
             => new NatsException(NatsExceptionCodes.CouldNotCreateSubscription, $"Could not create subscription. Id='{subscriptionInfo.Id}'. Subject='{subscriptionInfo.Subject}' QueueGroup='{subscriptionInfo.QueueGroup}'.");
 
-        internal static NatsException ConnectionFoundStale(string host, int port)
-            => new NatsException(NatsExceptionCodes.ConnectionFoundStale, $"The Connection against server {host}:{port.ToString()} has not received any data in to long period.");
+        internal static NatsException ConnectionFoundIdling(string host, int port)
+            => new NatsException(NatsExceptionCodes.ConnectionFoundIdling, $"The Connection against server {host}:{port.ToString()} has not received any data in a to long period.");
     }
 }
