@@ -33,6 +33,7 @@ namespace MyNatsClient
         private readonly Func<bool> _socketIsConnected;
         private readonly Func<bool> _consumerIsCancelled;
         private readonly IPublisher _publisher;
+
         private ObservableOf<IClientEvent> _eventMediator;
         private NatsOpMediator _opMediator;
         private Socket _socket;
@@ -76,6 +77,12 @@ namespace MyNatsClient
             SocketFactory = new SocketFactory();
 
             SubscribeToClientEventsForInternalUse();
+
+            _opMediator.Subscribe(new DelegatingObserver<IOp>(op =>
+            {
+                if (_connectionInfo.AutoRespondToPing && State == NatsClientState.Connected && op is PingOp)
+                    Swallow.Everything(Pong);
+            }));
         }
 
         private void SubscribeToClientEventsForInternalUse()
@@ -84,56 +91,18 @@ namespace MyNatsClient
             {
                 if (ev is ClientConnected)
                 {
-                    OnClientConnected();
+                    HandleClientConnected();
                     return;
                 }
 
                 var disconnectedEvent = ev as ClientDisconnected;
                 if (disconnectedEvent != null)
                 {
-                    OnClientDisconnected(disconnectedEvent);
+                    HandleClientDisconnected(disconnectedEvent);
                     // ReSharper disable once RedundantJumpStatement
                     return;
                 }
             }));
-        }
-
-        private void OnClientConnected()
-        {
-            foreach (var subscription in _subscriptions.Values)
-            {
-                if (State != NatsClientState.Connected)
-                    break;
-
-                DoSub(subscription.SubscriptionInfo);
-            }
-        }
-
-        private void OnClientDisconnected(ClientDisconnected disconnectedEvent)
-        {
-            if (disconnectedEvent == null || disconnectedEvent.Reason != DisconnectReason.DueToFailure)
-                return;
-
-            if (!_connectionInfo.AutoReconnectOnFailure)
-                return;
-
-            try
-            {
-                var attempts = 0;
-                while (State == NatsClientState.Disconnected && attempts < MaxReconnectDueToFailureAttempts)
-                {
-                    attempts += 1;
-                    Logger.Debug($"Trying to reconnect after disconnection due to failure. attempt={attempts.ToString()}");
-                    Connect();
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Failed while trying to reconnect client.", ex);
-            }
-
-            if (State == NatsClientState.Disconnected)
-                _eventMediator.Dispatch(new ClientAutoReconnectFailed(this));
         }
 
         public void Dispose()
@@ -197,31 +166,19 @@ namespace MyNatsClient
 
         private void DoDisconnect(DisconnectReason reason)
         {
-            if (State != NatsClientState.Connected)
-                return;
-
-            lock (_sync)
+            if (State == NatsClientState.Connected)
             {
-                if (State != NatsClientState.Connected)
-                    return;
+                lock (_sync)
+                {
+                    if (State == NatsClientState.Connected)
+                        Release();
 
-                Release();
-
-                State = NatsClientState.Disconnected;
+                    State = NatsClientState.Disconnected;
+                }
             }
 
-            OnDisconnected(reason);
+            RaiseClientDisconnected(reason);
         }
-
-        private void OnConnected()
-            => _eventMediator.Dispatch(new ClientConnected(this));
-
-        private void OnDisconnected(DisconnectReason reason)
-            => _eventMediator.Dispatch(new ClientDisconnected(this, reason));
-
-        private void OnConsumerFailed(Exception ex)
-            => _eventMediator.Dispatch(new ClientConsumerFailed(this, ex));
-
         public void Connect()
         {
             ThrowIfDisposed();
@@ -263,7 +220,7 @@ namespace MyNatsClient
             }
 
             if (State == NatsClientState.Connected)
-                OnConnected();
+                RaiseClientConnected();
         }
 
         //TODO: SSL
@@ -344,7 +301,7 @@ namespace MyNatsClient
             return false;
         }
 
-        private ErrOp Consumer()
+        private void Consumer()
         {
             ErrOp errOp = null;
 
@@ -354,7 +311,7 @@ namespace MyNatsClient
                 _readStream != null &&
                 _readStream.CanRead;
 
-            while (shouldRead() && errOp == null)
+            while (shouldRead())
             {
                 try
                 {
@@ -363,12 +320,9 @@ namespace MyNatsClient
                         if (op == null)
                             continue;
 
-                        if (_connectionInfo.AutoRespondToPing && op is PingOp)
-                            Pong();
-
                         errOp = op as ErrOp;
                         if (errOp != null)
-                            continue;
+                            break;
 
                         _opMediator.Dispatch(op);
                     }
@@ -390,36 +344,30 @@ namespace MyNatsClient
 
                     var silenceDeltaMs = DateTime.UtcNow.Subtract(Stats.LastOpReceivedAt).TotalMilliseconds;
                     if (silenceDeltaMs >= ConsumerMaxMsSilenceFromServer)
-                        throw;
+                        throw NatsException.ConnectionFoundStale(_serverInfo.Host, _serverInfo.Port);
 
                     if (silenceDeltaMs >= ConsumerPingAfterMsSilenceFromServer)
                         Ping();
                 }
             }
 
-            return errOp;
+            if (errOp != null)
+                _opMediator.Dispatch(errOp);
         }
 
-        private void OnConsumerCompleted(Task<ErrOp> t)
+        private void OnConsumerCompleted(Task t)
         {
-            if (!t.IsFaulted && t.Result == null)
+            if (!t.IsFaulted)
                 return;
 
             DoDisconnect(DisconnectReason.DueToFailure);
-
-            var errOp = t.Result;
-            if (errOp != null)
-                _opMediator.Dispatch(errOp);
-
-            if (!t.IsFaulted)
-                return;
 
             var ex = t.Exception?.GetBaseException() ?? t.Exception;
             if (ex == null)
                 return;
 
             Logger.Error("Consumer exception.", ex);
-            OnConsumerFailed(ex);
+            RaiseClientConsumerFailed(ex);
         }
 
         private void Release()
@@ -653,7 +601,7 @@ namespace MyNatsClient
                 await DoFlushAsync().ForAwait();
             }).ForAwait();
 
-            Task.WaitAny(new[] { Task.Delay(timeOutMs ?? DefaultRequestTimeOutMs),  taskComp.Task }, _cancellation.Token);
+            Task.WaitAny(new[] { Task.Delay(timeOutMs ?? DefaultRequestTimeOutMs), taskComp.Task }, _cancellation.Token);
             if (!taskComp.Task.IsCompleted)
                 throw NatsException.RequestTimedOut();
 
@@ -915,6 +863,53 @@ namespace MyNatsClient
         {
             using (await _writeStreamSync.LockAsync(_cancellation.Token).ForAwait())
                 await a().ForAwait();
+        }
+
+        private void RaiseClientConnected()
+            => _eventMediator.Dispatch(new ClientConnected(this));
+
+        private void RaiseClientDisconnected(DisconnectReason reason)
+            => _eventMediator.Dispatch(new ClientDisconnected(this, reason));
+
+        private void RaiseClientConsumerFailed(Exception ex)
+            => _eventMediator.Dispatch(new ClientConsumerFailed(this, ex));
+
+        private void HandleClientConnected()
+        {
+            foreach (var subscription in _subscriptions.Values)
+            {
+                if (State != NatsClientState.Connected)
+                    break;
+
+                DoSub(subscription.SubscriptionInfo);
+            }
+        }
+
+        private void HandleClientDisconnected(ClientDisconnected disconnectedEvent)
+        {
+            if (disconnectedEvent == null || disconnectedEvent.Reason != DisconnectReason.DueToFailure)
+                return;
+
+            if (!_connectionInfo.AutoReconnectOnFailure)
+                return;
+
+            try
+            {
+                var attempts = 0;
+                while (State == NatsClientState.Disconnected && attempts < MaxReconnectDueToFailureAttempts)
+                {
+                    attempts += 1;
+                    Logger.Debug($"Trying to reconnect after disconnection due to failure. attempt={attempts.ToString()}");
+                    Connect();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Failed while trying to reconnect client.", ex);
+            }
+
+            if (State == NatsClientState.Disconnected)
+                _eventMediator.Dispatch(new ClientAutoReconnectFailed(this));
         }
     }
 }
