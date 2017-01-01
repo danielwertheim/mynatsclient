@@ -10,7 +10,7 @@ namespace MyNatsClient.UnitTests
     {
         public ObservableOfTests()
         {
-            UnitUnderTest = new ObservableOf<IClientEvent>();
+            UnitUnderTest = new ObservableOf<IClientEvent>(false);
         }
 
         [Fact]
@@ -57,8 +57,10 @@ namespace MyNatsClient.UnitTests
         }
 
         [Fact]
-        public void Dispatching_Should_not_dispatch_to_a_failed_observer()
+        public void Dispatching_Should_not_dispatch_to_a_failed_observer_When_auto_remove_failing_subscription_is_true()
         {
+            UnitUnderTest = new ObservableOf<IClientEvent>(true);
+
             var fake = new Mock<IObserver<IClientEvent>>();
             fake.Setup(f => f.OnNext(It.IsAny<IClientEvent>())).Throws<Exception>();
             UnitUnderTest.Subscribe(fake.Object);
@@ -68,6 +70,22 @@ namespace MyNatsClient.UnitTests
 
             fake.Verify(f => f.OnNext(It.IsAny<IClientEvent>()), Times.Once);
             fake.Verify(f => f.OnError(It.IsAny<Exception>()), Times.Once);
+        }
+
+        [Fact]
+        public void Dispatching_Should_dispatch_to_a_failed_observer_When_auto_remove_failing_subscription_is_false()
+        {
+            UnitUnderTest = new ObservableOf<IClientEvent>(false);
+
+            var fake = new Mock<IObserver<IClientEvent>>();
+            fake.Setup(f => f.OnNext(It.IsAny<IClientEvent>())).Throws<Exception>();
+            UnitUnderTest.Subscribe(fake.Object);
+
+            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
+            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
+
+            fake.Verify(f => f.OnNext(It.IsAny<IClientEvent>()), Times.Exactly(2));
+            fake.Verify(f => f.OnError(It.IsAny<Exception>()), Times.Exactly(2));
         }
 
         [Fact]
@@ -85,8 +103,6 @@ namespace MyNatsClient.UnitTests
 
             nonFailingObserver.Verify(f => f.OnNext(It.IsAny<IClientEvent>()), Times.Exactly(2));
             nonFailingObserver.Verify(f => f.OnError(It.IsAny<Exception>()), Times.Never);
-            failingObserver.Verify(f => f.OnNext(It.IsAny<IClientEvent>()), Times.Once);
-            failingObserver.Verify(f => f.OnError(It.IsAny<Exception>()), Times.Once);
         }
 
         [Fact]

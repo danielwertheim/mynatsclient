@@ -23,6 +23,7 @@ namespace MyNatsClient
         private const int MaxReconnectDueToFailureAttempts = 5;
         private const int WaitForConsumerCompleteMs = 100;
         private const int DefaultRequestTimeOutMs = 5000;
+        private const bool AutoRemoveFailingObservableSubscription = false;
 
         private readonly object _sync;
         private readonly ConnectionInfo _connectionInfo;
@@ -53,8 +54,8 @@ namespace MyNatsClient
             _sync = new object();
             _connectionInfo = connectionInfo.Clone();
             _subscriptions = new ConcurrentDictionary<string, Subscription>();
-            _eventMediator = new ObservableOf<IClientEvent>();
-            _opMediator = new NatsOpMediator();
+            _eventMediator = new ObservableOf<IClientEvent>(AutoRemoveFailingObservableSubscription);
+            _opMediator = new NatsOpMediator(AutoRemoveFailingObservableSubscription);
             _inbox = new Lazy<ClientInbox>(() => new ClientInbox(this), LazyThreadSafetyMode.ExecutionAndPublication);
             _consumerIsCancelled = () => _cancellation == null || _cancellation.IsCancellationRequested;
 
