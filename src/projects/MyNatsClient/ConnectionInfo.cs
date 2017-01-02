@@ -22,7 +22,7 @@ namespace MyNatsClient
         /// try and auto reconnect on failure.
         /// Default is false.
         /// </summary>
-        public bool AutoReconnectOnFailure { get; set; } = false;
+        public bool AutoReconnectOnFailure { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the credentials used when connecting against the hosts.
@@ -34,7 +34,7 @@ namespace MyNatsClient
         /// Gets or sets value if verbose output should be used.
         /// Default is false.
         /// </summary>
-        public bool Verbose { get; set; } = false;
+        public bool Verbose { get; set; }
 
         /// <summary>
         /// Gets or sets value determining how the clients flush behavior
