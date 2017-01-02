@@ -26,6 +26,6 @@ namespace MyNatsClient
         /// <summary>
         /// Gets or sets the SendTimeoutMs for the Socket.
         /// </summary>
-        public int? SendTimeoutMs { get; set; }
+        public int? SendTimeoutMs { get; set; } = 10000;
     }
 }
