@@ -5,8 +5,6 @@ using MyNatsClient.Ops;
 namespace MyNatsClient
 {
     public class NatsOpMediator :
-        IObservable<IOp>,
-        IFilterableObservable<MsgOp>,
         INatsClientStats,
         IDisposable
     {
@@ -14,6 +12,8 @@ namespace MyNatsClient
         private ObservableOf<IOp> _opStream;
         private ObservableOf<MsgOp> _msgOpStream;
 
+        public IFilterableObservable<IOp> AllOpsStream => _opStream;
+        public IFilterableObservable<MsgOp> MsgOpsStream => _msgOpStream;
         public DateTime LastOpReceivedAt { get; private set; }
         public long OpCount { get; private set; }
 
@@ -34,21 +34,6 @@ namespace MyNatsClient
             Try.DisposeAll(_opStream, _msgOpStream);
             _opStream = null;
             _msgOpStream = null;
-        }
-
-        public IDisposable Subscribe(IObserver<IOp> observer)
-        {
-            return _opStream.Subscribe(observer);
-        }
-
-        public IDisposable Subscribe(IObserver<MsgOp> observer)
-        {
-            return _msgOpStream.Subscribe(observer);
-        }
-
-        public IDisposable Subscribe(IObserver<MsgOp> observer, Func<MsgOp, bool> filter)
-        {
-            return _msgOpStream.Subscribe(observer, filter);
         }
 
         public void Dispatch(IOp op)

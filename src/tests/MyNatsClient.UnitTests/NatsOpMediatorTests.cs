@@ -37,13 +37,13 @@ namespace MyNatsClient.UnitTests
         }
 
         [Fact]
-        public void Dispatching_MsgOp_Should_dispatch_to_both_OpStream_and_MsgOpStream()
+        public void Dispatching_MsgOp_Should_dispatch_to_both_AllOpsStream_and_MsgOpsStream()
         {
             var msgOp = new MsgOp("TestSubject", "0a3282e769e34677809db5d756dfd768", new byte[0]);
             var opStreamRec = false;
             var msgOpStreamRec = false;
-            UnitUnderTest.Subscribe(new AnonymousObserver<IOp>(op => opStreamRec = true));
-            UnitUnderTest.Subscribe(new AnonymousObserver<MsgOp>(op => msgOpStreamRec = true));
+            UnitUnderTest.AllOpsStream.Subscribe(new AnonymousObserver<IOp>(op => opStreamRec = true));
+            UnitUnderTest.MsgOpsStream.Subscribe(new AnonymousObserver<MsgOp>(op => msgOpStreamRec = true));
 
             UnitUnderTest.Dispatch(msgOp);
 
@@ -52,12 +52,12 @@ namespace MyNatsClient.UnitTests
         }
 
         [Fact]
-        public void Dispatching_non_MsgOp_Should_not_dispatch_to_MsgOpStream()
+        public void Dispatching_non_MsgOp_Should_not_dispatch_to_MsgOpsStream_but_AllOpsStream()
         {
             var opStreamRec = false;
             var msgOpStreamRec = false;
-            UnitUnderTest.Subscribe(new AnonymousObserver<IOp>(op => opStreamRec = true));
-            UnitUnderTest.Subscribe(new AnonymousObserver<MsgOp>(op => msgOpStreamRec = true));
+            UnitUnderTest.AllOpsStream.Subscribe(new AnonymousObserver<IOp>(op => opStreamRec = true));
+            UnitUnderTest.MsgOpsStream.Subscribe(new AnonymousObserver<MsgOp>(op => msgOpStreamRec = true));
 
             UnitUnderTest.Dispatch(PingOp.Instance);
 

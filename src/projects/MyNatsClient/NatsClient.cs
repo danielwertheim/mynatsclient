@@ -42,8 +42,8 @@ namespace MyNatsClient
 
         public string Id { get; }
         public IObservable<IClientEvent> Events => _eventMediator;
-        public IObservable<IOp> OpStream => _opMediator;
-        public IFilterableObservable<MsgOp> MsgOpStream => _opMediator;
+        public IFilterableObservable<IOp> OpStream => _opMediator.AllOpsStream;
+        public IFilterableObservable<MsgOp> MsgOpStream => _opMediator.MsgOpsStream;
         public INatsClientStats Stats => _opMediator;
         public bool IsConnected => _connection != null && _connection.IsConnected;
         public INatsConnectionManager ConnectionManager { private get; set; }
@@ -64,7 +64,7 @@ namespace MyNatsClient
 
             SubscribeToClientEventsForInternalUse();
 
-            _opMediator.Subscribe(new DelegatingObserver<IOp>(op =>
+            _opMediator.AllOpsStream.Subscribe(new DelegatingObserver<IOp>(op =>
             {
                 if (!IsConnected)
                     return;
