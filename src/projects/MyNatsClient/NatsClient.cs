@@ -280,10 +280,6 @@ namespace MyNatsClient
                         if (!_consumer.IsCompleted)
                             _consumer.Wait(WaitForConsumerCompleteMs);
 
-#if !NETSTANDARD1_6
-                        if (_consumer.IsCompleted)
-                            _consumer.Dispose();
-#endif
                         _consumer = null;
                     },
                     () =>
