@@ -1,7 +1,7 @@
 # Release notes
 
 ## v0.8.0 - 2017-01-03
-Focus has been on stabilize the experience and we are closing in on stabalizing the API. No more planned changes exists.
+Focus has been on stabilizing the experience and we are closing in on getting a stable API. No more planned changes exists.
 
 - **Changed**: `ConnectionInfo.AutoReconnectOnFailure` is now by default `true`, so in case that the internal consumer of a message fails, it will try and auto reconnect.
 - **Changed**: A failing observable subscription does no longer remove the subscription. `OnError` for the observer is still called if you have injected that. You can therefore control if it should be terminated or not. This is done, e.g. so that just becase Msg#1 on a certain subject X doesn't prevent Msg#2 against the same subject to be handled. Before, the handler subscription was removed if there was an exception for the first one.
