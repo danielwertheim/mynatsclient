@@ -6,17 +6,18 @@ namespace MyNatsClient.Internals
     {
         internal static void Everything(params Action[] actions)
         {
-            foreach (var action in actions)
-            {
+            if (actions == null)
+                return;
+
+            for (var i = 0; i < actions.Length; i++)
                 try
                 {
-                    action();
+                    actions[i]();
                 }
                 catch
                 {
                     // ignored
                 }
-            }
         }
     }
 }

@@ -14,6 +14,11 @@ namespace MyNatsClient
         string Id { get; }
 
         /// <summary>
+        /// Sets a specific <see cref="INatsConnectionManager"/> to use.
+        /// </summary>
+        INatsConnectionManager ConnectionManager { set; }
+
+        /// <summary>
         /// Stream of client events that mostly concerns client state changes.
         /// E.g.
         /// <see cref="MyNatsClient.Events.ClientConnected"/>,

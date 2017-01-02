@@ -15,11 +15,14 @@ namespace MyNatsClient
             ExceptionCode = exceptionCode;
         }
 
-        internal static NatsException MissingCredentials(string host)
-            => new NatsException(NatsExceptionCodes.MissingCredentials, $"Error while connecting to {host}. Server requires credentials to be passed. None was specified.");
+        internal static NatsException MissingCredentials(Host host)
+            => new NatsException(NatsExceptionCodes.MissingCredentials, $"Error while connecting to {host}. Host requires credentials to be passed. None was specified. Pass for specific host or for all hosts.");
 
-        internal static NatsException NoConnectionCouldBeMade(params Exception[] exceptions)
-            => new NatsException(NatsExceptionCodes.NoConnectionCouldBeMade, "No connection could be established against any of the specified servers.", exceptions);
+        internal static NatsException FailedToConnectToHost(Host host, string message)
+            => new NatsException(NatsExceptionCodes.FailedToConnectToHost, $"Error while connecting to {host}. {message}");
+
+        internal static NatsException CouldNotEstablishAnyConnection(params Exception[] exceptions)
+            => new NatsException(NatsExceptionCodes.CouldNotEstablishAnyConnection, "No connection could be established against any of the specified hosts (servers).", exceptions);
 
         internal static NatsException ExceededMaxPayload(long maxPayload, long bufferLength)
             => new NatsException(NatsExceptionCodes.ExceededMaxPayload, $"Server indicated max payload of {maxPayload} bytes. Current dispatch is {bufferLength} bytes.");

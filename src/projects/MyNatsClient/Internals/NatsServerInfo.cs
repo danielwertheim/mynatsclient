@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MyNatsClient.Internals
 {
-    public class NatsServerInfo
+    public class NatsServerInfo : INatsServerInfo
     {
         public string ServerId { get; private set; }
         public string Version { get; private set; }

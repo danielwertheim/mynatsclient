@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 
 namespace MyNatsClient
 {
-    internal interface INatsStreamWriter
+    public interface INatsStreamWriter
     {
         void Flush();
         Task FlushAsync();

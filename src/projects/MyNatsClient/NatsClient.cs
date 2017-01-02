@@ -31,7 +31,7 @@ namespace MyNatsClient
         private readonly Func<bool> _consumerIsCancelled;
 
         private CancellationTokenSource _cancellation;
-        private NatsConnection _connection;
+        private INatsConnection _connection;
         private Task _consumer;
         private ObservableOf<IClientEvent> _eventMediator;
         private NatsOpMediator _opMediator;
@@ -46,7 +46,7 @@ namespace MyNatsClient
         public IFilterableObservable<MsgOp> MsgOpStream => _opMediator;
         public INatsClientStats Stats => _opMediator;
         public bool IsConnected => _connection != null && _connection.IsConnected;
-        public ISocketFactory SocketFactory { private get; set; }
+        public INatsConnectionManager ConnectionManager { private get; set; }
         private ClientInbox Inbox => _inbox.Value;
 
         public NatsClient(string id, ConnectionInfo connectionInfo)
@@ -60,7 +60,7 @@ namespace MyNatsClient
             _consumerIsCancelled = () => _cancellation == null || _cancellation.IsCancellationRequested;
 
             Id = id;
-            SocketFactory = new SocketFactory();
+            ConnectionManager = new NatsConnectionManager(new SocketFactory());
 
             SubscribeToClientEventsForInternalUse();
 
@@ -169,7 +169,15 @@ namespace MyNatsClient
                 Release();
 
                 _cancellation = new CancellationTokenSource();
-                _connection = NatsConnection.Connect(_connectionInfo, SocketFactory, _cancellation.Token);
+
+                var connectionResult = ConnectionManager.OpenConnection(_connectionInfo, _cancellation.Token);
+                _connection = connectionResult.Item1;
+
+                var ops = connectionResult.Item2;
+                if (ops.Any())
+                    foreach (var op in ops)
+                        _opMediator.Dispatch(op);
+
                 _consumer = Task.Factory.StartNew(
                     Consumer,
                     _cancellation.Token,
