@@ -15,7 +15,7 @@ namespace MyNatsClient
         public IFilterableObservable<IOp> AllOpsStream => _opStream;
         public IFilterableObservable<MsgOp> MsgOpsStream => _msgOpStream;
         public DateTime LastOpReceivedAt { get; private set; }
-        public long OpCount { get; private set; }
+        public ulong OpCount { get; private set; }
 
         public NatsOpMediator(bool autoRemoveFailingSubscription)
         {
