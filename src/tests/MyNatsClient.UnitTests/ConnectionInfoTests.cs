@@ -29,9 +29,39 @@ namespace MyNatsClient.UnitTests
         }
 
         [Fact]
-        public void Defaults_Should_not_auto_respond_to_pings()
+        public void Defaults_Should_auto_respond_to_pings()
         {
             UnitUnderTest.AutoRespondToPing.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Defaults_Should_have_auto_pub_flush_mode()
+        {
+            UnitUnderTest.PubFlushMode.Should().Be(PubFlushMode.Auto);
+        }
+
+        [Fact]
+        public void Defaults_Should_have_a_request_timeout_of_5s()
+        {
+            UnitUnderTest.RequestTimeoutMs.Should().Be(5000);
+        }
+
+        [Fact]
+        public void Defaults_Should_have_a_socket_recieve_timeout_of_5s()
+        {
+            UnitUnderTest.SocketOptions.ReceiveTimeoutMs.Should().Be(5000);
+        }
+
+        [Fact]
+        public void Defaults_Should_have_a_socket_send_timeout_of_5s()
+        {
+            UnitUnderTest.SocketOptions.SendTimeoutMs.Should().Be(5000);
+        }
+
+        [Fact]
+        public void Defaults_Should_have_a_socket_connect_timeout_of_5s()
+        {
+            UnitUnderTest.SocketOptions.ConnectTimeoutMs.Should().Be(5000);
         }
 
         [Fact]
@@ -43,13 +73,15 @@ namespace MyNatsClient.UnitTests
                 Verbose = !UnitUnderTest.Verbose,
                 AutoReconnectOnFailure = !UnitUnderTest.AutoReconnectOnFailure,
                 AutoRespondToPing = !UnitUnderTest.AutoRespondToPing,
+                RequestTimeoutMs = 100,
                 PubFlushMode = UnitUnderTest.PubFlushMode,
                 SocketOptions = new SocketOptions
                 {
                     ReceiveBufferSize = 1000,
                     ReceiveTimeoutMs = 100,
-                    SendBufferSize = 2000,
-                    SendTimeoutMs = 200
+                    SendBufferSize = 1000,
+                    SendTimeoutMs = 100,
+                    ConnectTimeoutMs = 100
                 }
             };
 

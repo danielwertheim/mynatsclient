@@ -43,6 +43,15 @@ namespace MyNatsClient
         /// </summary>
         public PubFlushMode PubFlushMode { get; set; } = PubFlushMode.Auto;
 
+        /// <summary>
+        /// Gets or sets the default value to use for request timeout.
+        /// </summary>
+        public int RequestTimeoutMs { get; set; } = 5000;
+
+        /// <summary>
+        /// Gets or sets <see cref="SocketOptions"/> to use when creating the clients
+        /// underlying socket via <see cref="ISocketFactory"/>.
+        /// </summary>
         public SocketOptions SocketOptions { get; set; } = new SocketOptions();
 
         public ConnectionInfo(string host, int? port = null)
@@ -75,13 +84,15 @@ namespace MyNatsClient
                 AutoReconnectOnFailure = AutoReconnectOnFailure,
                 Credentials = new Credentials(Credentials.User, Credentials.Pass),
                 Verbose = Verbose,
+                RequestTimeoutMs = RequestTimeoutMs,
                 PubFlushMode = PubFlushMode,
                 SocketOptions = new SocketOptions
                 {
                     ReceiveBufferSize = SocketOptions.ReceiveBufferSize,
                     SendBufferSize = SocketOptions.SendBufferSize,
                     ReceiveTimeoutMs = SocketOptions.ReceiveTimeoutMs,
-                    SendTimeoutMs = SocketOptions.SendTimeoutMs
+                    SendTimeoutMs = SocketOptions.SendTimeoutMs,
+                    ConnectTimeoutMs = SocketOptions.ConnectTimeoutMs
                 }
             };
         }

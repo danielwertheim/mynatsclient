@@ -22,7 +22,6 @@ namespace MyNatsClient
         private const int ConsumerMaxMsSilenceFromServer = 60000;
         private const int MaxReconnectDueToFailureAttempts = 5;
         private const int WaitForConsumerCompleteMs = 100;
-        private const int DefaultRequestTimeOutMs = 5000;
         private const bool AutoRemoveFailingObservableSubscription = false;
 
         private readonly object _sync;
@@ -418,37 +417,37 @@ namespace MyNatsClient
             });
         }
 
-        public async Task<MsgOp> RequestAsync(string subject, string body, int? timeOutMs = null)
+        public async Task<MsgOp> RequestAsync(string subject, string body, int? timeoutMs = null)
         {
             ThrowIfDisposed();
 
             EnsureArg.IsNotNullOrWhiteSpace(subject, nameof(subject));
             EnsureArg.IsNotNullOrWhiteSpace(body, nameof(body));
 
-            return await DoRequestAsync(subject, NatsEncoder.GetBytes(body), timeOutMs).ForAwait();
+            return await DoRequestAsync(subject, NatsEncoder.GetBytes(body), timeoutMs).ForAwait();
         }
 
-        public async Task<MsgOp> RequestAsync(string subject, byte[] body, int? timeOutMs = null)
+        public async Task<MsgOp> RequestAsync(string subject, byte[] body, int? timeoutMs = null)
         {
             ThrowIfDisposed();
 
             EnsureArg.IsNotNullOrWhiteSpace(subject, nameof(subject));
             EnsureArg.HasItems(body, nameof(body));
 
-            return await DoRequestAsync(subject, body, timeOutMs).ForAwait();
+            return await DoRequestAsync(subject, body, timeoutMs).ForAwait();
         }
 
-        public async Task<MsgOp> RequestAsync(string subject, IPayload body, int? timeOutMs = null)
+        public async Task<MsgOp> RequestAsync(string subject, IPayload body, int? timeoutMs = null)
         {
             ThrowIfDisposed();
 
             EnsureArg.IsNotNullOrWhiteSpace(subject, nameof(subject));
             EnsureArg.IsNotNull(body, nameof(body));
 
-            return await DoRequestAsync(subject, body.Blocks.SelectMany(b => b).ToArray(), timeOutMs).ForAwait();
+            return await DoRequestAsync(subject, body.Blocks.SelectMany(b => b).ToArray(), timeoutMs).ForAwait();
         }
 
-        private async Task<MsgOp> DoRequestAsync(string subject, byte[] body, int? timeOutMs)
+        private async Task<MsgOp> DoRequestAsync(string subject, byte[] body, int? timeoutMs)
         {
             var requestReplyAddress = $"{Inbox.Address}.{Guid.NewGuid():N}";
             var taskComp = new TaskCompletionSource<MsgOp>();
@@ -462,7 +461,7 @@ namespace MyNatsClient
                 await writer.FlushAsync().ForAwait();
             }).ForAwait();
 
-            Task.WaitAny(new[] { Task.Delay(timeOutMs ?? DefaultRequestTimeOutMs), taskComp.Task }, _cancellation.Token);
+            Task.WaitAny(new[] { Task.Delay(timeoutMs ?? _connectionInfo.RequestTimeoutMs), taskComp.Task }, _cancellation.Token);
             if (!taskComp.Task.IsCompleted)
                 throw NatsException.RequestTimedOut();
 

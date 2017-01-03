@@ -13,9 +13,6 @@ namespace MyNatsClient.Internals
 {
     internal class NatsConnectionManager : INatsConnectionManager
     {
-        private const int TryConnectMaxCycleDelayMs = 200;
-        private const int TryConnectMaxDurationMs = 2000;
-
         private static readonly ILogger Logger = LoggerManager.Resolve(typeof(NatsConnectionManager));
 
         public ISocketFactory SocketFactory { private get; set; }
@@ -60,19 +57,19 @@ namespace MyNatsClient.Internals
             try
             {
                 socket = SocketFactory.Create(connectionInfo.SocketOptions);
-                socket.Connect(host.Address, host.Port);
+                socket.Connect(host, connectionInfo.SocketOptions.ConnectTimeoutMs, cancellationToken);
 
                 readStream = new BufferedStream(socket.CreateReadStream(), socket.ReceiveBufferSize);
 
                 var reader = new NatsOpStreamReader(readStream);
                 var readOps = new List<IOp>();
-                Func<IOp> readOne = () => Retry.This(() =>
+                Func<IOp> readOne = () =>
                 {
                     var op = reader.ReadOp().FirstOrDefault();
                     if (op != null)
                         readOps.Add(op);
                     return op;
-                }, TryConnectMaxCycleDelayMs, TryConnectMaxDurationMs);
+                };
 
                 var serverInfo = VerifyConnection(host, connectionInfo, socket, readOne);
 
