@@ -1,6 +1,6 @@
 # Release notes
 
-## v0.8.0 - 2017-01-03
+## v0.8.0 - 2017-01-04
 Focus has been on stabilizing the experience and we are closing in on getting a stable API. No more planned changes exists.
 
 - **Changed**: `ConnectionInfo.AutoReconnectOnFailure` is now by default `true`, so in case that the internal consumer of a message fails, it will try and auto reconnect.
@@ -13,6 +13,10 @@ Focus has been on stabilizing the experience and we are closing in on getting a 
 - **Changed**: When connecting to a NATS Server, the `CONNECT` (handshake) now sends `pedantic=false` and `protocol:1`
 - **Changed**: All reading and writing access now goes via a new introduced `NATSConnection` which is something you could use for raw reads and writes.
 - **Changed**: No more specific compile for .NET4.5 as .NET4.5 is supported via .NET Standard 1.6.
+- **Changed**: Made `NatsClient.Stats.OpCount` a `ulong` instead of `long`.
+- **Changed**: Tweaked settings for `ConnectionInfo.SocketOptions.ReceiveTimeoutMs` and `ConnectionInfo.SocketOptions.SendTimeOutMs` to be `5s` instead of `10s`.
+- **Added**: New setting `ConnectionInfo.SocketOptions.ConnectTimeoutMs` with default of `5s`. So no more long defaults on Windows.
+- **Added**: New setting `ConnectionInfo.RequestTimeoutMs` with default of `10s`. That is what will be used if no specific request timeout is passed to `client.RequestAsync`.
 - **Added**: Since we now send `protocol:1` in the `CONNECT`, we now get additive information dispatched to the client via whenever a new server is added to the cluster. In the next release that will be used to keep a hot list with the possible servers/hosts for a client to connect to in a cluster. Meaning that you will be able to connect to a seed server.
 - **Added**: `NatsServerInfo.Host`, `NatsServerInfo.Port` is now extracted from the info sent from the server.
 - **Fixed**: Issue with missed `ConfigureAwait(false)`.
