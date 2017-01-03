@@ -159,24 +159,24 @@ namespace MyNatsClient
         /// </summary>
         /// <param name="subject"></param>
         /// <param name="body"></param>
-        /// <param name="timeOutMs"></param>
-        Task<MsgOp> RequestAsync(string subject, string body, int? timeOutMs = null);
+        /// <param name="timeoutMs"></param>
+        Task<MsgOp> RequestAsync(string subject, string body, int? timeoutMs = null);
 
         /// <summary>
         /// Async request response.
         /// </summary>
         /// <param name="subject"></param>
         /// <param name="body"></param>
-        /// <param name="timeOutMs"></param>
-        Task<MsgOp> RequestAsync(string subject, byte[] body, int? timeOutMs = null);
+        /// <param name="timeoutMs"></param>
+        Task<MsgOp> RequestAsync(string subject, byte[] body, int? timeoutMs = null);
 
         /// <summary>
         /// Async request response.
         /// </summary>
         /// <param name="subject"></param>
         /// <param name="body"></param>
-        /// <param name="timeOutMs"></param>
-        Task<MsgOp> RequestAsync(string subject, IPayload body, int? timeOutMs = null);
+        /// <param name="timeoutMs"></param>
+        Task<MsgOp> RequestAsync(string subject, IPayload body, int? timeoutMs = null);
 
         /// <summary>
         /// Flushes the write stream.
