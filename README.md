@@ -1,15 +1,28 @@
 # MyNatsClient
-## Why a new one when there's an official project?
-Because I wanted one that leaves .Net4.0 behind and therefore offers `async` constructs. And I also wanted one that is reactive and supports [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET), by being based around `IObservable<T>`. And I also wanted to keep as much of the domain language of NATS as possible, but not strictly be following/limited to the APIs of other NATS client, but instead offer one that fits the .NET domain and one that is a .NET client first and foremost and not a port.
+A **.NET Core enabled**, `async` and [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) (RX) friendly client for [NATS Server](https://nats.io). It's RX friendly cause it's based around `IObservable<T>`. It keeps as much of NATS domain language as possible but does not limit itself to follow the APIs of other NATS clients, but instead offer one that fits the .NET domain and one that first and foremost is a client written for .NET. Not GO or JAVA or Foo.
+
+It offers both simple and advanced usage. By default it's configured to auto reply on heartbeat pings and to reconnect on failures. You can seed it with multiple hosts in a cluster. So if one fails it will reconnect to another one.
+
+If one of your in-process observer subscription fails, it will not unsubscribe them. It will however invoke the observers `OnError` callback. This is done so that one failing message against a certain subject does not prevent future messages from being handled.
+
+It keeps track of stats of when last contact to a server was, so that it can send a `PING` to see if server is still alive.
+
+Instead of relying on background flushing like other clients do, it **auto flushes** for each `PUB`. You can also use the construct `client.PubMany` to publish many messages and get one flush for them all. Finally **you can also control the flushing manually**.
+
+It supports:
+
+- Pub-Sub
+- Request-Response
+- Queue groups
 
 ## Metrics
-There are some posts on this on my blog. The most interesting one would be: [MyNatsClient - It flushes, but so can you](http://danielwertheim.se/mynatsclient-it-flushes-but-so-can-you/)
-
-## DotNet Core
-Yes it does support DotNet Core. From [v0.3.0-b1](https://www.nuget.org/packages/MyNatsClient/0.3.0-b1)
+Fast? Yes it is. More info can be found here: [MyNatsClient - It flushes, but so can you](http://danielwertheim.se/mynatsclient-it-flushes-but-so-can-you/)
 
 ## License
-Have fun using it ;-) [MIT](https://github.com/danielwertheim/mynatsclient/blob/master/LICENSE.txt)
+MyNatsClient is licensed under [MIT](https://github.com/danielwertheim/mynatsclient/blob/master/LICENSE.txt) so have fun using it.
+
+## Release notes
+They are kept separately [here](https://github.com/danielwertheim/mynatsclient/blob/master/ReleaseNotes.md).
 
 ## Install NuGet Package
 If you just want the client and not the Reactive Extensions packages, use:
@@ -24,32 +37,51 @@ For convenience, if you want a consumer that makes use of Reactive Extensions, u
 install-package MyNatsClient.Rx
 ```
 
-## Simplest usage
-Just some simple code showing usage.
+## Pub-Sub sample
+Simple pub-sub sample showing one client that publishes and one that subscribes. This can of course be the same client and you can also have more clients subscribing etc.
+
+**Publisher**
 
 ```csharp
-var connectionInfo = new ConnectionInfo("192.168.1.176")
-{
-    AutoReconnectOnFailure = true
-};
+var cnInfo1 = new ConnectionInfo("192.168.1.10");
+var client1 = new NatsClient("client1", cnInfo);
 
-using(var client = new NatsClient("clientId1", connectionInfo))
-{
-    //Pub-Sub sample
-    await client.SubWithHandlerAsync("tick", msg => {
-        Console.WriteLine($"Clock ticked. Tick is {msg.GetPayloadAsString()}");
-    });
+await client1.PubAsync("tick", getNextTick());
+```
 
-    await client.PubAsync("tick", getNextTick());
+**Subscriber**
 
-    //Request-Response sample
-    await client.SubWithHandlerAsync("getTemp", msg => {
-        client.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
-    });
+```csharp
+var cnInfo2 = new ConnectionInfo("192.168.1.20");
+var client2 = new NatsClient("client2", cnInfo);
 
-    var response = await client.RequestAsync("getTemp", "stockholm@sweden");
-    Console.WriteLine($"Temp in Stockholm is {response.GetPayloadAsString()}");
-}
+await clien2.SubWithHandlerAsync("tick", msg => {
+    Console.WriteLine($"Clock ticked. Tick is {msg.GetPayloadAsString()}");
+});
+```
+
+## Request-Response sample
+Simple request-response sample. This sample also makes use of two clients. It can of course be the same client requesting and responding, you can also have more responders forming a queue group. Where one will be giving the answer.
+
+**Requester**
+
+```csharp
+var cnInfo1 = new ConnectionInfo("192.168.1.10");
+var client1 = new NatsClient("client1", cnInfo);
+
+var response = await client1.RequestAsync("getTemp", "stockholm@sweden");
+Console.WriteLine($"Temp in Stockholm is {response.GetPayloadAsString()}");
+```
+
+**Responder**
+
+```csharp
+var cnInfo2 = new ConnectionInfo("192.168.1.20");
+var client2 = new NatsClient("client2", cnInfo);
+
+await client.SubWithHandlerAsync("getTemp", msg => {
+    client.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
+});
 ```
 
 ## Advanced usage
@@ -65,9 +97,19 @@ var connectionInfo = new ConnectionInfo(
     })
 {
     AutoRespondToPing = true,
-    AutoReconnectOnFailure = false,
+    AutoReconnectOnFailure = true,
     Verbose = false,
-    Credentials = new Credentials("testuser", "p@ssword1234")
+    Credentials = new Credentials("testuser", "p@ssword1234"),
+    RequestTimeoutMs = 5000,
+    PubFlushMode = PubFlushMode.Auto,
+    SocketOptions = new SocketOptions
+    {
+        ReceiveTimeoutMs = 5000,
+        SendTimeoutMs = 5000,
+        ConnectTimeoutMs = 5000,
+        ReceiveBufferSize = null, //.NET & OS default
+        SendBufferSize = null //.NET & OS default
+    }
 };
 
 //The ClientId is not really used. Something you can use to look at
@@ -177,6 +219,7 @@ The events aren't normal events, the events are distributed via `client.Events` 
 
 * ClientConnected
 * ClientDisconnected
+* ClientAutoReconnectFailed
 * ClientConsumerFailed
 
 ### ClientConnected
@@ -267,16 +310,22 @@ public class SocketOptions
     public int? SendBufferSize { get; set; }
 
     /// <summary>
-    /// Gets or sets the ReceiveTimeoutMs for the Socket.
+    /// Gets or sets the Recieve timeout in milliseconds for the Socket.
     /// When it times out, the client will look at internal settings
     /// to determine if it should fail or first try and ping the server.
     /// </summary>
-    public int? ReceiveTimeoutMs { get; set; } = 10000;
+    public int? ReceiveTimeoutMs { get; set; } = 5000;
 
     /// <summary>
-    /// Gets or sets the SendTimeoutMs for the Socket.
+    /// Gets or sets the Send timeout in milliseconds for the Socket.
     /// </summary>
-    public int? SendTimeoutMs { get; set; }
+    public int? SendTimeoutMs { get; set; } = 5000;
+
+
+    /// <summary>
+    /// Gets or sets the Connect timeout in milliseconds for the Socket.
+    /// </summary>
+    public int ConnectTimeoutMs { get; set; } = 5000;
 }
 ```
 
@@ -284,7 +333,7 @@ public class SocketOptions
 If you like to tweak socket options, you inject your custom implementation of `ISocketFactory` on the client:
 
 ```csharp
-client.SocketFactory = new MyMonoOptimizedSocketFactory();
+client.ConnectionManager..SocketFactory = new MyMonoOptimizedSocketFactory();
 ```
 
 ## Logging
@@ -382,4 +431,4 @@ The Consumer looks at `client.Stats.LastOpReceivedAt` to see if it has taken to 
 
 If `ConsumerPingAfterMsSilenceFromServer` (20000ms) has passed, it will start to `PING` the server.
 
-If `ConsumerMaxMsSilenceFromServer` (60000ms) has passed, it will cause an exception and you will get notified via a `ClientConsumerFailed` event dispatched via `client.Events`. The Client will also be disconnected, and you will get the `ClientDisconnected` event, which you can use to reconnect.
+If `ConsumerMaxMsSilenceFromServer` (40000ms) has passed, it will cause an exception and you will get notified via a `ClientConsumerFailed` event dispatched via `client.Events`. The Client will also be disconnected, and you will get the `ClientDisconnected` event, which you can use to reconnect.

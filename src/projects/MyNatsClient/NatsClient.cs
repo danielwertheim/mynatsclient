@@ -18,8 +18,8 @@ namespace MyNatsClient
     {
         private static readonly ILogger Logger = LoggerManager.Resolve(typeof(NatsClient));
 
-        private const int ConsumerPingAfterMsSilenceFromServer = 30000;
-        private const int ConsumerMaxMsSilenceFromServer = 60000;
+        private const int ConsumerPingAfterMsSilenceFromServer = 20000;
+        private const int ConsumerMaxMsSilenceFromServer = 40000;
         private const int MaxReconnectDueToFailureAttempts = 5;
         private const int WaitForConsumerCompleteMs = 100;
         private const bool AutoRemoveFailingObservableSubscription = false;
