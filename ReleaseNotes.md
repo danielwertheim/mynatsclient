@@ -10,7 +10,6 @@ Focus has been on stabilizing the experience and we are closing in on getting a 
 - **Changed**: `INatsClient.State` is **removed**, instead there's a simple `client.IsConnected` to chech instead.
 - **Changed**: Some codes in `NatsExceptionCodes` has changed. These are used as value for `NatsException.ExceptionCode`.
 - **Changed**: When connecting to a NATS Server, the `CONNECT` (handshake) now sends `pedantic=false` and `protocol:1`
-- **Changed**: All reading and writing access now goes via a new introduced `NATSConnection` which is something you could use for raw reads and writes.
 - **Changed**: No more specific compile for .NET4.5 as .NET4.5 is supported via .NET Standard 1.6.
 - **Changed**: Made `NatsClient.Stats.OpCount` a `ulong` instead of `long`.
 - **Changed**: `ConnectionInfo.SocketOptions.SendTimeOut` now defaults to `10s`. Before it had no timeout.
