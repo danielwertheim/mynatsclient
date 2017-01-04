@@ -55,7 +55,7 @@ await client1.PubAsync("tick", getNextTick());
 var cnInfo2 = new ConnectionInfo("192.168.1.20");
 var client2 = new NatsClient("client2", cnInfo);
 
-await clien2.SubWithHandlerAsync("tick", msg => {
+await client2.SubWithHandlerAsync("tick", msg => {
     Console.WriteLine($"Clock ticked. Tick is {msg.GetPayloadAsString()}");
 });
 ```
@@ -79,7 +79,7 @@ Console.WriteLine($"Temp in Stockholm is {response.GetPayloadAsString()}");
 var cnInfo2 = new ConnectionInfo("192.168.1.20");
 var client2 = new NatsClient("client2", cnInfo);
 
-await client.SubWithHandlerAsync("getTemp", msg => {
+await client2.SubWithHandlerAsync("getTemp", msg => {
     client.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
 });
 ```
