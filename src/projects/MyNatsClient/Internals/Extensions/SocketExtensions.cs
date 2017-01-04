@@ -1,17 +1,26 @@
-﻿using System.IO;
+﻿using System.Net;
 using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MyNatsClient.Internals.Extensions
 {
     internal static class SocketExtensions
     {
+        internal static void Connect(this Socket socket, Host host, int timeoutMs, CancellationToken cancellationToken)
+        {
+            var connectTask = socket.ConnectAsync(new DnsEndPoint(host.Address, host.Port));
+            if (connectTask.Wait(timeoutMs, cancellationToken))
+                return;
+
+            throw NatsException.FailedToConnectToHost(
+                host, $"Socket could not connect against {host}, within specified timeout {timeoutMs.ToString()}ms.");
+        }
+
         internal static NetworkStream CreateReadStream(this Socket socket)
         {
-#if NETSTANDARD1_6
             var s = new NetworkStream(socket, false);
-#else
-            var s = new NetworkStream(socket, FileAccess.Read, false);
-#endif
+
             if (socket.ReceiveTimeout > 0)
                 s.ReadTimeout = socket.ReceiveTimeout;
 
@@ -20,11 +29,7 @@ namespace MyNatsClient.Internals.Extensions
 
         internal static NetworkStream CreateWriteStream(this Socket socket)
         {
-#if NETSTANDARD1_6
             var s = new NetworkStream(socket, false);
-#else
-            var s = new NetworkStream(socket, FileAccess.Write, false);
-#endif
             if (socket.SendTimeout > 0)
                 s.WriteTimeout = socket.SendTimeout;
 

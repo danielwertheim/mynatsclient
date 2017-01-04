@@ -5,6 +5,6 @@ namespace MyNatsClient
     public interface INatsClientStats
     {
         DateTime LastOpReceivedAt { get; }
-        long OpCount { get; }
+        ulong OpCount { get; }
     }
 }

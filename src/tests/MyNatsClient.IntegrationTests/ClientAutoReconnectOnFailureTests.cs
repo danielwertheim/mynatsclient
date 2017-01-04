@@ -69,7 +69,7 @@ namespace MyNatsClient.IntegrationTests
 
             wasDisconnectedDueToFailure.Should().BeTrue();
             wasReconnected.Should().BeTrue();
-            _client.State.Should().Be(NatsClientState.Connected);
+            _client.IsConnected.Should().BeTrue();
         }
 
         [Fact]
@@ -112,7 +112,7 @@ namespace MyNatsClient.IntegrationTests
 
             wasDisconnectedDueToFailure.Should().BeTrue();
             wasReconnected.Should().BeFalse();
-            _client.State.Should().Be(NatsClientState.Disconnected);
+            _client.IsConnected.Should().BeFalse();
         }
 
         [Fact]
@@ -152,7 +152,7 @@ namespace MyNatsClient.IntegrationTests
             wasDisconnectedDueToFailure.Should().BeFalse();
             wasDisconnected.Should().BeTrue();
             wasReconnected.Should().BeFalse();
-            _client.State.Should().Be(NatsClientState.Disconnected);
+            _client.IsConnected.Should().BeFalse();
         }
     }
 }

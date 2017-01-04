@@ -5,31 +5,35 @@ using MyNatsClient.Ops;
 namespace MyNatsClient
 {
     public class NatsOpMediator :
-        IObservable<IOp>,
-        IFilterableObservable<MsgOp>,
         INatsClientStats,
         IDisposable
     {
         private bool _isDisposed;
-        private ObservableOf<IOp> _opStream = new ObservableOf<IOp>();
-        private ObservableOf<MsgOp> _msgOpStream = new ObservableOf<MsgOp>();
+        private ObservableOf<IOp> _opStream;
+        private ObservableOf<MsgOp> _msgOpStream;
 
+        public IFilterableObservable<IOp> AllOpsStream => _opStream;
+        public IFilterableObservable<MsgOp> MsgOpsStream => _msgOpStream;
         public DateTime LastOpReceivedAt { get; private set; }
-        public long OpCount { get; private set; }
+        public ulong OpCount { get; private set; }
 
-        public IDisposable Subscribe(IObserver<IOp> observer)
+        public NatsOpMediator(bool autoRemoveFailingSubscription)
         {
-            return _opStream.Subscribe(observer);
+            _opStream = new ObservableOf<IOp>(autoRemoveFailingSubscription);
+            _msgOpStream = new ObservableOf<MsgOp>(autoRemoveFailingSubscription);
         }
 
-        public IDisposable Subscribe(IObserver<MsgOp> observer)
+        public void Dispose()
         {
-            return _msgOpStream.Subscribe(observer);
-        }
+            if (_isDisposed)
+                return;
 
-        public IDisposable Subscribe(IObserver<MsgOp> observer, Func<MsgOp, bool> filter)
-        {
-            return _msgOpStream.Subscribe(observer, filter);
+            _isDisposed = true;
+            GC.SuppressFinalize(this);
+
+            Try.DisposeAll(_opStream, _msgOpStream);
+            _opStream = null;
+            _msgOpStream = null;
         }
 
         public void Dispatch(IOp op)
@@ -42,23 +46,6 @@ namespace MyNatsClient
                 _msgOpStream.Dispatch(msgOp);
 
             _opStream.Dispatch(op);
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-            _isDisposed = true;
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (_isDisposed || !disposing)
-                return;
-
-            Try.DisposeAll(_opStream, _msgOpStream);
-            _opStream = null;
-            _msgOpStream = null;
         }
     }
 }

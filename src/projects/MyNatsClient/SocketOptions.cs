@@ -17,15 +17,21 @@ namespace MyNatsClient
         public int? SendBufferSize { get; set; }
 
         /// <summary>
-        /// Gets or sets the ReceiveTimeoutMs for the Socket.
+        /// Gets or sets the Recieve timeout in milliseconds for the Socket.
         /// When it times out, the client will look at internal settings
         /// to determine if it should fail or first try and ping the server.
         /// </summary>
-        public int? ReceiveTimeoutMs { get; set; } = 10000;
+        public int? ReceiveTimeoutMs { get; set; } = 5000;
 
         /// <summary>
-        /// Gets or sets the SendTimeoutMs for the Socket.
+        /// Gets or sets the Send timeout in milliseconds for the Socket.
         /// </summary>
-        public int? SendTimeoutMs { get; set; }
+        public int? SendTimeoutMs { get; set; } = 5000;
+
+
+        /// <summary>
+        /// Gets or sets the Connect timeout in milliseconds for the Socket.
+        /// </summary>
+        public int ConnectTimeoutMs { get; set; } = 5000;
     }
 }

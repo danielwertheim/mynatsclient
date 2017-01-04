@@ -14,7 +14,7 @@ namespace MyNatsClient.Internals.Commands
         private static string GenerateConnectionOpString(bool verbose, Credentials credentials)
         {
             var sb = new StringBuilder();
-            sb.Append("CONNECT {\"name\":\"mynatsclient\",\"lang\":\"csharp\",\"verbose\":");
+            sb.Append("CONNECT {\"name\":\"mynatsclient\",\"lang\":\"csharp\",\"protocol\":1,\"pedantic\":false,\"verbose\":");
             sb.Append(verbose.ToString().ToLower());
 
             if (credentials != Credentials.Empty)

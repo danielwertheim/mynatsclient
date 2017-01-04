@@ -2,7 +2,7 @@
     "clientIntegrationTests": {
         "hosts": [
             {
-                "address": "192.168.2.20",
+                "address": "192.168.2.17",
                 "port": 4222,
                 "credentials": {
                     "usr": "test",

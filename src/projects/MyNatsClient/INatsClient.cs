@@ -14,6 +14,11 @@ namespace MyNatsClient
         string Id { get; }
 
         /// <summary>
+        /// Sets a specific <see cref="INatsConnectionManager"/> to use.
+        /// </summary>
+        INatsConnectionManager ConnectionManager { set; }
+
+        /// <summary>
         /// Stream of client events that mostly concerns client state changes.
         /// E.g.
         /// <see cref="MyNatsClient.Events.ClientConnected"/>,
@@ -31,7 +36,7 @@ namespace MyNatsClient
         /// <see cref="PongOp"/>,
         /// <see cref="MsgOp"/>
         /// </summary>
-        IObservable<IOp> OpStream { get; }
+        IFilterableObservable<IOp> OpStream { get; }
 
         /// <summary>
         /// Stream of all incoming <see cref="MsgOp"/>.
@@ -44,9 +49,9 @@ namespace MyNatsClient
         INatsClientStats Stats { get; }
 
         /// <summary>
-        /// Gets current State of the client. <see cref="NatsClientState"/>.
+        /// Gets value indicating if the client is connected or not.
         /// </summary>
-        NatsClientState State { get; }
+        bool IsConnected { get; }
 
         /// <summary>
         /// Connects the client to one of the <see cref="Host"/>
@@ -154,24 +159,24 @@ namespace MyNatsClient
         /// </summary>
         /// <param name="subject"></param>
         /// <param name="body"></param>
-        /// <param name="timeOutMs"></param>
-        Task<MsgOp> RequestAsync(string subject, string body, int? timeOutMs = null);
+        /// <param name="timeoutMs"></param>
+        Task<MsgOp> RequestAsync(string subject, string body, int? timeoutMs = null);
 
         /// <summary>
         /// Async request response.
         /// </summary>
         /// <param name="subject"></param>
         /// <param name="body"></param>
-        /// <param name="timeOutMs"></param>
-        Task<MsgOp> RequestAsync(string subject, byte[] body, int? timeOutMs = null);
+        /// <param name="timeoutMs"></param>
+        Task<MsgOp> RequestAsync(string subject, byte[] body, int? timeoutMs = null);
 
         /// <summary>
         /// Async request response.
         /// </summary>
         /// <param name="subject"></param>
         /// <param name="body"></param>
-        /// <param name="timeOutMs"></param>
-        Task<MsgOp> RequestAsync(string subject, IPayload body, int? timeOutMs = null);
+        /// <param name="timeoutMs"></param>
+        Task<MsgOp> RequestAsync(string subject, IPayload body, int? timeoutMs = null);
 
         /// <summary>
         /// Flushes the write stream.

@@ -4,9 +4,11 @@ namespace MyNatsClient
     {
         public const string CouldNotCreateSubscription = "CouldNotCreateSubscription";
         public const string MissingCredentials = "MissingCredentials";
-        public const string NoConnectionCouldBeMade = "NoConnectionCouldBeMade";
+        public const string FailedToConnectToHost = "FailedToConnectToHost";
+        public const string CouldNotEstablishAnyConnection = "CouldNotEstablishAnyConnection";
         public const string ExceededMaxPayload = "ExceededMaxPayload";
         public const string NoDataReceivedFromServer = "NoDataReceivedFromServer";
         public const string RequestTimedOut = "RequestTimedOut";
+        public const string ConnectionFoundIdling = "ConnectionFoundIdling";
     }
 }

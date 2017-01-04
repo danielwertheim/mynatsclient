@@ -8,7 +8,27 @@ namespace MyNatsClient
     public class ObservableOf<T> : IFilterableObservable<T>, IDisposable
     {
         private readonly ConcurrentDictionary<Guid, SubscriptionOf<T>> _subscriptions = new ConcurrentDictionary<Guid, SubscriptionOf<T>>();
+        private readonly bool _autoRemoveFailingSubscription;
         private bool _isDisposed;
+
+        public ObservableOf(bool autoRemoveFailingSubscription)
+        {
+            _autoRemoveFailingSubscription = autoRemoveFailingSubscription;
+        }
+
+        public void Dispose()
+        {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+            GC.SuppressFinalize(this);
+
+            var copy = _subscriptions.Values.ToArray();
+            _subscriptions.Clear();
+
+            Try.DisposeAll(copy);
+        }
 
         public virtual void Dispatch(T ev)
         {
@@ -29,14 +49,14 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
-            return Subscribe(SubscriptionOf<T>.Default(observer, OnDisposeSubscription));
+            return Subscribe(SubscriptionOf<T>.Default(observer, OnDisposeSubscription, _autoRemoveFailingSubscription));
         }
 
         public virtual IDisposable Subscribe(IObserver<T> observer, Func<T, bool> filter)
         {
             ThrowIfDisposed();
 
-            return Subscribe(SubscriptionOf<T>.Filtered(observer, filter, OnDisposeSubscription));
+            return Subscribe(SubscriptionOf<T>.Filtered(observer, filter, OnDisposeSubscription, _autoRemoveFailingSubscription));
         }
 
         private IDisposable Subscribe(SubscriptionOf<T> subscription)
@@ -51,24 +71,6 @@ namespace MyNatsClient
         {
             if (_subscriptions.TryRemove(subscription.Id, out subscription))
                 subscription.OnCompleted();
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-            _isDisposed = true;
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (_isDisposed || !disposing)
-                return;
-
-            var copy = _subscriptions.Values.ToArray();
-            _subscriptions.Clear();
-
-            Try.DisposeAll(copy);
         }
 
         private void ThrowIfDisposed()
