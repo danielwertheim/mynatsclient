@@ -17,7 +17,7 @@ namespace MyNatsClient.Internals
             EnsureArg.IsNotNull(client, nameof(client));
 
             Address = Guid.NewGuid().ToString("N");
-            _responses = new ObservableOf<MsgOp>(false);
+            _responses = new ObservableOf<MsgOp>();
             _inboxSubscription = client.SubWithHandler($"{Address}.>", msg => _responses.Dispatch(msg));
         }
 

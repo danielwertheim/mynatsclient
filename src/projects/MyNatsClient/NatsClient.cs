@@ -22,7 +22,6 @@ namespace MyNatsClient
         private const int ConsumerMaxMsSilenceFromServer = 40000;
         private const int MaxReconnectDueToFailureAttempts = 5;
         private const int WaitForConsumerCompleteMs = 100;
-        private const bool AutoRemoveFailingObservableSubscription = false;
 
         private readonly object _sync;
         private readonly ConnectionInfo _connectionInfo;
@@ -41,8 +40,8 @@ namespace MyNatsClient
 
         public string Id { get; }
         public IObservable<IClientEvent> Events => _eventMediator;
-        public IFilterableObservable<IOp> OpStream => _opMediator.AllOpsStream;
-        public IFilterableObservable<MsgOp> MsgOpStream => _opMediator.MsgOpsStream;
+        public INatsObservable<IOp> OpStream => _opMediator.AllOpsStream;
+        public INatsObservable<MsgOp> MsgOpStream => _opMediator.MsgOpsStream;
         public INatsClientStats Stats => _opMediator;
         public bool IsConnected => _connection != null && _connection.IsConnected;
         public INatsConnectionManager ConnectionManager { private get; set; }
@@ -53,8 +52,8 @@ namespace MyNatsClient
             _sync = new object();
             _connectionInfo = connectionInfo.Clone();
             _subscriptions = new ConcurrentDictionary<string, Subscription>();
-            _eventMediator = new ObservableOf<IClientEvent>(AutoRemoveFailingObservableSubscription);
-            _opMediator = new NatsOpMediator(AutoRemoveFailingObservableSubscription);
+            _eventMediator = new ObservableOf<IClientEvent>();
+            _opMediator = new NatsOpMediator();
             _inbox = new Lazy<ClientInbox>(() => new ClientInbox(this), LazyThreadSafetyMode.ExecutionAndPublication);
             _consumerIsCancelled = () => _cancellation == null || _cancellation.IsCancellationRequested;
 

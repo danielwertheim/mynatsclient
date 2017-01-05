@@ -10,7 +10,7 @@ namespace MyNatsClient.UnitTests
     {
         public ObservableOfTests()
         {
-            UnitUnderTest = new ObservableOf<IClientEvent>(false);
+            UnitUnderTest = new ObservableOf<IClientEvent>();
         }
 
         [Fact]
@@ -41,9 +41,9 @@ namespace MyNatsClient.UnitTests
         }
 
         [Fact]
-        public void Dispatching_Should_invoke_onError_When_exception_is_thrown_by_observer()
+        public void Dispatching_Should_invoke_subscriptions_onError_When_exception_is_thrown_by_observer()
         {
-            Exception thrown = new Exception("I FAILED!");
+            var thrown = new Exception("I FAILED!");
             Exception caught = null;
             UnitUnderTest.Subscribe(ev =>
             {
@@ -57,25 +57,48 @@ namespace MyNatsClient.UnitTests
         }
 
         [Fact]
-        public void Dispatching_Should_not_dispatch_to_a_failed_observer_When_auto_remove_failing_subscription_is_true()
+        public void Dispatching_Should_invoke_logger_for_error_When_exception_is_thrown_by_observer()
         {
-            UnitUnderTest = new ObservableOf<IClientEvent>(true);
-
-            var fake = new Mock<IObserver<IClientEvent>>();
-            fake.Setup(f => f.OnNext(It.IsAny<IClientEvent>())).Throws<Exception>();
-            UnitUnderTest.Subscribe(fake.Object);
+            var thrown = new Exception("I FAILED!");
+            UnitUnderTest.Subscribe(new DelegatingObserver<IClientEvent>(msg => { throw thrown; }));
 
             UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
-            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
 
-            fake.Verify(f => f.OnNext(It.IsAny<IClientEvent>()), Times.Once);
-            fake.Verify(f => f.OnError(It.IsAny<Exception>()), Times.Once);
+            FakeLogger.Verify(f => f.Error("Error in observer while processing message.", thrown), Times.Once);
         }
 
         [Fact]
-        public void Dispatching_Should_dispatch_to_a_failed_observer_When_auto_remove_failing_subscription_is_false()
+        public void Dispatching_Should_invoke_onError_When_exception_is_thrown_by_observer()
         {
-            UnitUnderTest = new ObservableOf<IClientEvent>(false);
+            var thrown = new Exception("I FAILED!");
+            Exception caughtInCommonHandler = null;
+            Exception caughtInObserverHandler = null;
+
+            UnitUnderTest.OnException = (ev, ex) =>
+            {
+                caughtInCommonHandler = ex;
+            };
+
+            UnitUnderTest.Subscribe(ev =>
+            {
+                throw thrown;
+            }, ex =>
+            {
+                caughtInObserverHandler = ex;
+            });
+
+            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
+
+            caughtInCommonHandler.Should().NotBeNull();
+            caughtInCommonHandler.Should().BeSameAs(thrown);
+            caughtInObserverHandler.Should().NotBeNull();
+            caughtInObserverHandler.Should().BeSameAs(thrown);
+        }
+
+        [Fact]
+        public void Dispatching_Should_dispatch_to_a_failed_observer()
+        {
+            UnitUnderTest = new ObservableOf<IClientEvent>();
 
             var fake = new Mock<IObserver<IClientEvent>>();
             fake.Setup(f => f.OnNext(It.IsAny<IClientEvent>())).Throws<Exception>();

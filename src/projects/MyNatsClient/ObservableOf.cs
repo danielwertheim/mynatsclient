@@ -5,16 +5,22 @@ using MyNatsClient.Internals;
 
 namespace MyNatsClient
 {
-    public class ObservableOf<T> : IFilterableObservable<T>, IDisposable
+    public abstract class Observable
     {
-        private readonly ConcurrentDictionary<Guid, SubscriptionOf<T>> _subscriptions = new ConcurrentDictionary<Guid, SubscriptionOf<T>>();
-        private readonly bool _autoRemoveFailingSubscription;
+        protected readonly ILogger Logger;
+
+        protected Observable()
+        {
+            Logger = LoggerManager.Resolve(typeof(Observable));
+        }
+    }
+
+    public class ObservableOf<T> : Observable, INatsObservable<T>, IDisposable where T : class
+    {
+        private readonly ConcurrentDictionary<Guid, ObserverSubscription<T>> _subscriptions = new ConcurrentDictionary<Guid, ObserverSubscription<T>>();
         private bool _isDisposed;
 
-        public ObservableOf(bool autoRemoveFailingSubscription)
-        {
-            _autoRemoveFailingSubscription = autoRemoveFailingSubscription;
-        }
+        public Action<T, Exception> OnException { private get; set; }
 
         public void Dispose()
         {
@@ -40,6 +46,10 @@ namespace MyNatsClient
                 }
                 catch (Exception ex)
                 {
+                    Logger.Error("Error in observer while processing message.", ex);
+
+                    OnException?.Invoke(ev, ex);
+
                     subscription.OnError(ex);
                 }
             }
@@ -49,28 +59,28 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
-            return Subscribe(SubscriptionOf<T>.Default(observer, OnDisposeSubscription, _autoRemoveFailingSubscription));
+            return Subscribe(ObserverSubscription<T>.Default(observer, OnDisposeSubscription));
         }
 
         public virtual IDisposable Subscribe(IObserver<T> observer, Func<T, bool> filter)
         {
             ThrowIfDisposed();
 
-            return Subscribe(SubscriptionOf<T>.Filtered(observer, filter, OnDisposeSubscription, _autoRemoveFailingSubscription));
+            return Subscribe(ObserverSubscription<T>.Filtered(observer, filter, OnDisposeSubscription));
         }
 
-        private IDisposable Subscribe(SubscriptionOf<T> subscription)
+        private IDisposable Subscribe(ObserverSubscription<T> observerSubscription)
         {
-            if (_subscriptions.TryAdd(subscription.Id, subscription))
-                return subscription;
+            if (_subscriptions.TryAdd(observerSubscription.Id, observerSubscription))
+                return observerSubscription;
 
             throw new InvalidOperationException("Could not register observer.");
         }
 
-        private void OnDisposeSubscription(SubscriptionOf<T> subscription)
+        private void OnDisposeSubscription(ObserverSubscription<T> observerSubscription)
         {
-            if (_subscriptions.TryRemove(subscription.Id, out subscription))
-                subscription.OnCompleted();
+            if (_subscriptions.TryRemove(observerSubscription.Id, out observerSubscription))
+                observerSubscription.OnCompleted();
         }
 
         private void ThrowIfDisposed()

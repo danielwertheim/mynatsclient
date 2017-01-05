@@ -9,8 +9,8 @@ namespace MyNatsClient.UnitTests
         [Fact]
         public void Should_return_NullLogger_by_default()
         {
+            LoggerManager.ResetToDefaults();
             LoggerManager.Resolve(typeof(Fake1)).Should().BeOfType<NullLogger>();
-            LoggerManager.Resolve(typeof(Fake2)).Should().BeOfType<NullLogger>();
         }
 
         private class Fake1 { }

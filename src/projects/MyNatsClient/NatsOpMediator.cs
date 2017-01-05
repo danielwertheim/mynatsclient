@@ -12,15 +12,15 @@ namespace MyNatsClient
         private ObservableOf<IOp> _opStream;
         private ObservableOf<MsgOp> _msgOpStream;
 
-        public IFilterableObservable<IOp> AllOpsStream => _opStream;
-        public IFilterableObservable<MsgOp> MsgOpsStream => _msgOpStream;
+        public INatsObservable<IOp> AllOpsStream => _opStream;
+        public INatsObservable<MsgOp> MsgOpsStream => _msgOpStream;
         public DateTime LastOpReceivedAt { get; private set; }
         public ulong OpCount { get; private set; }
 
-        public NatsOpMediator(bool autoRemoveFailingSubscription)
+        public NatsOpMediator()
         {
-            _opStream = new ObservableOf<IOp>(autoRemoveFailingSubscription);
-            _msgOpStream = new ObservableOf<MsgOp>(autoRemoveFailingSubscription);
+            _opStream = new ObservableOf<IOp>();
+            _msgOpStream = new ObservableOf<MsgOp>();
         }
 
         public void Dispose()

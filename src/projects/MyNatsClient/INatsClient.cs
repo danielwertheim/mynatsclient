@@ -36,12 +36,12 @@ namespace MyNatsClient
         /// <see cref="PongOp"/>,
         /// <see cref="MsgOp"/>
         /// </summary>
-        IFilterableObservable<IOp> OpStream { get; }
+        INatsObservable<IOp> OpStream { get; }
 
         /// <summary>
         /// Stream of all incoming <see cref="MsgOp"/>.
         /// </summary>
-        IFilterableObservable<MsgOp> MsgOpStream { get; }
+        INatsObservable<MsgOp> MsgOpStream { get; }
 
         /// <summary>
         /// Gets client statistics.

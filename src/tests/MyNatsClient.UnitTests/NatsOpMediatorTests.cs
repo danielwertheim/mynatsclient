@@ -11,7 +11,7 @@ namespace MyNatsClient.UnitTests
     {
         public NatsOpMediatorTests()
         {
-            UnitUnderTest = new NatsOpMediator(false);
+            UnitUnderTest = new NatsOpMediator();
         }
 
         [Fact]
