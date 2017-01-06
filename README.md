@@ -424,7 +424,7 @@ This will happen automatically if your subscription is causing an unhandled exce
 
 **PLEASE NOTE!** The NATS subscription is still there. Use `client.Unsub(...)` or `client.UnsubAsync(...)` to let the server know that your client should not receive messages for a certain subject anymore.
 
-### Consumer pings and stuff
+## Consumer pings and stuff
 The Consumer looks at `client.Stats.LastOpReceivedAt` to see if it has taken to long time since it heard from the server.
 
 **NOTE** this only kicks in as long as the client thinks the `Socket` is connected. If there's a known hard disconnect it will cleanly just get disconnected.
@@ -432,3 +432,97 @@ The Consumer looks at `client.Stats.LastOpReceivedAt` to see if it has taken to 
 If `ConsumerPingAfterMsSilenceFromServer` (20000ms) has passed, it will start to `PING` the server.
 
 If `ConsumerMaxMsSilenceFromServer` (40000ms) has passed, it will cause an exception and you will get notified via a `ClientConsumerFailed` event dispatched via `client.Events`. The Client will also be disconnected, and you will get the `ClientDisconnected` event, which you can use to reconnect.
+
+## Exceptions
+### Catch all unhandled exceptions per stream
+The Client exposes e.g. `MsgOpStream` which has a `OnException` delegate defined. You can use it to get notified about exceptions. These exceptions will automatically be logged via `ILogger.Error` which is resolved via `LoggerManager.Resolve` which is something you can hook into.
+
+### Catch exceptions using the DelegatingObserver
+Subscribing with the use of an observer makes it easy for you to catch exceptions and handle them.
+
+```csharp
+var c = 0;
+
+//Only the OnNext (the first argument) is required.
+var myObserver = new DelegatingObserver<MsgOp>(
+  msg =>
+  {
+    Console.WriteLine($"Observer OnNext got: {msg.GetPayloadAsString()}");
+
+    throw new Exception(c++.ToString());
+  },
+  err =>
+    Console.WriteLine("Observer OnError got:" + err.Message),
+  () =>
+    Console.WriteLine("Observer completed"));
+
+//Subscribe to subject "test" and hook up the observer
+//for incoming messages on that subject
+var sub = _client.SubWithObserver("test", myObserver);
+
+
+//Publish some messages
+while (true)
+{
+  Console.WriteLine("Run? (y=yes;n=no)");
+  var key = Console.ReadKey().KeyChar;
+
+  Console.WriteLine();
+  if (key == 'n')
+    break;
+  
+  _client.Pub("test", $"test{c.ToString()}");
+}
+
+//Tear down subscription (both against NATS server and observable stream)
+sub.Dispose();
+```
+
+This will give the following output:
+
+```bash
+Run? (y=yes;n=no)
+y
+Run? (y=yes;n=no)
+Observer OnNext got: test0
+Observer OnError got:0
+y
+Run? (y=yes;n=no)
+Observer OnNext got: test1
+Observer OnError got:1
+n
+Observer completed
+```
+
+### Exceptions and "handlers"
+The handler will just swallow the exception and continue working.
+
+Changing the subscribing part from the first sample above to:
+
+```csharp
+var sub = _client.SubWithHandler("test", msg =>
+{
+  Console.WriteLine($"Observer OnNext got: {msg.GetPayloadAsString()}");
+
+  throw new Exception(c++.ToString());
+});
+```
+
+This will give the following output:
+
+```bash
+Run? (y=yes;n=no)
+y
+Run? (y=yes;n=no)
+Observer OnNext got: test0
+y
+Run? (y=yes;n=no)
+Observer OnNext got: test1
+y
+Run? (y=yes;n=no)
+Observer OnNext got: test2
+y
+Run? (y=yes;n=no)
+Observer OnNext got: test3
+n
+```

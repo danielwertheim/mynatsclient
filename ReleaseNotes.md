@@ -1,5 +1,12 @@
 # Release notes
 
+## v0.9.0 - 2017-01-06
+Focus of this release has been to offer more hooks for exceptions in your handlers.
+
+- **Added**: `client.OpStream.OnException = (op, ex) => {}` as a generic client hook for getting notified of exceptions in handlers for the all OPS stream.
+- **Added**: `client.MsgOpStream.OnException = (msg, ex) => {}` as a generic client hook for getting notified of exceptions in handlers for the MsgOP stream.
+- **Added**: Any exception caused by an observer will now be logged via a `ILogger.Error` resolved via `LoggerManager.Resolve`, which is a place where you can hook in NLog, Serilog or whatever.
+
 ## v0.8.0 - 2017-01-04
 Focus has been on stabilizing the experience and we are closing in on getting a stable API. No more planned changes exists.
 
