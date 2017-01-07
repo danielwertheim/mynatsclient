@@ -28,7 +28,6 @@ namespace MyNatsClient.Internals
         {
             EnsureArg.IsNotNull(connectionInfo, nameof(connectionInfo));
 
-            var exceptions = new List<Exception>();
             var hosts = new Queue<Host>(connectionInfo.Hosts.GetRandomized());
             while (!cancellationToken.IsCancellationRequested && hosts.Any())
             {
@@ -41,11 +40,10 @@ namespace MyNatsClient.Internals
                 catch (Exception ex)
                 {
                     Logger.Error($"Error while connecting to {host}. Trying with next host (if any).", ex);
-                    exceptions.Add(ex);
                 }
             }
 
-            throw NatsException.CouldNotEstablishAnyConnection(exceptions.ToArray());
+            throw NatsException.CouldNotEstablishAnyConnection();
         }
 
         private Tuple<INatsConnection, IList<IOp>> EstablishConnection(Host host, ConnectionInfo connectionInfo, CancellationToken cancellationToken)

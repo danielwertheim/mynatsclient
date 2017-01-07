@@ -2,6 +2,7 @@ namespace MyNatsClient
 {
     public static class NatsExceptionCodes
     {
+        internal const string Unknown = "Unknown";
         public const string CouldNotCreateSubscription = "CouldNotCreateSubscription";
         public const string MissingCredentials = "MissingCredentials";
         public const string FailedToConnectToHost = "FailedToConnectToHost";
