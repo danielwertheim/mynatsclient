@@ -1,18 +1,15 @@
 using System;
-using EnsureThat;
 
 namespace MyNatsClient
 {
-    public class NatsException : AggregateException
+    public class NatsException : Exception
     {
-        public string ExceptionCode { get; }
+        public string ExceptionCode { get; private set; }
 
-        protected NatsException(string exceptionCode, string message, params Exception[] innerExceptions)
-            : base(message, innerExceptions)
+        protected NatsException(string exceptionCode, string message)
+            : base(message)
         {
-            EnsureArg.IsNotNullOrWhiteSpace(exceptionCode, nameof(exceptionCode));
-
-            ExceptionCode = exceptionCode;
+            ExceptionCode = exceptionCode ?? NatsExceptionCodes.Unknown;
         }
 
         internal static NatsException MissingCredentials(Host host)
@@ -21,8 +18,8 @@ namespace MyNatsClient
         internal static NatsException FailedToConnectToHost(Host host, string message)
             => new NatsException(NatsExceptionCodes.FailedToConnectToHost, $"Error while connecting to {host}. {message}");
 
-        internal static NatsException CouldNotEstablishAnyConnection(params Exception[] exceptions)
-            => new NatsException(NatsExceptionCodes.CouldNotEstablishAnyConnection, "No connection could be established against any of the specified hosts (servers).", exceptions);
+        internal static NatsException CouldNotEstablishAnyConnection()
+            => new NatsException(NatsExceptionCodes.CouldNotEstablishAnyConnection, "No connection could be established against any of the specified hosts (servers).");
 
         internal static NatsException ExceededMaxPayload(long maxPayload, long bufferLength)
             => new NatsException(NatsExceptionCodes.ExceededMaxPayload, $"Server indicated max payload of {maxPayload} bytes. Current dispatch is {bufferLength} bytes.");
