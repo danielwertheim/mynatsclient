@@ -462,7 +462,7 @@ namespace MyNatsClient
 
             Task.WaitAny(new[] { Task.Delay(timeoutMs ?? _connectionInfo.RequestTimeoutMs), taskComp.Task }, _cancellation.Token);
             if (!taskComp.Task.IsCompleted)
-                throw NatsException.RequestTimedOut();
+                taskComp.SetException(NatsException.RequestTimedOut());
 
             return await taskComp.Task
                 .ContinueWith(t =>
