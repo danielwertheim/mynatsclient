@@ -1,5 +1,9 @@
 # Release notes
 
+## v0.9.1 - 2017-01-07
+- **Fixed**: `NatsException` does not extend `AggregateException` anymore, as there seem to be an issue with internal stuff in .NET Core trying to reach members that does not exist.
+- **Fixed**: `client.RequestAsync(...)` now uses `TaskCompletionSource.SetException` for the time out instead of having the method throw the exception.
+
 ## v0.9.0 - 2017-01-06
 Focus of this release has been to offer more hooks for exceptions in your handlers.
 
