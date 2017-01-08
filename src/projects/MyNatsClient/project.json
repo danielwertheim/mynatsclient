@@ -43,6 +43,11 @@
             "dependencies": {
                 "NETStandard.Library": "1.6.0"
             }
+        },
+        "net45": {
+            "buildOptions": {
+                "define": [ "NET" ]
+            }
         }
     }
 }
