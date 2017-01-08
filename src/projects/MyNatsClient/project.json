@@ -45,6 +45,9 @@
             }
         },
         "net45": {
+            "buildOptions": {
+                "define": [ "NET" ]
+            }
         }
     }
 }
