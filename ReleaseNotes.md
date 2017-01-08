@@ -1,5 +1,10 @@
 # Release notes
 
+## v0.9.2 - 2017-01-08
+Enabling lost support for .NET4.5+, so now .NET4.5+ is build specifically for .NET (plain old .NET) and .NET Core is build against .NET Standard 1.6
+
+- **Fixed**: Support for .NET4.5 again which was lost in `v0.8.0` where the idea was to support it via .NET Standard.
+
 ## v0.9.1 - 2017-01-07
 - **Fixed**: `NatsException` does not extend `AggregateException` anymore, as there seem to be an issue with internal stuff in .NET Core trying to reach members that does not exist.
 - **Fixed**: `client.RequestAsync(...)` now uses `TaskCompletionSource.SetException` for the time out instead of having the method throw the exception.
