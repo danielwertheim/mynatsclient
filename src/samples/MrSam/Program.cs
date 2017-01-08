@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Reactive;
 using System.Threading;
 using MyNatsClient;
-using MyNatsClient.Ops;
 
 namespace MrSam
 {
@@ -21,7 +19,6 @@ namespace MrSam
 
             _client.SubWithHandler("getTemp", msg =>
             {
-                Thread.Sleep(10000);
                 var parts = msg.GetPayloadAsString().Split('@');
                 _client.Pub(msg.ReplyTo, $"Temp is {TempService.Get(parts[0], parts[1])}C");
             });
