@@ -76,17 +76,26 @@ namespace MyNatsClient.Internals
             Try.All(
                 () =>
                 {
+#if !NETSTANDARD1_6
+                    _readStream?.Close();
+#endif
                     _readStream?.Dispose();
                     _readStream = null;
                 },
                 () =>
                 {
+#if !NETSTANDARD1_6
+                    _writeStream?.Close();
+#endif
                     _writeStream?.Dispose();
                     _writeStream = null;
                 },
                 () =>
                 {
                     _socket?.Shutdown(SocketShutdown.Both);
+#if !NETSTANDARD1_6
+                    _socket?.Close();
+#endif
                     //_socket?.Disconnect(false);
                     _socket?.Dispose();
                     _socket = null;
