@@ -1,5 +1,5 @@
 {
-    "title": "MyNatsClient.Rx - async, reactive and simple NATS client",
+    "title": "MyNatsClient.Rx async and reactive NATS client",
     "description": "Convenience package that installs MyNatsClient and ReactiveExtensions (System.Reactive). MyNatsClient provides a simple, effective sync and async library for interacting with NATS Server using .NET and .NET Core.",
     "authors": [ "danielwertheim" ],
     "version": "0.0.0-*",
