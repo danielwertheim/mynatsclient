@@ -32,18 +32,31 @@
         },
         "releaseNotes": "https://github.com/danielwertheim/mynatsclient/blob/master/ReleaseNotes.md"
     },
-    "dependencies": {
-        "Ensure.That": "5.0.0",
-        "MyNatsClient": "*",
-        "Newtonsoft.Json": "9.0.1"
-    },
     "frameworks": {
         "netstandard1.6": {
             "buildOptions": {
                 "define": [ "DOTNETCORE" ]
             },
             "dependencies": {
-                "NETStandard.Library": "1.6.0"
+                "NETStandard.Library": "1.6.0",
+                "Ensure.That": "5.0.0",
+                "MyNatsClient": {
+                    "target": "project"
+                },
+                "Newtonsoft.Json": "9.0.1"
+            }
+        },
+        "net45": {
+            "buildOptions": {
+                "define": [ "NET" ]
+            },
+            "dependencies": {
+                "NETStandard.Library": "1.6.0",
+                "Ensure.That": "5.0.0",
+                "MyNatsClient": {
+                    "target": "project"
+                },
+                "Newtonsoft.Json": "9.0.1"
             }
         }
     }

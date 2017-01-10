@@ -9,8 +9,12 @@
         "type": "platform",
         "version": "1.1.0"
     },
-    "MyNatsClient": "0.0.0-*",
-    "MyNatsClient.Encoders.Json": "0.0.0-*",
+    "MyNatsClient": {
+        "target": "project"
+    },
+    "MyNatsClient.Encodings.Json": {
+        "target": "project"
+    },
     "System.Reactive": "3.1.1"
   },
 
