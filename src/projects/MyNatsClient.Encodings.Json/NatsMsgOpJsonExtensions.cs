@@ -1,7 +1,7 @@
 using System;
 using MyNatsClient.Ops;
 
-namespace MyNatsClient.Encodings.Json.Extensions
+namespace MyNatsClient.Encodings.Json
 {
     public static class NatsMsgOpJsonExtensions
     {

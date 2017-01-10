@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using FluentAssertions;
 using MyNatsClient.Encodings.Json;
-using MyNatsClient.Encodings.Json.Extensions;
 using Xunit;
 
 namespace MyNatsClient.IntegrationTests.Encodings
