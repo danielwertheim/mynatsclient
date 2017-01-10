@@ -59,7 +59,7 @@ namespace MyNatsClient.Internals
                 throw NatsException.ExceededMaxPayload(_maxPayloadSize, data.Size);
 
             for (var i = 0; i < data.BlockCount; i++)
-                await _stream.WriteAsync(data[i], 0, data.Size, _cancellationToken).ForAwait();
+                await _stream.WriteAsync(data[i], 0, data[i].Length, _cancellationToken).ForAwait();
         }
     }
 }
