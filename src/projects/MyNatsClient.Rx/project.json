@@ -24,19 +24,17 @@
         "releaseNotes": "https://github.com/danielwertheim/mynatsclient/blob/master/ReleaseNotes.md",
         "files": "README.md"
     },
+    "dependencies": {
+        "MyNatsClient": "*",
+        "System.Reactive": "3.1.1"
+    },
     "frameworks": {
         "netstandard1.6": {
             "dependencies": {
-                "NETStandard.Library": "1.6.0",
-                "MyNatsClient": "*",
-                "System.Reactive": "3.1.1"
+                "NETStandard.Library": "1.6.0"
             }
         },
         "net45": {
-            "dependencies": {
-                "MyNatsClient": "*",
-                "System.Reactive": "3.1.1"
-            }
         }
     }
 }
