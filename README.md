@@ -40,6 +40,15 @@ For convenience, if you want a consumer that makes use of Reactive Extensions, u
 install-package MyNatsClient.Rx
 ```
 
+### Encodings
+You can also get simplified support for specific payload encodings.
+
+```
+install-package MyNatsClient.Encodings.Json
+```
+
+This gives you a `JsonEncoding` and some premade extension methods under `MyNatsClient.Encodings.Json.Extensions`
+
 ## Pub-Sub sample
 Simple pub-sub sample showing one client that publishes and one that subscribes. This can of course be the same client and you can also have more clients subscribing etc.
 
@@ -49,7 +58,10 @@ Simple pub-sub sample showing one client that publishes and one that subscribes.
 var cnInfo1 = new ConnectionInfo("192.168.1.10");
 var client1 = new NatsClient("client1", cnInfo);
 
-await client1.PubAsync("tick", getNextTick());
+await client1.PubAsync("tick", GetNextTick());
+
+//or using an encoding package e.g. Json
+await client1.PubAsJsonAsync("tickItem", new Tick { Value = GetNextTick() });
 ```
 
 **Subscriber**
@@ -61,6 +73,11 @@ var client2 = new NatsClient("client2", cnInfo);
 await client2.SubWithHandlerAsync("tick", msg => {
     Console.WriteLine($"Clock ticked. Tick is {msg.GetPayloadAsString()}");
 });
+
+//or using an encoding package e.g Json
+await client2.SubWithHandlerAsync("tickItem", msg => {
+    Console.WriteLine($"Clock ticked. Tick is {msg.FromJson<TestItem>().Value}");
+})
 ```
 
 ## Request-Response sample

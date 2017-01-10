@@ -1,4 +1,8 @@
 # Release notes
+## v0.10.0 - 2017-01-10
+- **Added**: New NuGet `MyNatsClient.Encodings.Json` which ads simple `Encode` and `Decode` support for JSON and simplifying extension methods for it.
+- **Fixed**: Bug with `PubAsync` variations/overloads that used `IPayload` instead of `byte[]` or `string`.
+
 
 ## v0.9.2 - 2017-01-08
 Enabling lost support for .NET4.5+, so now .NET4.5+ is build specifically for .NET (plain old .NET) and .NET Core is build against .NET Standard 1.6
