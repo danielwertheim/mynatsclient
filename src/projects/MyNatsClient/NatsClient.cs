@@ -292,9 +292,11 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
+            var cmdPayload = PingCmd.Generate();
+
             _connection.WithWriteLock(writer =>
             {
-                writer.Write(PingCmd.Generate());
+                writer.Write(cmdPayload);
                 writer.Flush();
             });
         }
@@ -303,9 +305,11 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
+            var cmdPayload = PingCmd.Generate();
+
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await writer.WriteAsync(PingCmd.Generate()).ForAwait();
+                await writer.WriteAsync(cmdPayload).ForAwait();
                 await writer.FlushAsync().ForAwait();
             }).ForAwait();
         }
@@ -314,9 +318,11 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
+            var cmdPayload = PongCmd.Generate();
+
             _connection.WithWriteLock(writer =>
             {
-                writer.Write(PongCmd.Generate());
+                writer.Write(cmdPayload);
                 writer.Flush();
             });
         }
@@ -325,9 +331,11 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
+            var cmdPayload = PongCmd.Generate();
+
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await writer.WriteAsync(PongCmd.Generate()).ForAwait();
+                await writer.WriteAsync(cmdPayload).ForAwait();
                 await writer.FlushAsync().ForAwait();
             }).ForAwait();
         }
@@ -336,9 +344,11 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
+            var cmdPayload = PubCmd.Generate(subject, body, replyTo);
+
             _connection.WithWriteLock(writer =>
             {
-                writer.Write(PubCmd.Generate(subject, body, replyTo));
+                writer.Write(cmdPayload);
                 if (ShouldAutoFlush)
                     writer.Flush();
             });
@@ -348,9 +358,11 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
+            var cmdPayload = PubCmd.Generate(subject, body, replyTo);
+
             _connection.WithWriteLock(writer =>
              {
-                 writer.Write(PubCmd.Generate(subject, body, replyTo));
+                 writer.Write(cmdPayload);
                  if (ShouldAutoFlush)
                      writer.Flush();
              });
@@ -360,9 +372,11 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
+            var cmdPayload = PubCmd.Generate(subject, body, replyTo);
+
             _connection.WithWriteLock(writer =>
             {
-                writer.Write(PubCmd.Generate(subject, body, replyTo));
+                writer.Write(cmdPayload);
                 if (ShouldAutoFlush)
                     writer.Flush();
             });
@@ -372,9 +386,11 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
+            var cmdPayload = PubCmd.Generate(subject, body, replyTo);
+
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await writer.WriteAsync(PubCmd.Generate(subject, body, replyTo)).ForAwait();
+                await writer.WriteAsync(cmdPayload).ForAwait();
                 if (ShouldAutoFlush)
                     await writer.FlushAsync().ForAwait();
             }).ForAwait();
@@ -384,9 +400,11 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
+            var cmdPayload = PubCmd.Generate(subject, body, replyTo);
+
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await writer.WriteAsync(PubCmd.Generate(subject, body, replyTo)).ForAwait();
+                await writer.WriteAsync(cmdPayload).ForAwait();
                 if (ShouldAutoFlush)
                     await writer.FlushAsync().ForAwait();
             }).ForAwait();
@@ -396,9 +414,11 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
+            var cmdPayload = PubCmd.Generate(subject, body, replyTo);
+
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await writer.WriteAsync(PubCmd.Generate(subject, body, replyTo)).ForAwait();
+                await writer.WriteAsync(cmdPayload).ForAwait();
                 if (ShouldAutoFlush)
                     await writer.FlushAsync().ForAwait();
             }).ForAwait();
@@ -443,7 +463,7 @@ namespace MyNatsClient
             EnsureArg.IsNotNullOrWhiteSpace(subject, nameof(subject));
             EnsureArg.IsNotNull(body, nameof(body));
 
-            return await DoRequestAsync(subject, body.Blocks.SelectMany(b => b).ToArray(), timeoutMs).ForAwait();
+            return await DoRequestAsync(subject, body.GetBytes().ToArray(), timeoutMs).ForAwait();
         }
 
         private async Task<MsgOp> DoRequestAsync(string subject, byte[] body, int? timeoutMs)
@@ -454,9 +474,11 @@ namespace MyNatsClient
                 new DelegatingObserver<MsgOp>(msg => taskComp.SetResult(msg), ex => taskComp.SetException(ex)),
                 msg => msg.Subject == requestReplyAddress);
 
+            var cmdPayload = PubCmd.Generate(subject, body, requestReplyAddress);
+
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await writer.WriteAsync(PubCmd.Generate(subject, body, requestReplyAddress)).ForAwait();
+                await writer.WriteAsync(cmdPayload).ForAwait();
                 await writer.FlushAsync().ForAwait();
             }).ForAwait();
 
@@ -615,12 +637,14 @@ namespace MyNatsClient
             if (!IsConnected)
                 return;
 
+            var cmdPayload = UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages);
+
             _connection.WithWriteLock(writer =>
             {
                 if (!IsConnected)
                     return;
 
-                writer.Write(UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages));
+                writer.Write(cmdPayload);
                 writer.Flush();
             });
         }
@@ -637,12 +661,14 @@ namespace MyNatsClient
             if (!IsConnected)
                 return;
 
+            var cmdPayload = UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages);
+
             await _connection.WithWriteLockAsync(async writer =>
             {
                 if (!IsConnected)
                     return;
 
-                await writer.WriteAsync(UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages)).ForAwait();
+                await writer.WriteAsync(cmdPayload).ForAwait();
                 await writer.FlushAsync().ForAwait();
             }).ForAwait();
         }

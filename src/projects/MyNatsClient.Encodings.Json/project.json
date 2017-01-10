@@ -1,6 +1,6 @@
 {
-    "title": "MyNatsClient async and reactive NATS client",
-    "description": "Provides a simple, effective sync and async library for interacting with NATS Server using .NET and .NET Core. It uses IObservable so it is ReactiveX (RX) friendly.",
+    "title": "MyNatsClient.Encodings.Json async and reactive NATS client",
+    "description": "JSON Encoding for assisting with sending and consuming JSON messages using MyNatsClient which provides a simple, effective sync and async library for interacting with NATS Server using .NET and .NET Core. It uses IObservable so it is ReactiveX (RX) friendly.",
     "authors": [ "danielwertheim" ],
     "version": "0.0.0-*",
     "copyright": "danielwertheim",
@@ -20,8 +20,8 @@
         }
     },
     "packOptions": {
-        "summary": "NATS Server client for .NET and .NET Core.",
-        "tags": [ "NATS", "NATS.io", "messaging", "PubSub", "pub-sub", "request-response", "rx", "reactivex", "reactiveextensions" ],
+        "summary": "JSON Encoder for assisting with sending and consuming JSON messages using MyNatsClient.",
+        "tags": [ "NATS", "NATS.io", "messaging", "JSON", "JSONEncoding", "PubSub", "pub-sub", "request-response", "rx", "reactivex", "reactiveextensions" ],
         "owners": [ "danielwertheim" ],
         "projectUrl": "https://github.com/danielwertheim/mynatsclient",
         "licenseUrl": "http://www.opensource.org/licenses/MIT",
@@ -33,7 +33,11 @@
         "releaseNotes": "https://github.com/danielwertheim/mynatsclient/blob/master/ReleaseNotes.md"
     },
     "dependencies": {
-        "Ensure.That": "5.0.0"
+        "Ensure.That": "5.0.0",
+        "MyNatsClient": {
+            "target": "project"
+        },
+        "Newtonsoft.Json": "9.0.1"
     },
     "frameworks": {
         "netstandard1.6": {
