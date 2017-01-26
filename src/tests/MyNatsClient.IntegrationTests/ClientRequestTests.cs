@@ -1,26 +1,36 @@
 ﻿using System;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using MyNatsClient.Ops;
 using Xunit;
 
 namespace MyNatsClient.IntegrationTests
 {
     public class ClientRequestTests : ClientIntegrationTests
     {
-        private NatsClient _client;
+        private NatsClient _requester;
+        private NatsClient _responder;
 
         public ClientRequestTests()
         {
-            _client = new NatsClient("tc1", ConnectionInfo);
-            _client.Connect();
+            _requester = new NatsClient("requester", ConnectionInfo);
+            _requester.Connect();
+
+            _responder = new NatsClient("responder", ConnectionInfo);
+            _responder.Connect();
         }
 
         protected override void OnAfterEachTest()
         {
-            _client?.Disconnect();
-            _client?.Dispose();
-            _client = null;
+            _requester?.Disconnect();
+            _requester?.Dispose();
+            _requester = null;
+
+            _responder?.Disconnect();
+            _responder?.Dispose();
+            _responder = null;
         }
 
         [Fact]
@@ -28,9 +38,9 @@ namespace MyNatsClient.IntegrationTests
         {
             var value = Guid.NewGuid().ToString("N");
 
-            _client.SubWithHandler("getValue", msg => _client.Pub(msg.ReplyTo, msg.GetPayloadAsString()));
+            _responder.SubWithHandler("getValue", msg => _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString()));
 
-            var response = await _client.RequestAsync("getValue", value);
+            var response = await _requester.RequestAsync("getValue", value);
 
             response.GetPayloadAsString().Should().Be(value);
         }
@@ -40,9 +50,9 @@ namespace MyNatsClient.IntegrationTests
         {
             var value = Guid.NewGuid().ToString("N");
 
-            _client.SubWithHandler("getValue", msg => _client.Pub(msg.ReplyTo, msg.GetPayloadAsString()));
+            _responder.SubWithHandler("getValue", msg => _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString()));
 
-            var response = await _client.RequestAsync("getValue", Encoding.UTF8.GetBytes(value));
+            var response = await _requester.RequestAsync("getValue", Encoding.UTF8.GetBytes(value));
 
             response.GetPayloadAsString().Should().Be(value);
         }
@@ -54,26 +64,44 @@ namespace MyNatsClient.IntegrationTests
             var payloadBuilder = new PayloadBuilder();
             payloadBuilder.Append(Encoding.UTF8.GetBytes(value));
 
-            _client.SubWithHandler("getValue", msg => _client.Pub(msg.ReplyTo, msg.GetPayloadAsString()));
+            _responder.SubWithHandler("getValue", msg => _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString()));
 
-            var response = await _client.RequestAsync("getValue", payloadBuilder.ToPayload());
+            var response = await _requester.RequestAsync("getValue", payloadBuilder.ToPayload());
 
             response.GetPayloadAsString().Should().Be(value);
         }
 
         [Fact]
-        public async Task Given_responder_exists_When_requesting_after_reconnect_It_should_get_response()
+        public async Task Given_multiple_responders_exists_When_requesting_It_should_return_one_response()
         {
             var value = Guid.NewGuid().ToString("N");
+            var responderReplyingCount = 0;
+            var responderReplyCount = 0;
 
-            _client.SubWithHandler("getValue", msg => _client.Pub(msg.ReplyTo, msg.GetPayloadAsString()));
+            _requester.MsgOpStream.Subscribe(msgOp => Interlocked.Increment(ref responderReplyCount));
 
-            _client.Disconnect();
-            _client.Connect();
+            _responder.SubWithHandler("getValue", msg =>
+            {
+                Interlocked.Increment(ref responderReplyingCount);
+                _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString());
+            });
 
-            var response = await _client.RequestAsync("getValue", value);
+            MsgOp response;
+            using (var responder2 = new NatsClient("Responder2", ConnectionInfo))
+            {
+                responder2.Connect();
+                responder2.SubWithHandler("getValue", msg =>
+                {
+                    Interlocked.Increment(ref responderReplyingCount);
+                    responder2.Pub(msg.ReplyTo, msg.GetPayloadAsString());
+                });
+
+                response = await _requester.RequestAsync("getValue", value);
+            }
 
             response.GetPayloadAsString().Should().Be(value);
+            responderReplyCount.Should().Be(1);
+            responderReplyingCount.Should().Be(2);
         }
 
         [Fact]
@@ -83,7 +111,7 @@ namespace MyNatsClient.IntegrationTests
 
             try
             {
-                await _client.RequestAsync("getValue", "foo value");
+                await _requester.RequestAsync("getValue", "foo value");
             }
             catch (NatsException e)
             {
@@ -101,7 +129,7 @@ namespace MyNatsClient.IntegrationTests
 
             try
             {
-                await _client.RequestAsync("getValue", "foo value", 100);
+                await _requester.RequestAsync("getValue", "foo value", 100);
             }
             catch (NatsException e)
             {

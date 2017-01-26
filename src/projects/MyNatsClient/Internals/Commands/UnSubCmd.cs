@@ -1,6 +1,6 @@
 namespace MyNatsClient.Internals.Commands
 {
-    internal static class UnSubCmd
+    internal static class UnsubCmd
     {
         internal static byte[] Generate(string subscriptionId, int? maxMessages = null)
         {
