@@ -6,6 +6,8 @@ namespace MyNatsClient.Internals
 {
     internal class ClientInbox : IDisposable
     {
+        private bool _isDisposed;
+
         private ISubscription _inboxSubscription;
         private ObservableOf<MsgOp> _responses;
 
@@ -23,6 +25,18 @@ namespace MyNatsClient.Internals
 
         public void Dispose()
         {
+            ThrowIfDisposed();
+
+            Dispose(true);
+            GC.SuppressFinalize(this);
+            _isDisposed = true;
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_isDisposed || !disposing)
+                return;
+
             Try.All(
                 () =>
                 {
@@ -34,6 +48,12 @@ namespace MyNatsClient.Internals
                     _responses?.Dispose();
                     _responses = null;
                 });
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(GetType().Name);
         }
     }
 }
