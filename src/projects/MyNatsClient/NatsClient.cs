@@ -33,7 +33,6 @@ namespace MyNatsClient
         private Task _consumer;
         private ObservableOf<IClientEvent> _eventMediator;
         private NatsOpMediator _opMediator;
-        private Lazy<ClientInbox> _inbox;
         private bool _isDisposed;
 
         private bool ShouldAutoFlush => _connectionInfo.PubFlushMode != PubFlushMode.Manual;
@@ -45,7 +44,6 @@ namespace MyNatsClient
         public INatsClientStats Stats => _opMediator;
         public bool IsConnected => _connection != null && _connection.IsConnected;
         public INatsConnectionManager ConnectionManager { private get; set; }
-        private ClientInbox Inbox => _inbox.Value;
 
         public NatsClient(string id, ConnectionInfo connectionInfo)
         {
@@ -54,7 +52,6 @@ namespace MyNatsClient
             _subscriptions = new ConcurrentDictionary<string, Subscription>();
             _eventMediator = new ObservableOf<IClientEvent>();
             _opMediator = new NatsOpMediator();
-            _inbox = new Lazy<ClientInbox>(() => new ClientInbox(this), LazyThreadSafetyMode.ExecutionAndPublication);
             _consumerIsCancelled = () => _cancellation == null || _cancellation.IsCancellationRequested;
 
             Id = id;
@@ -109,14 +106,6 @@ namespace MyNatsClient
             Release();
 
             Try.All(
-                () =>
-                {
-                    if (_inbox == null)
-                        return;
-
-                    _inbox.Value.Dispose();
-                    _inbox = null;
-                },
                 () =>
                 {
                     var subscriptions = _subscriptions.Values.Cast<IDisposable>().ToArray();
@@ -468,17 +457,26 @@ namespace MyNatsClient
 
         private async Task<MsgOp> DoRequestAsync(string subject, byte[] body, int? timeoutMs)
         {
-            var requestReplyAddress = $"{Inbox.Address}.{Guid.NewGuid():N}";
+            var requestReplyAddress = $"{Guid.NewGuid():N}";
+            var pubCmd = PubCmd.Generate(subject, body, requestReplyAddress);
+
             var taskComp = new TaskCompletionSource<MsgOp>();
-            var requestSubscription = Inbox.Responses.Subscribe(
-                new DelegatingObserver<MsgOp>(msg => taskComp.SetResult(msg), ex => taskComp.SetException(ex)),
+            var requestSubscription = MsgOpStream.Subscribe(
+                new DelegatingObserver<MsgOp>(
+                    msg => taskComp.SetResult(msg),
+                    ex => taskComp.SetException(ex)),
                 msg => msg.Subject == requestReplyAddress);
 
-            var cmdPayload = PubCmd.Generate(subject, body, requestReplyAddress);
+            var subscriptionInfo = new SubscriptionInfo(requestReplyAddress, maxMessages: 1);
+            var subCmd = SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id);
+            var unsubCmd = UnsubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages);
 
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await writer.WriteAsync(cmdPayload).ForAwait();
+                await writer.WriteAsync(subCmd).ForAwait();
+                await writer.WriteAsync(unsubCmd).ForAwait();
+                await writer.FlushAsync().ForAwait();
+                await writer.WriteAsync(pubCmd).ForAwait();
                 await writer.FlushAsync().ForAwait();
             }).ForAwait();
 
@@ -559,7 +557,7 @@ namespace MyNatsClient
             writer.Write(SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup));
 
             if (subscriptionInfo.MaxMessages.HasValue)
-                writer.Write(UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages));
+                writer.Write(UnsubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages));
 
             writer.Flush();
         });
@@ -604,7 +602,7 @@ namespace MyNatsClient
             await writer.WriteAsync(SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup)).ForAwait();
 
             if (subscriptionInfo.MaxMessages.HasValue)
-                await writer.WriteAsync(UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages)).ForAwait();
+                await writer.WriteAsync(UnsubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages)).ForAwait();
 
             await writer.FlushAsync().ForAwait();
         }).ForAwait();
@@ -637,7 +635,7 @@ namespace MyNatsClient
             if (!IsConnected)
                 return;
 
-            var cmdPayload = UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages);
+            var cmdPayload = UnsubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages);
 
             _connection.WithWriteLock(writer =>
             {
@@ -661,7 +659,7 @@ namespace MyNatsClient
             if (!IsConnected)
                 return;
 
-            var cmdPayload = UnSubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages);
+            var cmdPayload = UnsubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages);
 
             await _connection.WithWriteLockAsync(async writer =>
             {

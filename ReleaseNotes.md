@@ -1,4 +1,7 @@
 # Release notes
+## v0.11.0 - 2017-01-26
+- **Fixed**: Although it workes as it was, the `RequestAsync` method now uses same patter as other clients, and invokes an automatic `unsub` with `maxMessages=1` so that many responders doesn't make the client get unnecessary replies.
+
 ## v0.10.0 - 2017-01-10
 - **Added**: New NuGet `MyNatsClient.Encodings.Json` which ads simple `Encode` and `Decode` support for JSON and simplifying extension methods for it.
 - **Fixed**: Bug with `PubAsync` variations/overloads that used `IPayload` instead of `byte[]` or `string`.
