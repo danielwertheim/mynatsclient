@@ -15,6 +15,9 @@ It supports:
 - Request-Response
 - Queue groups
 
+## Samples
+There's a separate repo for [the samples](https://github.com/danielwertheim/mynatsclient-samples)
+
 ## .NET and .NET Core
 Two different DLL's are provided. One for traditional **.NET4.5+** and one for **.NET Core** via .NET Standard 1.6.
 
