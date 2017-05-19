@@ -11,10 +11,10 @@ namespace MyNatsClient.Encodings.Json
             var settings = new JsonSerializerSettings
             {
                 DateFormatHandling = DateFormatHandling.IsoDateFormat,
-                DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-                ContractResolver = new CamelCasePropertyNamesContractResolver
+                DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
+                ContractResolver = new DefaultContractResolver
                 {
-                    NamingStrategy = new CamelCaseNamingStrategy
+                    NamingStrategy = new DefaultNamingStrategy
                     {
                         ProcessDictionaryKeys = false
                     }

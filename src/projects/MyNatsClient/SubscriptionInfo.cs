@@ -29,6 +29,9 @@ namespace MyNatsClient
         /// </summary>
         public int? MaxMessages { get; }
 
+        /// <summary>
+        /// Gets a value indicating if this subscription is a wild card subscription.
+        /// </summary>
         public bool HasWildcardSubject { get; }
 
         /// <summary>

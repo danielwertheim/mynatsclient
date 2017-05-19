@@ -14,18 +14,13 @@ namespace MyNatsClient
         string Id { get; }
 
         /// <summary>
-        /// Sets a specific <see cref="INatsConnectionManager"/> to use.
-        /// </summary>
-        INatsConnectionManager ConnectionManager { set; }
-
-        /// <summary>
         /// Stream of client events that mostly concerns client state changes.
         /// E.g.
         /// <see cref="MyNatsClient.Events.ClientConnected"/>,
         /// <see cref="MyNatsClient.Events.ClientDisconnected"/>,
         /// <see cref="MyNatsClient.Events.ClientConsumerFailed"/>.
         /// </summary>
-        IObservable<IClientEvent> Events { get; }
+        INatsObservable<IClientEvent> Events { get; }
 
         /// <summary>
         /// Stream of all incoming Ops.
@@ -63,6 +58,17 @@ namespace MyNatsClient
         /// Disconnects the client.
         /// </summary>
         void Disconnect();
+
+        /// <summary>
+        /// Flushes the write stream.
+        /// </summary>
+        void Flush();
+
+        /// <summary>
+        /// Async flush of write stream.
+        /// </summary>
+        /// <returns></returns>
+        Task FlushAsync();
 
         /// <summary>
         /// Sync send of a Ping message to the server, which then
@@ -177,17 +183,6 @@ namespace MyNatsClient
         /// <param name="body"></param>
         /// <param name="timeoutMs"></param>
         Task<MsgOp> RequestAsync(string subject, IPayload body, int? timeoutMs = null);
-
-        /// <summary>
-        /// Flushes the write stream.
-        /// </summary>
-        void Flush();
-
-        /// <summary>
-        /// Async flush of write stream.
-        /// </summary>
-        /// <returns></returns>
-        Task FlushAsync();
 
         /// <summary>
         /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.

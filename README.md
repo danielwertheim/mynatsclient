@@ -1,5 +1,5 @@
 # MyNatsClient
-A **.NET4.5+ and .NET Core supported**, `async` and [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) (RX) friendly client for [NATS Server](https://nats.io). It's RX friendly cause it's based around `IObservable<T>`. It keeps as much of NATS domain language as possible but does not limit itself to follow the APIs of other NATS clients, but instead offer one that fits the .NET domain and one that first and foremost is a client written for .NET. Not GO or JAVA or Foo.
+A **.NETStandard2.0 and .NET 4.5.1+**, `async` and [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) (RX) friendly client for [NATS Server](https://nats.io). It's RX friendly cause it's based around `IObservable<T>`. It keeps as much of NATS domain language as possible but does not limit itself to follow the APIs of other NATS clients, but instead offer one that fits the .NET domain and one that first and foremost is a client written for .NET. Not GO or JAVA or Foo.
 
 It offers both simple and advanced usage. By default it's configured to auto reply on heartbeat pings and to reconnect on failures. You can seed it with multiple hosts in a cluster. So if one fails it will reconnect to another one.
 
@@ -18,8 +18,11 @@ It supports:
 ## Samples
 There's a separate repo for [the samples](https://github.com/danielwertheim/mynatsclient-samples)
 
-## .NET and .NET Core
-Two different DLL's are provided. One for traditional **.NET4.5+** and one for **.NET Core** via .NET Standard 1.6.
+## .NET and .NET Standard
+The project multi targets the following frameworks:
+
+- .NET4.5.1
+- .NETStandard2.0
 
 ## Metrics
 Fast? Yes it is. More info can be found here: [MyNatsClient - It flushes, but so can you](http://danielwertheim.se/mynatsclient-it-flushes-but-so-can-you/)

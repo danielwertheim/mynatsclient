@@ -30,7 +30,11 @@ namespace MyNatsClient
             _isDisposed = true;
             GC.SuppressFinalize(this);
 
-            var copy = _subscriptions.Values.ToArray();
+            var copy = _subscriptions
+                .Values
+                .OfType<IDisposable>()
+                .ToArray();
+
             _subscriptions.Clear();
 
             Try.DisposeAll(copy);
@@ -48,9 +52,11 @@ namespace MyNatsClient
                 {
                     Logger.Error("Error in observer while processing message.", ex);
 
-                    OnException?.Invoke(ev, ex);
+                    Swallow.Everything(
+                        () => subscription.OnError(ex),
+                        () => subscription.Dispose());
 
-                    subscription.OnError(ex);
+                    OnException?.Invoke(ev, ex);
                 }
             }
         }

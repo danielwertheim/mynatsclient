@@ -24,7 +24,7 @@ namespace MyNatsClient
 
             _onNext = onNext;
             _onError = onError;
-            _onCompleted = onCompleted; ;
+            _onCompleted = onCompleted;
         }
 
         public void OnNext(T value) => _onNext(value);

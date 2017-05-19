@@ -23,11 +23,12 @@ namespace MyNatsClient
         private const int MaxReconnectDueToFailureAttempts = 5;
         private const int WaitForConsumerCompleteMs = 100;
 
-        private readonly object _sync;
         private readonly ConnectionInfo _connectionInfo;
         private readonly ConcurrentDictionary<string, Subscription> _subscriptions;
         private readonly Func<bool> _consumerIsCancelled;
+        private readonly INatsConnectionManager _connectionManager;
 
+        private Locker _sync;
         private CancellationTokenSource _cancellation;
         private INatsConnection _connection;
         private Task _consumer;
@@ -38,55 +39,76 @@ namespace MyNatsClient
         private bool ShouldAutoFlush => _connectionInfo.PubFlushMode != PubFlushMode.Manual;
 
         public string Id { get; }
-        public IObservable<IClientEvent> Events => _eventMediator;
+        public INatsObservable<IClientEvent> Events => _eventMediator;
         public INatsObservable<IOp> OpStream => _opMediator.AllOpsStream;
         public INatsObservable<MsgOp> MsgOpStream => _opMediator.MsgOpsStream;
         public INatsClientStats Stats => _opMediator;
         public bool IsConnected => _connection != null && _connection.IsConnected;
-        public INatsConnectionManager ConnectionManager { private get; set; }
 
         public NatsClient(string id, ConnectionInfo connectionInfo)
         {
-            _sync = new object();
+            EnsureArg.IsNotNullOrWhiteSpace(id, nameof(id));
+            EnsureArg.IsNotNull(connectionInfo, nameof(connectionInfo));
+
+            Id = id;
+
+            _sync = new Locker();
             _connectionInfo = connectionInfo.Clone();
             _subscriptions = new ConcurrentDictionary<string, Subscription>();
             _eventMediator = new ObservableOf<IClientEvent>();
             _opMediator = new NatsOpMediator();
+            _connectionManager = new NatsConnectionManager(new SocketFactory());
             _consumerIsCancelled = () => _cancellation == null || _cancellation.IsCancellationRequested;
 
-            Id = id;
-            ConnectionManager = new NatsConnectionManager(new SocketFactory());
-
-            SubscribeToClientEventsForInternalUse();
-
-            _opMediator.AllOpsStream.Subscribe(new DelegatingObserver<IOp>(op =>
+            OpStream.Subscribe(new DelegatingObserver<IOp>(op =>
             {
                 if (!IsConnected)
                     return;
 
                 if (_connectionInfo.AutoRespondToPing && op is PingOp)
-                    Swallow.Everything(Pong);
+                    Pong();
             }));
-        }
 
-        private void SubscribeToClientEventsForInternalUse()
-        {
             Events.Subscribe(new DelegatingObserver<IClientEvent>(ev =>
             {
                 if (ev is ClientConnected)
                 {
-                    HandleClientConnected();
+                    foreach (var subscription in _subscriptions.Values)
+                    {
+                        if (!IsConnected)
+                            break;
+
+                        DoSub(subscription.SubscriptionInfo);
+                    }
                     return;
                 }
 
                 var disconnectedEvent = ev as ClientDisconnected;
-                if (disconnectedEvent != null)
-                {
-                    HandleClientDisconnected(disconnectedEvent);
-                    // ReSharper disable once RedundantJumpStatement
+                var shouldTryToReconnect = disconnectedEvent?.Reason == DisconnectReason.DueToFailure && _connectionInfo.AutoReconnectOnFailure;
+                if (!shouldTryToReconnect)
                     return;
-                }
+
+                Reconnect();
             }));
+        }
+
+        private void Reconnect()
+        {
+            try
+            {
+                for (var attempts = 0; !IsConnected && attempts < MaxReconnectDueToFailureAttempts; attempts++)
+                {
+                    Logger.Debug($"Trying to reconnect after disconnection due to failure. attempt={attempts.ToString()}");
+                    Connect();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Failed while trying to reconnect client.", ex);
+            }
+
+            if (!IsConnected)
+                _eventMediator.Dispatch(new ClientAutoReconnectFailed(this));
         }
 
         public void Dispose()
@@ -114,31 +136,11 @@ namespace MyNatsClient
                 },
                 () =>
                 {
-                    Try.DisposeAll(_eventMediator, _opMediator);
+                    Try.DisposeAll(_eventMediator, _opMediator, _sync);
                     _eventMediator = null;
                     _opMediator = null;
+                    _sync = null;
                 });
-        }
-
-        public void Disconnect()
-        {
-            ThrowIfDisposed();
-
-            Disconnect(DisconnectReason.ByUser);
-        }
-
-        private void Disconnect(DisconnectReason reason)
-        {
-            if (IsConnected)
-            {
-                lock (_sync)
-                {
-                    if (IsConnected)
-                        Release();
-                }
-            }
-
-            RaiseClientDisconnected(reason);
         }
 
         public void Connect()
@@ -148,7 +150,7 @@ namespace MyNatsClient
             if (IsConnected)
                 return;
 
-            lock (_sync)
+            using (_sync.Lock())
             {
                 if (IsConnected)
                     return;
@@ -157,7 +159,10 @@ namespace MyNatsClient
 
                 _cancellation = new CancellationTokenSource();
 
-                var connectionResult = ConnectionManager.OpenConnection(_connectionInfo, _cancellation.Token);
+                var connectionResult = _connectionManager.OpenConnection(
+                    _connectionInfo,
+                    _cancellation.Token);
+
                 _connection = connectionResult.Item1;
 
                 var ops = connectionResult.Item2;
@@ -165,11 +170,27 @@ namespace MyNatsClient
                     foreach (var op in ops)
                         _opMediator.Dispatch(op);
 
-                _consumer = Task.Factory.StartNew(
-                    Consumer,
-                    _cancellation.Token,
-                    TaskCreationOptions.LongRunning,
-                    TaskScheduler.Default).ContinueWith(OnConsumerCompleted);
+                _consumer = Task.Factory
+                    .StartNew(
+                        Consumer,
+                        _cancellation.Token,
+                        TaskCreationOptions.LongRunning,
+                        TaskScheduler.Default)
+                    .ContinueWith(t =>
+                    {
+                        if (!t.IsFaulted)
+                            return;
+
+                        Disconnect(DisconnectReason.DueToFailure);
+
+                        var ex = t.Exception?.GetBaseException() ?? t.Exception;
+                        if (ex == null)
+                            return;
+
+                        Logger.Error("Consumer exception.", ex);
+
+                        RaiseClientConsumerFailed(ex);
+                    });
             }
 
             if (IsConnected)
@@ -180,13 +201,12 @@ namespace MyNatsClient
         {
             ErrOp errOp = null;
 
-            Func<bool> shouldRead = () =>
-                _connection != null &&
-                _connection.CanRead &&
-                !_consumerIsCancelled();
+            bool ShouldRead() => _connection != null && _connection.CanRead && !_consumerIsCancelled();
 
-            while (shouldRead())
+            while (ShouldRead())
             {
+                Logger.Trace("Consume cycle");
+
                 try
                 {
                     foreach (var op in _connection.ReadOp())
@@ -203,16 +223,19 @@ namespace MyNatsClient
                 }
                 catch (IOException ioex)
                 {
-                    if (!shouldRead())
+                    Logger.Error("Consumer got IOException.", ioex);
+
+                    if (!ShouldRead())
                         break;
 
-                    var ex = ioex.InnerException as SocketException;
-                    if (ex != null)
+                    if (ioex.InnerException is SocketException socketEx)
                     {
-                        if (ex.SocketErrorCode == SocketError.Interrupted)
+                        Logger.Error($"Consumer got SocketException with SocketErrorCode='{socketEx.SocketErrorCode}'");
+
+                        if (socketEx.SocketErrorCode == SocketError.Interrupted)
                             break;
 
-                        if (ex.SocketErrorCode != SocketError.TimedOut)
+                        if (socketEx.SocketErrorCode != SocketError.TimedOut)
                             throw;
                     }
 
@@ -226,55 +249,77 @@ namespace MyNatsClient
             }
 
             if (errOp != null)
+            {
+                Logger.Error($"Consumer stopped with ErrOp with message='{errOp.Message}'.");
                 _opMediator.Dispatch(errOp);
+            }
         }
 
-        private void OnConsumerCompleted(Task t)
+        public void Disconnect()
         {
-            if (!t.IsFaulted)
-                return;
+            ThrowIfDisposed();
 
-            Disconnect(DisconnectReason.DueToFailure);
+            Disconnect(DisconnectReason.ByUser);
+        }
 
-            var ex = t.Exception?.GetBaseException() ?? t.Exception;
-            if (ex == null)
-                return;
+        private void Disconnect(DisconnectReason reason)
+        {
+            if (IsConnected)
+            {
+                using (_sync.Lock())
+                {
+                    if (IsConnected)
+                        Release();
+                }
+            }
 
-            Logger.Error("Consumer exception.", ex);
-            RaiseClientConsumerFailed(ex);
+            RaiseClientDisconnected(reason);
         }
 
         private void Release()
         {
-            lock (_sync)
-            {
-                Swallow.Everything(
-                    () =>
-                    {
-                        if (_cancellation == null)
-                            return;
+            Swallow.Everything(
+                () =>
+                {
+                    if (_cancellation == null)
+                        return;
 
-                        if (!_cancellation.IsCancellationRequested)
-                            _cancellation.Cancel(false);
+                    if (!_cancellation.IsCancellationRequested)
+                        _cancellation.Cancel(false);
 
-                        _cancellation = null;
-                    },
-                    () =>
-                    {
-                        if (_consumer == null)
-                            return;
+                    _cancellation = null;
+                },
+                () =>
+                {
+                    if (_consumer == null)
+                        return;
 
-                        if (!_consumer.IsCompleted)
-                            _consumer.Wait(WaitForConsumerCompleteMs);
+                    if (!_consumer.IsCompleted)
+                        _consumer.Wait(WaitForConsumerCompleteMs);
 
-                        _consumer = null;
-                    },
-                    () =>
-                    {
-                        _connection?.Dispose();
-                        _connection = null;
-                    });
-            }
+                    _consumer = null;
+                },
+                () =>
+                {
+                    _connection?.Dispose();
+                    _connection = null;
+                });
+        }
+
+        public void Flush()
+        {
+            ThrowIfDisposed();
+
+            _connection.WithWriteLock(writer => writer.Flush());
+        }
+
+        public async Task FlushAsync()
+        {
+            ThrowIfDisposed();
+
+            await _connection.WithWriteLockAsync(
+                async writer => await writer.FlushAsync().ForAwait()
+            ).ForAwait();
         }
 
         public void Ping()
@@ -503,20 +548,6 @@ namespace MyNatsClient
                 .ForAwait();
         }
 
-        public void Flush()
-        {
-            ThrowIfDisposed();
-
-            _connection.WithWriteLock(writer => writer.Flush());
-        }
-
-        public async Task FlushAsync()
-        {
-            ThrowIfDisposed();
-
-            await _connection.WithWriteLockAsync(async writer => await writer.FlushAsync().ForAwait()).ForAwait();
-        }
-
         public ISubscription Sub(string subject)
             => Sub(new SubscriptionInfo(subject));
 
@@ -688,44 +719,6 @@ namespace MyNatsClient
 
         private void RaiseClientConsumerFailed(Exception ex)
             => _eventMediator.Dispatch(new ClientConsumerFailed(this, ex));
-
-        private void HandleClientConnected()
-        {
-            foreach (var subscription in _subscriptions.Values)
-            {
-                if (!IsConnected)
-                    break;
-
-                DoSub(subscription.SubscriptionInfo);
-            }
-        }
-
-        private void HandleClientDisconnected(ClientDisconnected disconnectedEvent)
-        {
-            if (disconnectedEvent == null || disconnectedEvent.Reason != DisconnectReason.DueToFailure)
-                return;
-
-            if (!_connectionInfo.AutoReconnectOnFailure)
-                return;
-
-            try
-            {
-                var attempts = 0;
-                while (!IsConnected && attempts < MaxReconnectDueToFailureAttempts)
-                {
-                    attempts += 1;
-                    Logger.Debug($"Trying to reconnect after disconnection due to failure. attempt={attempts.ToString()}");
-                    Connect();
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Failed while trying to reconnect client.", ex);
-            }
-
-            if (!IsConnected)
-                _eventMediator.Dispatch(new ClientAutoReconnectFailed(this));
-        }
 
         private void ThrowIfDisposed()
         {

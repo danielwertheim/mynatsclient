@@ -41,8 +41,7 @@ namespace MyNatsClient
             LastOpReceivedAt = DateTime.UtcNow;
             OpCount++;
 
-            var msgOp = op as MsgOp;
-            if (msgOp != null)
+            if (op is MsgOp msgOp)
                 _msgOpStream.Dispatch(msgOp);
 
             _opStream.Dispatch(op);
