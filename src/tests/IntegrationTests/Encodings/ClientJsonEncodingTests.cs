@@ -30,7 +30,7 @@ namespace IntegrationTests.Encodings
             var orgItem = new TestItem { Value = Guid.NewGuid().ToString("N") };
             TestItem decodedItem = null;
 
-            _client.SubWithHandler("ClientJsonEncodingTests", msg =>
+            _client.Sub("ClientJsonEncodingTests", msg =>
             {
                 decodedItem = msg.FromJson<TestItem>();
                 ReleaseOne();
@@ -48,7 +48,7 @@ namespace IntegrationTests.Encodings
             var orgItem = new TestItem { Value = Guid.NewGuid().ToString("N") };
             TestItem decodedItem = null;
 
-            await _client.SubWithHandlerAsync("ClientJsonEncodingTests", msg =>
+            await _client.SubAsync("ClientJsonEncodingTests", msg =>
             {
                 decodedItem = msg.FromJson<TestItem>();
                 ReleaseOne();

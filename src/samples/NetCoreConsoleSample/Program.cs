@@ -16,7 +16,7 @@ namespace NetCoreConsoleSample
             _client = new NatsClient(cnInfo);
             _client.Connect();
 
-            _client.SubWithHandler("getTemp", msg =>
+            _client.Sub("getTemp", msg =>
             {
                 var parts = msg.GetPayloadAsString().Split('@');
                 _client.Pub(msg.ReplyTo, $"Temp is {TempService.Get(parts[0], parts[1])}C");

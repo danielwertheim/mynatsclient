@@ -33,7 +33,7 @@ namespace IntegrationTests
             var otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            _client.SubWithObserver(subject, new DelegatingObserver<MsgOp>(msg =>
+            _client.Sub(subject, new DelegatingObserver<MsgOp>(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
@@ -58,7 +58,7 @@ namespace IntegrationTests
             var otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            await _client.SubWithObserverAsync(subject, new DelegatingObserver<MsgOp>(msg =>
+            await _client.SubAsync(subject, new DelegatingObserver<MsgOp>(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
@@ -83,7 +83,7 @@ namespace IntegrationTests
             var otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            _client.SubWithHandler(subject, msg =>
+            _client.Sub(subject, msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
@@ -108,7 +108,7 @@ namespace IntegrationTests
             var otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            await _client.SubWithHandlerAsync(subject, msg =>
+            await _client.SubAsync(subject, msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
@@ -132,7 +132,7 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var s = _client.SubWithObserver(subject, new DelegatingObserver<MsgOp>(msg =>
+            var s = _client.Sub(subject, new DelegatingObserver<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
@@ -157,7 +157,7 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var s = await _client.SubWithObserverAsync(subject, new DelegatingObserver<MsgOp>(msg =>
+            var s = await _client.SubAsync(subject, new DelegatingObserver<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
@@ -182,7 +182,7 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var s = _client.SubWithHandler(subject, msg =>
+            var s = _client.Sub(subject, msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
@@ -207,7 +207,7 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var s = await _client.SubWithHandlerAsync(subject, msg =>
+            var s = await _client.SubAsync(subject, msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
@@ -232,7 +232,7 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var subscription = _client.SubWithObserver(subject, new DelegatingObserver<MsgOp>(msg =>
+            var subscription = _client.Sub(subject, new DelegatingObserver<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
@@ -257,7 +257,7 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var subscription = _client.SubWithObserver(subject, new DelegatingObserver<MsgOp>(msg =>
+            var subscription = _client.Sub(subject, new DelegatingObserver<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
@@ -282,7 +282,7 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            _client.SubWithObserver(subject, new DelegatingObserver<MsgOp>(msg =>
+            _client.Sub(subject, new DelegatingObserver<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
@@ -305,7 +305,7 @@ namespace IntegrationTests
             const string subjectNs = "foo.tests.";
             var interceptedSubjects = new List<string>();
 
-            _client.SubWithObserver(subjectNs + "*", new DelegatingObserver<MsgOp>(msg =>
+            _client.Sub(subjectNs + "*", new DelegatingObserver<MsgOp>(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
@@ -328,7 +328,7 @@ namespace IntegrationTests
             const string subjectNs = "foo.tests.";
             var interceptedSubjects = new List<string>();
 
-            await _client.SubWithObserverAsync(subjectNs + "*", new DelegatingObserver<MsgOp>(msg =>
+            await _client.SubAsync(subjectNs + "*", new DelegatingObserver<MsgOp>(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
@@ -351,7 +351,7 @@ namespace IntegrationTests
             const string subjectNs = "foo.tests.";
             var interceptedSubjects = new List<string>();
 
-            _client.SubWithHandler(subjectNs + "*", msg =>
+            _client.Sub(subjectNs + "*", msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
@@ -374,7 +374,7 @@ namespace IntegrationTests
             const string subjectNs = "foo.tests.";
             var interceptedSubjects = new List<string>();
 
-            await _client.SubWithHandlerAsync(subjectNs + "*", msg =>
+            await _client.SubAsync(subjectNs + "*", msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
