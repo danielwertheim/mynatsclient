@@ -318,11 +318,25 @@ namespace MyNatsClient
         Task<ISubscription> SubAsync(SubscriptionInfo subscriptionInfo, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory);
 
         /// <summary>
+        /// Unsubscribes from the server as well as any previosly associated subscription
+        /// (handler, observer) against <see cref="MsgOpStream"/>.
+        /// </summary>
+        /// <param name="subscription"></param>
+        void Unsub(ISubscription subscription);
+
+        /// <summary>
         /// Unsubscribes from the server as well as any previosly created <see cref="ISubscription"/>
         /// with any associated subscription (handler, observer) against <see cref="MsgOpStream"/>.
         /// </summary>
         /// <param name="subscriptionInfo"></param>
         void Unsub(SubscriptionInfo subscriptionInfo);
+
+        /// <summary>
+        /// Unsubscribes from the server as well as any previosly associated subscription
+        /// (handler, observer) against <see cref="MsgOpStream"/>.
+        /// </summary>
+        /// <param name="subscription"></param>
+        Task UnsubAsync(ISubscription subscription);
 
         /// <summary>
         /// Unsubscribes from the server as well as any previosly created <see cref="ISubscription"/>

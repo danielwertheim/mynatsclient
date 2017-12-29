@@ -93,6 +93,106 @@ namespace IntegrationTests
         }
 
         [Fact]
+        public async Task Client_Should_be_able_to_unsub_from_a_subject_by_passing_a_subscription_object()
+        {
+            const string subject = "Test";
+            var nr1ReceiveCount = 0;
+            var nr2ReceiveCount = 0;
+            var nr3ReceiveCount = 0;
+            var subInfo1 = new SubscriptionInfo(subject);
+            var subInfo2 = new SubscriptionInfo(subject);
+            var subInfo3 = new SubscriptionInfo(subject);
+
+            _client1.OpStream.OfType<MsgOp>().Subscribe(msg =>
+            {
+                Interlocked.Increment(ref nr1ReceiveCount);
+                ReleaseOne();
+            });
+            var sub1 = _client1.Sub(subInfo1);
+
+            _client2.OpStream.OfType<MsgOp>().Subscribe(msg =>
+            {
+                Interlocked.Increment(ref nr2ReceiveCount);
+                ReleaseOne();
+            });
+            var sub2 = _client2.Sub(subInfo2);
+
+            _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
+            {
+                Interlocked.Increment(ref nr3ReceiveCount);
+                ReleaseOne();
+            });
+            var sub3 = _client3.Sub(subInfo3);
+
+            _client1.Pub(subject, "mess1");
+            WaitOne();
+            WaitOne();
+            WaitOne();
+
+            _client1.Unsub(sub1);
+            _client2.Unsub(sub2);
+            _client3.Unsub(sub3);
+            await DelayAsync();
+
+            _client1.Pub(subject, "mess2");
+            await DelayAsync();
+
+            nr1ReceiveCount.Should().Be(1);
+            nr2ReceiveCount.Should().Be(1);
+            nr3ReceiveCount.Should().Be(1);
+        }
+
+        [Fact]
+        public async Task Client_Should_be_able_to_unsub_from_a_subject_by_disposing_a_subscription_object()
+        {
+            const string subject = "Test";
+            var nr1ReceiveCount = 0;
+            var nr2ReceiveCount = 0;
+            var nr3ReceiveCount = 0;
+            var subInfo1 = new SubscriptionInfo(subject);
+            var subInfo2 = new SubscriptionInfo(subject);
+            var subInfo3 = new SubscriptionInfo(subject);
+
+            _client1.OpStream.OfType<MsgOp>().Subscribe(msg =>
+            {
+                Interlocked.Increment(ref nr1ReceiveCount);
+                ReleaseOne();
+            });
+            var sub1 = _client1.Sub(subInfo1);
+
+            _client2.OpStream.OfType<MsgOp>().Subscribe(msg =>
+            {
+                Interlocked.Increment(ref nr2ReceiveCount);
+                ReleaseOne();
+            });
+            var sub2 = _client2.Sub(subInfo2);
+
+            _client3.OpStream.OfType<MsgOp>().Subscribe(msg =>
+            {
+                Interlocked.Increment(ref nr3ReceiveCount);
+                ReleaseOne();
+            });
+            var sub3 = _client3.Sub(subInfo3);
+
+            _client1.Pub(subject, "mess1");
+            WaitOne();
+            WaitOne();
+            WaitOne();
+
+            sub1.Dispose();
+            sub2.Dispose();
+            sub3.Dispose();
+            await DelayAsync();
+
+            _client1.Pub(subject, "mess2");
+            await DelayAsync();
+
+            nr1ReceiveCount.Should().Be(1);
+            nr2ReceiveCount.Should().Be(1);
+            nr3ReceiveCount.Should().Be(1);
+        }
+
+        [Fact]
         public async Task Client_Should_be_able_to_auto_unsub_after_n_messages_to_subject()
         {
             const string subject = "Test";

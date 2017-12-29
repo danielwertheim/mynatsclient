@@ -650,6 +650,13 @@ namespace MyNatsClient
             return subscription;
         }
 
+        public void Unsub(ISubscription subscription)
+        {
+            EnsureArg.IsNotNull(subscription, nameof(subscription));
+
+            Unsub(subscription.SubscriptionInfo);
+        }
+
         public void Unsub(SubscriptionInfo subscriptionInfo)
         {
             EnsureArg.IsNotNull(subscriptionInfo, nameof(subscriptionInfo));
@@ -672,6 +679,13 @@ namespace MyNatsClient
                 writer.Write(cmdPayload);
                 writer.Flush();
             });
+        }
+
+        public async Task UnsubAsync(ISubscription subscription)
+        {
+            EnsureArg.IsNotNull(subscription, nameof(subscription));
+
+            await UnsubAsync(subscription.SubscriptionInfo).ConfigureAwait(false);
         }
 
         public async Task UnsubAsync(SubscriptionInfo subscriptionInfo)
