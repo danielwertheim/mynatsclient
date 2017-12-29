@@ -37,7 +37,7 @@ namespace IntegrationTests
             var wasDisconnectedDueToFailure = false;
             var wasReconnected = false;
 
-            _client = new NatsClient("tc1", _cnInfoWithAutoReconnect);
+            _client = new NatsClient(_cnInfoWithAutoReconnect);
             _client.Connect();
 
             await _client.SubAsync(subject);
@@ -80,7 +80,7 @@ namespace IntegrationTests
             var wasDisconnectedDueToFailure = false;
             var wasReconnected = false;
 
-            _client = new NatsClient("tc1", _cnInfoWithNoAutoReconnect);
+            _client = new NatsClient(_cnInfoWithNoAutoReconnect);
             _client.Connect();
 
             await _client.SubAsync(subject);
@@ -124,7 +124,7 @@ namespace IntegrationTests
             var wasDisconnected = false;
             var wasReconnected = false;
 
-            _client = new NatsClient("tc1", _cnInfoWithAutoReconnect);
+            _client = new NatsClient(_cnInfoWithAutoReconnect);
             _client.Connect();
 
             await _client.SubAsync(subject);

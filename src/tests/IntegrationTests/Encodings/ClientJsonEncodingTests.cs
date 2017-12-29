@@ -13,7 +13,7 @@ namespace IntegrationTests.Encodings
 
         public ClientJsonEncodingTests()
         {
-            _client = new NatsClient("tc1", ConnectionInfo);
+            _client = new NatsClient(ConnectionInfo);
             _client.Connect();
         }
 

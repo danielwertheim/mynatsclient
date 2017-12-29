@@ -7,13 +7,6 @@ namespace MyNatsClient
     public interface INatsClient
     {
         /// <summary>
-        /// ClientId. Currently not used more than for user convenience,
-        /// like if you have multiple clients running and want to keep
-        /// them apart.
-        /// </summary>
-        string Id { get; }
-
-        /// <summary>
         /// Stream of client events that mostly concerns client state changes.
         /// E.g.
         /// <see cref="MyNatsClient.Events.ClientConnected"/>,

@@ -15,7 +15,7 @@ namespace IntegrationTests
 
         public ClientSubTests()
         {
-            _client = new NatsClient("tc1", ConnectionInfo);
+            _client = new NatsClient(ConnectionInfo);
             _client.Connect();
         }
 

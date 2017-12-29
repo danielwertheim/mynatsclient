@@ -17,13 +17,13 @@ namespace IntegrationTests
 
         public ClientUnSubTests()
         {
-            _client1 = new NatsClient("tc1", ConnectionInfo);
+            _client1 = new NatsClient(ConnectionInfo);
             _client1.Connect();
 
-            _client2 = new NatsClient("tc2", ConnectionInfo);
+            _client2 = new NatsClient(ConnectionInfo);
             _client2.Connect();
 
-            _client3 = new NatsClient("tc3", ConnectionInfo);
+            _client3 = new NatsClient(ConnectionInfo);
             _client3.Connect();
         }
 

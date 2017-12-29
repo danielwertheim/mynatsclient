@@ -53,7 +53,7 @@ You can also get simplified support for specific payload encodings.
 install-package MyNatsClient.Encodings.Json
 ```
 
-This gives you a `JsonEncoding` and some premade extension methods under `MyNatsClient.Encodings.Json.Extensions`
+This gives you a `JsonEncoding` and some pre-made extension methods under `MyNatsClient.Encodings.Json.Extensions`
 
 ## Pub-Sub sample
 Simple pub-sub sample showing one client that publishes and one that subscribes. This can of course be the same client and you can also have more clients subscribing etc.
@@ -62,7 +62,7 @@ Simple pub-sub sample showing one client that publishes and one that subscribes.
 
 ```csharp
 var cnInfo1 = new ConnectionInfo("192.168.1.10");
-var client1 = new NatsClient("client1", cnInfo);
+var client1 = new NatsClient(cnInfo);
 
 await client1.PubAsync("tick", GetNextTick());
 
@@ -74,7 +74,7 @@ await client1.PubAsJsonAsync("tickItem", new Tick { Value = GetNextTick() });
 
 ```csharp
 var cnInfo2 = new ConnectionInfo("192.168.1.20");
-var client2 = new NatsClient("client2", cnInfo);
+var client2 = new NatsClient(cnInfo);
 
 await client2.SubWithHandlerAsync("tick", msg => {
     Console.WriteLine($"Clock ticked. Tick is {msg.GetPayloadAsString()}");
@@ -93,7 +93,7 @@ Simple request-response sample. This sample also makes use of two clients. It ca
 
 ```csharp
 var cnInfo1 = new ConnectionInfo("192.168.1.10");
-var client1 = new NatsClient("client1", cnInfo);
+var client1 = new NatsClient(cnInfo);
 
 var response = await client1.RequestAsync("getTemp", "stockholm@sweden");
 Console.WriteLine($"Temp in Stockholm is {response.GetPayloadAsString()}");
@@ -103,7 +103,7 @@ Console.WriteLine($"Temp in Stockholm is {response.GetPayloadAsString()}");
 
 ```csharp
 var cnInfo2 = new ConnectionInfo("192.168.1.20");
-var client2 = new NatsClient("client2", cnInfo);
+var client2 = new NatsClient(cnInfo);
 
 await client2.SubWithHandlerAsync("getTemp", msg => {
     client.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
@@ -138,9 +138,7 @@ var connectionInfo = new ConnectionInfo(
     }
 };
 
-//The ClientId is not really used. Something you can use to look at
-//if you have many clients running and same event handlers or something.
-using (var client = new NatsClient("myClientId", connectionInfo))
+using (var client = new NatsClient(connectionInfo))
 {
     //You can subscribe to dispatched client events
     //to react on something that happened to the client

@@ -18,6 +18,7 @@ namespace MyNatsClient
     {
         private static readonly ILogger Logger = LoggerManager.Resolve(typeof(NatsClient));
 
+        //TODO: Make available as options
         private const int ConsumerPingAfterMsSilenceFromServer = 20000;
         private const int ConsumerMaxMsSilenceFromServer = 40000;
         private const int MaxReconnectDueToFailureAttempts = 5;
@@ -38,26 +39,22 @@ namespace MyNatsClient
 
         private bool ShouldAutoFlush => _connectionInfo.PubFlushMode != PubFlushMode.Manual;
 
-        public string Id { get; }
         public INatsObservable<IClientEvent> Events => _eventMediator;
         public INatsObservable<IOp> OpStream => _opMediator.AllOpsStream;
         public INatsObservable<MsgOp> MsgOpStream => _opMediator.MsgOpsStream;
         public INatsClientStats Stats => _opMediator;
         public bool IsConnected => _connection != null && _connection.IsConnected;
 
-        public NatsClient(string id, ConnectionInfo connectionInfo)
+        public NatsClient(ConnectionInfo connectionInfo, INatsConnectionManager connectionManager = null)
         {
-            EnsureArg.IsNotNullOrWhiteSpace(id, nameof(id));
             EnsureArg.IsNotNull(connectionInfo, nameof(connectionInfo));
-
-            Id = id;
 
             _sync = new Locker();
             _connectionInfo = connectionInfo.Clone();
             _subscriptions = new ConcurrentDictionary<string, Subscription>();
             _eventMediator = new ObservableOf<IClientEvent>();
             _opMediator = new NatsOpMediator();
-            _connectionManager = new NatsConnectionManager(new SocketFactory());
+            _connectionManager = connectionManager ?? new NatsConnectionManager(new SocketFactory());
             _consumerIsCancelled = () => _cancellation == null || _cancellation.IsCancellationRequested;
 
             OpStream.Subscribe(new DelegatingObserver<IOp>(op =>

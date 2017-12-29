@@ -3,8 +3,10 @@
 ## v0.12.0 - UPCOMING
 
 - **Changed**: Multi targetting frameworks: `NETStandard2.0`, `.NET4.5.1`.
+- **Changed**: Constructor for `NatsClient` no longer accepts `Id`.
 - **Changed**: `MyNatsClient.Encodings.Json` now uses `DefaultContractResolver` and `DefaultNamingStrategy` instead of `CamelCase`. If you want the latter, this has to be explicitly configured.
 - **Changed**: `MyNatsClient.Encodings.Json*  now uses `DateTimeZoneHandling.RoundtripKind` instead of `DateTimeZoneHandling.Utc`. If you want the latter, this has to be explicitly configured.
+- **New**: Constructor for `NatsClient` now accepts an optional `INatsConnectionManager`.
 
 ## v0.11.0 - 2017-01-26
 - **Fixed**: Although it workes as it was, the `RequestAsync` method now uses same patter as other clients, and invokes an automatic `unsub` with `maxMessages=1` so that many responders doesn't make the client get unnecessary replies.

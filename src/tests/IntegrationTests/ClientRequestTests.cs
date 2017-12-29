@@ -16,10 +16,10 @@ namespace IntegrationTests
 
         public ClientRequestTests()
         {
-            _requester = new NatsClient("requester", ConnectionInfo);
+            _requester = new NatsClient(ConnectionInfo);
             _requester.Connect();
 
-            _responder = new NatsClient("responder", ConnectionInfo);
+            _responder = new NatsClient(ConnectionInfo);
             _responder.Connect();
         }
 
@@ -88,7 +88,7 @@ namespace IntegrationTests
             });
 
             MsgOp response;
-            using (var responder2 = new NatsClient("Responder2", ConnectionInfo))
+            using (var responder2 = new NatsClient(ConnectionInfo))
             {
                 responder2.Connect();
                 responder2.SubWithHandler("getValue", msg =>

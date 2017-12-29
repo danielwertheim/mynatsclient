@@ -13,7 +13,7 @@ namespace NetCoreConsoleSample
             {
                 Credentials = new Credentials("test", "p@ssword123")
             };
-            _client = new NatsClient("myclient", cnInfo);
+            _client = new NatsClient(cnInfo);
             _client.Connect();
 
             _client.SubWithHandler("getTemp", msg =>
