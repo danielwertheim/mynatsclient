@@ -7,6 +7,7 @@
 - **Changed**: `MyNatsClient.Encodings.Json` now uses `DefaultContractResolver` and `DefaultNamingStrategy` instead of `CamelCase`. If you want the latter, this has to be explicitly configured.
 - **Changed**: `MyNatsClient.Encodings.Json*  now uses `DateTimeZoneHandling.RoundtripKind` instead of `DateTimeZoneHandling.Utc`. If you want the latter, this has to be explicitly configured.
 - **New**: Constructor for `NatsClient` now accepts an optional `INatsConnectionManager`.
+- **New**: `SocketOptions.UseNagleAlgorithm`, defaults to (false).
 
 ## v0.11.0 - 2017-01-26
 - **Fixed**: Although it workes as it was, the `RequestAsync` method now uses same patter as other clients, and invokes an automatic `unsub` with `maxMessages=1` so that many responders doesn't make the client get unnecessary replies.

@@ -7,6 +7,10 @@ namespace MyNatsClient.Internals
         public Socket Create(SocketOptions options)
         {
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+            if (options.UseNagleAlgorithm.HasValue)
+                socket.NoDelay = !options.UseNagleAlgorithm.Value;
+
             if (options.ReceiveBufferSize.HasValue)
                 socket.ReceiveBufferSize = options.ReceiveBufferSize.Value;
 

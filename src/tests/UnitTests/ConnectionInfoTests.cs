@@ -66,6 +66,12 @@ namespace UnitTests
         }
 
         [Fact]
+        public void Defaults_Should_disable_Nagles_algorithm()
+        {
+            UnitUnderTest.SocketOptions.UseNagleAlgorithm.Should().BeFalse();
+        }
+
+        [Fact]
         public void Clone_Should_clone_all_properties()
         {
             var other = new ConnectionInfo(new[] { new Host("192.168.1.20", 4223) })
@@ -82,7 +88,8 @@ namespace UnitTests
                     ReceiveTimeoutMs = 100,
                     SendBufferSize = 1000,
                     SendTimeoutMs = 100,
-                    ConnectTimeoutMs = 100
+                    ConnectTimeoutMs = 100,
+                    UseNagleAlgorithm = true
                 }
             };
 
