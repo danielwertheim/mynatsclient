@@ -6,7 +6,7 @@
 - **Changed**: Constructor for `NatsClient` no longer accepts `Id`.
 - **Changed**: `MyNatsClient.Encodings.Json` now uses `DefaultContractResolver` and `DefaultNamingStrategy` instead of `CamelCase`. If you want the latter, this has to be explicitly configured.
 - **Changed**: `MyNatsClient.Encodings.Json*  now uses `DateTimeZoneHandling.RoundtripKind` instead of `DateTimeZoneHandling.Utc`. If you want the latter, this has to be explicitly configured.
-- **New**: Constructor for `NatsClient` now accepts an optional `INatsConnectionManager`.
+- **New**: Constructor for `NatsClient` now accepts an optional `ISocketFactory`.
 - **New**: `SocketOptions.UseNagleAlgorithm`, defaults to (false).
 
 ## v0.11.0 - 2017-01-26

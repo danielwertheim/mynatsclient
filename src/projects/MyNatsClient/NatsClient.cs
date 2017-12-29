@@ -45,7 +45,7 @@ namespace MyNatsClient
         public INatsClientStats Stats => _opMediator;
         public bool IsConnected => _connection != null && _connection.IsConnected;
 
-        public NatsClient(ConnectionInfo connectionInfo, INatsConnectionManager connectionManager = null)
+        public NatsClient(ConnectionInfo connectionInfo, ISocketFactory socketFactory = null)
         {
             EnsureArg.IsNotNull(connectionInfo, nameof(connectionInfo));
 
@@ -54,7 +54,7 @@ namespace MyNatsClient
             _subscriptions = new ConcurrentDictionary<string, Subscription>();
             _eventMediator = new ObservableOf<IClientEvent>();
             _opMediator = new NatsOpMediator();
-            _connectionManager = connectionManager ?? new NatsConnectionManager(new SocketFactory());
+            _connectionManager = new NatsConnectionManager(socketFactory ?? new SocketFactory());
             _consumerIsCancelled = () => _cancellation == null || _cancellation.IsCancellationRequested;
 
             OpStream.Subscribe(new DelegatingObserver<IOp>(op =>
