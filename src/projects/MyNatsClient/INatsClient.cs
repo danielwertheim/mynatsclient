@@ -210,7 +210,7 @@ namespace MyNatsClient
         /// <param name="subject">The subject that this subscription should be consuming.</param>
         /// <param name="subscriptionFactory">Should return a disposable subscription that will be invoked when unsub is perfored.</param>
         /// <returns></returns>
-        ISubscription SubWithObservableSubscription(string subject, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory);
+        ISubscription SubWithObservableSubscription(string subject, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory);
 
         /// <summary>
         /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
@@ -245,7 +245,7 @@ namespace MyNatsClient
         /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
         /// <param name="subscriptionFactory">Should return a disposable subscription that will be invoked when unsub is perfored.</param>
         /// <returns></returns>
-        ISubscription SubWithObservableSubscription(SubscriptionInfo subscriptionInfo, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory);
+        ISubscription SubWithObservableSubscription(SubscriptionInfo subscriptionInfo, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory);
 
         /// <summary>
         /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
@@ -280,7 +280,7 @@ namespace MyNatsClient
         /// <param name="subject">The subject that this subscription should be consuming.</param>
         /// <param name="subscriptionFactory">Should return a disposable subscription that will be invoked when unsub is perfored.</param>
         /// <returns></returns>
-        Task<ISubscription> SubWithObservableSubscriptionAsync(string subject, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory);
+        Task<ISubscription> SubWithObservableSubscriptionAsync(string subject, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory);
 
         /// <summary>
         /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
@@ -315,7 +315,7 @@ namespace MyNatsClient
         /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
         /// <param name="subscriptionFactory">Should return a disposable subscription that will be invoked when unsub is perfored.</param>
         /// <returns></returns>
-        Task<ISubscription> SubWithObservableSubscriptionAsync(SubscriptionInfo subscriptionInfo, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory);
+        Task<ISubscription> SubWithObservableSubscriptionAsync(SubscriptionInfo subscriptionInfo, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory);
 
         /// <summary>
         /// Unsubscribes from the server as well as any previosly created <see cref="ISubscription"/>

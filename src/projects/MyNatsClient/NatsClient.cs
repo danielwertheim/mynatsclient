@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EnsureThat;
@@ -503,11 +504,9 @@ namespace MyNatsClient
             var pubCmd = PubCmd.Generate(subject, body, requestReplyAddress);
 
             var taskComp = new TaskCompletionSource<MsgOp>();
-            var requestSubscription = MsgOpStream.Subscribe(
-                new DelegatingObserver<MsgOp>(
-                    msg => taskComp.SetResult(msg),
-                    ex => taskComp.SetException(ex)),
-                msg => msg.Subject == requestReplyAddress);
+            var requestSubscription = MsgOpStream.Where(msg => msg.Subject == requestReplyAddress).Subscribe(
+                msg => taskComp.SetResult(msg),
+                ex => taskComp.SetException(ex));
 
             var subscriptionInfo = new SubscriptionInfo(requestReplyAddress, maxMessages: 1);
             var subCmd = SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id);
@@ -557,16 +556,16 @@ namespace MyNatsClient
         public ISubscription SubWithObserver(string subject, IObserver<MsgOp> observer)
             => SubWithObserver(new SubscriptionInfo(subject), observer);
 
-        public ISubscription SubWithObservableSubscription(string subject, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
+        public ISubscription SubWithObservableSubscription(string subject, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory)
             => SubWithObservableSubscription(new SubscriptionInfo(subject), subscriptionFactory);
 
         public ISubscription SubWithHandler(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler)
             => SubWithObserver(subscriptionInfo, new DelegatingObserver<MsgOp>(handler));
 
         public ISubscription SubWithObserver(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
-            => SubWithObservableSubscription(subscriptionInfo, msgStream => msgStream.Subscribe(observer, msg => subscriptionInfo.Matches(msg.Subject)));
+            => SubWithObservableSubscription(subscriptionInfo, msgStream => msgStream.Where(msg => subscriptionInfo.Matches(msg.Subject)).Subscribe(observer));
 
-        public ISubscription SubWithObservableSubscription(SubscriptionInfo subscriptionInfo, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
+        public ISubscription SubWithObservableSubscription(SubscriptionInfo subscriptionInfo, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory)
         {
             ThrowIfDisposed();
 
@@ -599,7 +598,7 @@ namespace MyNatsClient
         public Task<ISubscription> SubWithObserverAsync(string subject, IObserver<MsgOp> observer)
             => SubWithObserverAsync(new SubscriptionInfo(subject), observer);
 
-        public Task<ISubscription> SubWithObservableSubscriptionAsync(string subject, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
+        public Task<ISubscription> SubWithObservableSubscriptionAsync(string subject, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory)
             => SubWithObservableSubscriptionAsync(new SubscriptionInfo(subject), subscriptionFactory);
 
         public Task<ISubscription> SubAsync(SubscriptionInfo subscriptionInfo)
@@ -609,9 +608,9 @@ namespace MyNatsClient
             => SubWithObserverAsync(subscriptionInfo, new DelegatingObserver<MsgOp>(handler));
 
         public Task<ISubscription> SubWithObserverAsync(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
-            => SubWithObservableSubscriptionAsync(subscriptionInfo, msgStream => msgStream.Subscribe(observer, msg => subscriptionInfo.Matches(msg.Subject)));
+            => SubWithObservableSubscriptionAsync(subscriptionInfo, msgStream => msgStream.Where(msg => subscriptionInfo.Matches(msg.Subject)).Subscribe(observer));
 
-        public async Task<ISubscription> SubWithObservableSubscriptionAsync(SubscriptionInfo subscriptionInfo, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
+        public async Task<ISubscription> SubWithObservableSubscriptionAsync(SubscriptionInfo subscriptionInfo, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory)
         {
             ThrowIfDisposed();
 
@@ -635,7 +634,7 @@ namespace MyNatsClient
             await writer.FlushAsync().ForAwait();
         }).ForAwait();
 
-        private Subscription CreateMsgOpSubscription(SubscriptionInfo subscriptionInfo, Func<IFilterableObservable<MsgOp>, IDisposable> subscriptionFactory)
+        private Subscription CreateMsgOpSubscription(SubscriptionInfo subscriptionInfo, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory)
         {
             var subscription = Subscription.Create(subscriptionInfo, subscriptionFactory(MsgOpStream), info =>
             {

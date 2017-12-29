@@ -2,7 +2,7 @@ using System;
 
 namespace MyNatsClient
 {
-    public interface INatsObservable<out T> : IFilterableObservable<T> where T : class
+    public interface INatsObservable<out T> : IObservable<T> where T : class
     {
         /// <summary>
         /// Sets a handler that will be called whenever a subscribed

@@ -2,6 +2,8 @@
 
 ## v0.12.0 - UPCOMING
 
+- **Changed**: The `MyNatsClient.Rx` NuGet package is no longer needed as a separate package as the `MyNatsClient` NuGet package now takes a dependency on `System.Reactive`.
+- **Changed**: `IFilteredObservable<T>` has been dropped as the main package now has access to `System.Reactive` which contains that logic.
 - **Changed**: Multi targetting frameworks: `NETStandard2.0`, `.NET4.5.1`.
 - **Changed**: Constructor for `NatsClient` no longer accepts `Id`.
 - **Changed**: `MyNatsClient.Encodings.Json` now uses `DefaultContractResolver` and `DefaultNamingStrategy` instead of `CamelCase`. If you want the latter, this has to be explicitly configured.

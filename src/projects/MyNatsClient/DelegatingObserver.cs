@@ -3,6 +3,7 @@ using EnsureThat;
 
 namespace MyNatsClient
 {
+    /// <inheritdoc />
     /// <summary>
     /// Simple observer implementation that delgates
     /// to injected onNext, onError and onCompleted
