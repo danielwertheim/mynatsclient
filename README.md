@@ -76,12 +76,12 @@ await client1.PubAsJsonAsync("tickItem", new Tick { Value = GetNextTick() });
 var cnInfo2 = new ConnectionInfo("192.168.1.20");
 var client2 = new NatsClient(cnInfo);
 
-await client2.SubWithHandlerAsync("tick", msg => {
+await client2.SubAsync("tick", msg => {
     Console.WriteLine($"Clock ticked. Tick is {msg.GetPayloadAsString()}");
 });
 
 //or using an encoding package e.g Json
-await client2.SubWithHandlerAsync("tickItem", msg => {
+await client2.Subsync("tickItem", msg => {
     Console.WriteLine($"Clock ticked. Tick is {msg.FromJson<TestItem>().Value}");
 })
 ```
@@ -105,7 +105,7 @@ Console.WriteLine($"Temp in Stockholm is {response.GetPayloadAsString()}");
 var cnInfo2 = new ConnectionInfo("192.168.1.20");
 var client2 = new NatsClient(cnInfo);
 
-await client2.SubWithHandlerAsync("getTemp", msg => {
+await client2.SubAsync("getTemp", msg => {
     client.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
 });
 ```
@@ -194,10 +194,7 @@ using (var client = new NatsClient(connectionInfo))
         Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
     });
 
-    var subscription = client.MsgOpStream.Subscribe(msg =>
-    {
-        //Will handle MsgOp matching Subject 'foo'
-    }, msg => msg.Subject == "foo");
+    var subscription = client.Sub("foo");
 
     client.Connect();
 
@@ -221,19 +218,19 @@ The Client will keep track of subscriptions done. And you can set them up before
 When subscribing to a subject using the client, you will be returned a `ISubscription`. The methods for subscribing are:
 
 - `client.Sub(subscriptionInfo)`
+- `client.Sub(subscriptionInfo, msg => {})`
+- `client.Sub(subscriptionInfo, observer)`
+- `client.Sub(subscriptionInfo, msgs => msgs.Subscribe(...))`
 - `client.SubAsync(subscriptionInfo)`
-- `client.SubWithHandler(subscriptionInfo, msg => {})`
-- `client.SubWithHandlerAsync(subscriptionInfo, msg => {})`
-- `client.SubWithObserver(subscriptionInfo, observer)`
-- `client.SubWithObserverAsync(subscriptionInfo, observer)`
-- `client.SubWithObservableSubscription(subscriptionInfo, msgs => msgs.Subscribe(...))`
-- `client.SubWithObservableSubscriptionAsync(subscriptionInfo, msgs => msgs.Subscribe(...))`
+- `client.SubAsync(subscriptionInfo, msg => {})`
+- `client.SubAsync(subscriptionInfo, observer)`
+- `client.SubAsync(subscriptionInfo, msgs => msgs.Subscribe(...))`
 
 To `Unsubscribe`, you can do **any of the following**:
 
 - Dispose the `ISubscription` returned by any of the subscribing methods listed above.
 - Dispose the `NatsClient` and it will take care of the subscriptions.
-- Pass the `ISubscription.SubscriptionInfo` to any of the `client.Unsub|UnsubAsync` methods
+- Pass the `ISubscription` or the `SubscriptionInfo` to any of the `client.Unsub|UnsubAsync` methods
 - Create the subscription using a `SubscriptionInfo` with `MaxMessages`, then it will auto unsubscribe after receiving the messages.
 
 **NOTE** it's perfectly fine to do both e.g. `subscription.Dispose` as well as `consumer.Dispose` or e.g. `consumer.Unsubscribe` and then `subscription.Dispose`.
@@ -350,14 +347,20 @@ public class SocketOptions
     /// Gets or sets the Connect timeout in milliseconds for the Socket.
     /// </summary>
     public int ConnectTimeoutMs { get; set; } = 5000;
+
+    /// <summary>
+    /// Gets or sets value indicating if the Nagle algoritm should be used or not
+    /// on the created Socket.
+    /// </summary>
+    public bool? UseNagleAlgorithm { get; set; } = false;
 }
 ```
 
 ## SocketFactory
-If you like to tweak socket options, you inject your custom implementation of `ISocketFactory` on the client:
+If you like to tweak socket options, you inject your custom implementation of `ISocketFactory` to the client:
 
 ```csharp
-client.ConnectionManager..SocketFactory = new MyMonoOptimizedSocketFactory();
+var client = new NatsClient(cnInfo, new MyMonoOptimizedSocketFactory());
 ```
 
 ## Logging
@@ -365,6 +368,7 @@ Some information is passed to a logger, e.g. Errors while trying to connect to a
 
 ```csharp
 public class MyLogger : ILogger {
+    public void void Trace(string message) {}
     public void Debug(string message) {}
     public void Info(string message) {}
     public void Error(string message) {}
@@ -482,7 +486,7 @@ var myObserver = new DelegatingObserver<MsgOp>(
 
 //Subscribe to subject "test" and hook up the observer
 //for incoming messages on that subject
-var sub = _client.SubWithObserver("test", myObserver);
+var sub = _client.Sub("test", myObserver);
 
 
 //Publish some messages
@@ -524,7 +528,7 @@ The handler will just swallow the exception and continue working.
 Changing the subscribing part from the first sample above to:
 
 ```csharp
-var sub = _client.SubWithHandler("test", msg =>
+var sub = _client.Sub("test", msg =>
 {
   Console.WriteLine($"Observer OnNext got: {msg.GetPayloadAsString()}");
 
