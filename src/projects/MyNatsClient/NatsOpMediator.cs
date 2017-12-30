@@ -4,9 +4,7 @@ using MyNatsClient.Ops;
 
 namespace MyNatsClient
 {
-    public class NatsOpMediator :
-        INatsClientStats,
-        IDisposable
+    public class NatsOpMediator : IDisposable
     {
         private bool _isDisposed;
         private ObservableOf<IOp> _opStream;
@@ -14,8 +12,6 @@ namespace MyNatsClient
 
         public INatsObservable<IOp> AllOpsStream => _opStream;
         public INatsObservable<MsgOp> MsgOpsStream => _msgOpStream;
-        public DateTime LastOpReceivedAt { get; private set; }
-        public ulong OpCount { get; private set; }
 
         public NatsOpMediator()
         {
@@ -38,9 +34,6 @@ namespace MyNatsClient
 
         public void Dispatch(IOp op)
         {
-            LastOpReceivedAt = DateTime.UtcNow;
-            OpCount++;
-
             if (op is MsgOp msgOp)
                 _msgOpStream.Emit(msgOp);
 

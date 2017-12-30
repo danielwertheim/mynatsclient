@@ -16,28 +16,6 @@ namespace UnitTests
         }
 
         [Fact]
-        public void Dispatching_Should_update_date_time_for_last_received_op()
-        {
-            var op = Mock.Of<IOp>();
-            UnitUnderTest.LastOpReceivedAt.Should().Be(DateTime.MinValue);
-
-            UnitUnderTest.Dispatch(op);
-
-            UnitUnderTest.LastOpReceivedAt.Should().BeCloseTo(DateTime.UtcNow);
-        }
-
-        [Fact]
-        public void Dispatching_Should_update_op_count()
-        {
-            var op = Mock.Of<IOp>();
-
-            UnitUnderTest.Dispatch(op);
-            UnitUnderTest.Dispatch(op);
-
-            UnitUnderTest.OpCount.Should().Be(2);
-        }
-
-        [Fact]
         public void Dispatching_MsgOp_Should_dispatch_to_both_AllOpsStream_and_MsgOpsStream()
         {
             var msgOp = new MsgOp("TestSubject", "0a3282e769e34677809db5d756dfd768", new byte[0]);

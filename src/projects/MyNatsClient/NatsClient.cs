@@ -44,7 +44,6 @@ namespace MyNatsClient
         public INatsObservable<IClientEvent> Events => _eventMediator;
         public INatsObservable<IOp> OpStream => _opMediator.AllOpsStream;
         public INatsObservable<MsgOp> MsgOpStream => _opMediator.MsgOpsStream;
-        public INatsClientStats Stats => _opMediator;
         public bool IsConnected => _connection != null && _connection.IsConnected;
 
         public NatsClient(ConnectionInfo connectionInfo, ISocketFactory socketFactory = null)
@@ -206,6 +205,8 @@ namespace MyNatsClient
             {
                 Logger.Trace("Consume cycle");
 
+                DateTime lastOpReceivedAt = DateTime.UtcNow;
+
                 try
                 {
                     foreach (var op in _connection.ReadOp())
@@ -216,6 +217,8 @@ namespace MyNatsClient
                         errOp = op as ErrOp;
                         if (errOp != null)
                             break;
+
+                        lastOpReceivedAt = DateTime.UtcNow;
 
                         _opMediator.Dispatch(op);
                     }
@@ -238,7 +241,7 @@ namespace MyNatsClient
                             throw;
                     }
 
-                    var silenceDeltaMs = DateTime.UtcNow.Subtract(Stats.LastOpReceivedAt).TotalMilliseconds;
+                    var silenceDeltaMs = DateTime.UtcNow.Subtract(lastOpReceivedAt).TotalMilliseconds;
                     if (silenceDeltaMs >= ConsumerMaxMsSilenceFromServer)
                         throw NatsException.ConnectionFoundIdling(_connection.ServerInfo.Host, _connection.ServerInfo.Port);
 

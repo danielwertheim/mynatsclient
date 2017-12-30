@@ -32,11 +32,6 @@ namespace MyNatsClient
         INatsObservable<MsgOp> MsgOpStream { get; }
 
         /// <summary>
-        /// Gets client statistics.
-        /// </summary>
-        INatsClientStats Stats { get; }
-
-        /// <summary>
         /// Gets value indicating if the client is connected or not.
         /// </summary>
         bool IsConnected { get; }
