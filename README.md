@@ -5,7 +5,7 @@ It offers both simple and advanced usage. By default it's configured to auto rep
 
 If one of your in-process observer subscription fails, it will not unsubscribe them. It will however invoke the observers `OnError` callback. This is done so that one failing message against a certain subject does not prevent future messages from being handled.
 
-It keeps track of stats of when last contact to a server was, so that it can send a `PING` to see if server is still alive.
+It keeps track of when the last contact to a server was, so that it can send a `PING` to see if server is still alive.
 
 Instead of relying on background flushing like other clients do, it **auto flushes** for each `PUB`. You can also use the construct `client.PubMany` to publish many messages and get one flush for them all. Finally **you can also control the flushing manually**.
 
@@ -165,7 +165,6 @@ using (var client = new NatsClient(connectionInfo))
     {
         Console.WriteLine("===== RECEIVED =====");
         Console.Write(op.GetAsString());
-        Console.WriteLine($"OpCount: {client.Stats.OpCount}");
     });
 
     //Filter for specific types
@@ -399,7 +398,6 @@ client.OpStream.Subscribe(op =>
 {
     Console.WriteLine("===== RECEIVED =====");
     Console.Write(op.GetAsString());
-    Console.WriteLine($"OpCount: {client.Stats.OpCount}");
 });
 
 //Also proccess PingOp explicitly
@@ -453,7 +451,7 @@ This will happen automatically if your subscription is causing an unhandled exce
 **PLEASE NOTE!** The NATS subscription is still there. Use `client.Unsub(...)` or `client.UnsubAsync(...)` to let the server know that your client should not receive messages for a certain subject anymore.
 
 ## Consumer pings and stuff
-The Consumer looks at `client.Stats.LastOpReceivedAt` to see if it has taken to long time since it heard from the server.
+The Consumer keeps track of how long it was since it got a message from the broker to see if it has taken to long time since it heard from it.
 
 **NOTE** this only kicks in as long as the client thinks the `Socket` is connected. If there's a known hard disconnect it will cleanly just get disconnected.
 
@@ -465,14 +463,14 @@ If `ConsumerMaxMsSilenceFromServer` (40000ms) has passed, it will cause an excep
 ### Catch all unhandled exceptions per stream
 The Client exposes e.g. `MsgOpStream` which has a `OnException` delegate defined. You can use it to get notified about exceptions. These exceptions will automatically be logged via `ILogger.Error` which is resolved via `LoggerManager.Resolve` which is something you can hook into.
 
-### Catch exceptions using the DelegatingObserver
+### Catch exceptions using the AnonymousObserver
 Subscribing with the use of an observer makes it easy for you to catch exceptions and handle them.
 
 ```csharp
 var c = 0;
 
 //Only the OnNext (the first argument) is required.
-var myObserver = new DelegatingObserver<MsgOp>(
+var myObserver = new AnonymousObserver<MsgOp>(
   msg =>
   {
     Console.WriteLine($"Observer OnNext got: {msg.GetPayloadAsString()}");
