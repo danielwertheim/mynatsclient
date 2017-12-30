@@ -7,29 +7,21 @@ namespace MyNatsClient.Internals
         public readonly Guid Id;
         private readonly IObserver<T> _observer;
         private readonly Action<ObserverSubscription<T>> _onDispose;
-        private readonly Func<T, bool> _filter;
         private bool _isDisposed;
 
         private ObserverSubscription(
             IObserver<T> observer,
-            Func<T, bool> filter,
             Action<ObserverSubscription<T>> onDispose)
         {
             Id = Guid.NewGuid();
 
             _observer = observer;
-            _filter = filter;
             _onDispose = onDispose;
             _isDisposed = false;
         }
 
-        private static bool ProcessAllFilter(T value) => true;
-
         internal static ObserverSubscription<T> Default(IObserver<T> observer, Action<ObserverSubscription<T>> onDispose)
-            => new ObserverSubscription<T>(observer, ProcessAllFilter, onDispose);
-
-        internal static ObserverSubscription<T> Filtered(IObserver<T> observer, Func<T, bool> filter, Action<ObserverSubscription<T>> onDispose)
-            => new ObserverSubscription<T>(observer, filter, onDispose);
+            => new ObserverSubscription<T>(observer, onDispose);
 
         public void Dispose()
         {
@@ -45,8 +37,7 @@ namespace MyNatsClient.Internals
 
         internal void OnNext(T value)
         {
-            if (_filter(value))
-                _observer.OnNext(value);
+            _observer.OnNext(value);
         }
 
         internal void OnError(Exception ex)
