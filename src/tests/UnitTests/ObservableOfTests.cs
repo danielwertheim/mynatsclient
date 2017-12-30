@@ -54,7 +54,7 @@ namespace UnitTests
         public void Dispatching_Should_invoke_logger_for_error_When_exception_is_thrown_by_observer()
         {
             var thrown = new Exception("I FAILED!");
-            UnitUnderTest.Subscribe(new DelegatingObserver<IClientEvent>(msg => { throw thrown; }));
+            UnitUnderTest.Subscribe(new AnonymousObserver<IClientEvent>(msg => throw thrown));
 
             UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
 

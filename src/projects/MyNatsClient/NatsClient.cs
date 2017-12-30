@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -58,7 +59,7 @@ namespace MyNatsClient
             _connectionManager = new NatsConnectionManager(socketFactory ?? new SocketFactory());
             _consumerIsCancelled = () => _cancellation == null || _cancellation.IsCancellationRequested;
 
-            OpStream.Subscribe(new DelegatingObserver<IOp>(op =>
+            OpStream.Subscribe(new AnonymousObserver<IOp>(op =>
             {
                 if (!IsConnected)
                     return;
@@ -67,7 +68,7 @@ namespace MyNatsClient
                     Pong();
             }));
 
-            Events.Subscribe(new DelegatingObserver<IClientEvent>(ev =>
+            Events.Subscribe(new AnonymousObserver<IClientEvent>(ev =>
             {
                 if (ev is ClientConnected)
                 {
@@ -551,7 +552,7 @@ namespace MyNatsClient
             => Sub(subscriptionInfo, msgs => Disposable.Empty);
 
         public ISubscription Sub(string subject, Action<MsgOp> handler)
-            => Sub(new SubscriptionInfo(subject), new DelegatingObserver<MsgOp>(handler));
+            => Sub(new SubscriptionInfo(subject), new AnonymousObserver<MsgOp>(handler));
 
         public ISubscription Sub(string subject, IObserver<MsgOp> observer)
             => Sub(new SubscriptionInfo(subject), observer);
@@ -560,7 +561,7 @@ namespace MyNatsClient
             => Sub(new SubscriptionInfo(subject), subscriptionFactory);
 
         public ISubscription Sub(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler)
-            => Sub(subscriptionInfo, new DelegatingObserver<MsgOp>(handler));
+            => Sub(subscriptionInfo, new AnonymousObserver<MsgOp>(handler));
 
         public ISubscription Sub(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
             => Sub(subscriptionInfo, msgStream => msgStream.Where(msg => subscriptionInfo.Matches(msg.Subject)).Subscribe(observer));
@@ -593,7 +594,7 @@ namespace MyNatsClient
             => SubAsync(new SubscriptionInfo(subject));
 
         public Task<ISubscription> SubAsync(string subject, Action<MsgOp> handler)
-            => SubAsync(new SubscriptionInfo(subject), new DelegatingObserver<MsgOp>(handler));
+            => SubAsync(new SubscriptionInfo(subject), new AnonymousObserver<MsgOp>(handler));
 
         public Task<ISubscription> SubAsync(string subject, IObserver<MsgOp> observer)
             => SubAsync(new SubscriptionInfo(subject), observer);
@@ -605,7 +606,7 @@ namespace MyNatsClient
             => SubAsync(subscriptionInfo, msgs => Disposable.Empty);
 
         public Task<ISubscription> SubAsync(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler)
-            => SubAsync(subscriptionInfo, new DelegatingObserver<MsgOp>(handler));
+            => SubAsync(subscriptionInfo, new AnonymousObserver<MsgOp>(handler));
 
         public Task<ISubscription> SubAsync(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
             => SubAsync(subscriptionInfo, msgStream => msgStream.Where(msg => subscriptionInfo.Matches(msg.Subject)).Subscribe(observer));

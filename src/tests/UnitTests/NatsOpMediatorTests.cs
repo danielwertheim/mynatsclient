@@ -67,7 +67,7 @@ namespace UnitTests
         }
 
         [Fact]
-        public void Dispatching_non_MsgOp_Should_continue_dispatching_When_using_AnonymousObserver_with_error_handler_but_failing_observer_gets_discarded()
+        public void Dispatching_non_MsgOp_Should_continue_dispatching_When_using_observer_with_error_handler_but_failing_observer_gets_discarded()
         {
             var countA = 0;
             var countB = 0;
@@ -98,7 +98,7 @@ namespace UnitTests
         }
 
         [Fact]
-        public void Dispatching_non_MsgOp_Should_continue_dispatching_When_using_DelegatingObserver_with_error_handler_but_failing_observer_gets_discarded()
+        public void Dispatching_non_MsgOp_Should_continue_dispatching_When_using_delegate_with_error_handler_but_failing_observer_gets_discarded()
         {
             var countA = 0;
             var countB = 0;
@@ -106,7 +106,7 @@ namespace UnitTests
             var exToThrow = new Exception(Guid.NewGuid().ToString());
             Exception caughtEx = null;
 
-            UnitUnderTest.AllOpsStream.Subscribe(new DelegatingObserver<IOp>(op =>
+            UnitUnderTest.AllOpsStream.Subscribe(op =>
             {
                 if (countA == 0)
                 {
@@ -115,9 +115,9 @@ namespace UnitTests
                 }
 
                 countA += 1;
-            }, ex => caughtEx = ex));
-            UnitUnderTest.AllOpsStream.Subscribe(new DelegatingObserver<IOp>(op => countB += 1));
-            UnitUnderTest.AllOpsStream.Subscribe(new DelegatingObserver<IOp>(op => countC += 1));
+            }, ex => caughtEx = ex);
+            UnitUnderTest.AllOpsStream.Subscribe(op => countB += 1);
+            UnitUnderTest.AllOpsStream.Subscribe(op => countC += 1);
 
             UnitUnderTest.Dispatch(PingOp.Instance);
             UnitUnderTest.Dispatch(PingOp.Instance);
@@ -129,7 +129,7 @@ namespace UnitTests
         }
 
         [Fact]
-        public void Dispatching_non_MsgOp_Should_continue_dispatching_When_using_AnonymousObserver_without_error_handler_but_failing_observer_gets_discarded()
+        public void Dispatching_non_MsgOp_Should_continue_dispatching_When_using_observer_without_error_handler_but_failing_observer_gets_discarded()
         {
             var countA = 0;
             var countB = 0;
@@ -157,13 +157,13 @@ namespace UnitTests
         }
 
         [Fact]
-        public void Dispatching_non_MsgOp_Should_continue_dispatching_When_using_DelegatingObserver_without_error_handler_but_failing_observer_gets_discarded()
+        public void Dispatching_non_MsgOp_Should_continue_dispatching_When_using_delegate_without_error_handler_but_failing_observer_gets_discarded()
         {
             var countA = 0;
             var countB = 0;
             var countC = 0;
 
-            UnitUnderTest.AllOpsStream.Subscribe(new DelegatingObserver<IOp>(op =>
+            UnitUnderTest.AllOpsStream.Subscribe(op =>
             {
                 if (countA == 0)
                 {
@@ -172,9 +172,9 @@ namespace UnitTests
                 }
 
                 countA += 1;
-            }));
-            UnitUnderTest.AllOpsStream.Subscribe(new DelegatingObserver<IOp>(op => countB += 1));
-            UnitUnderTest.AllOpsStream.Subscribe(new DelegatingObserver<IOp>(op => countC += 1));
+            });
+            UnitUnderTest.AllOpsStream.Subscribe(op => countB += 1);
+            UnitUnderTest.AllOpsStream.Subscribe(op => countC += 1);
 
             UnitUnderTest.Dispatch(PingOp.Instance);
             UnitUnderTest.Dispatch(PingOp.Instance);
@@ -185,7 +185,7 @@ namespace UnitTests
         }
 
         [Fact]
-        public void Dispatching_MsgOp_Should_continue_dispatching_When_using_AnonymousObserver_with_error_handler_but_failing_observer_gets_discarded()
+        public void Dispatching_MsgOp_Should_continue_dispatching_When_using_observer_with_error_handler_but_failing_observer_gets_discarded()
         {
             var msgOp = new MsgOp("TestSubject", "f0dd86b9c2804632919b7b78292435e6", new byte[0]);
             var countA = 0;
@@ -217,7 +217,7 @@ namespace UnitTests
         }
 
         [Fact]
-        public void Dispatching_MsgOp_Should_continue_dispatching_When_using_DelegatingObserver_with_error_handler_but_failing_observer_gets_discarded()
+        public void Dispatching_MsgOp_Should_continue_dispatching_When_using_delegate_with_error_handler_but_failing_observer_gets_discarded()
         {
             var msgOp = new MsgOp("TestSubject", "01c549bed5f643e484c2841aff7a0d9d", new byte[0]);
             var countA = 0;
@@ -226,7 +226,7 @@ namespace UnitTests
             var exToThrow = new Exception(Guid.NewGuid().ToString());
             Exception caughtEx = null;
 
-            UnitUnderTest.MsgOpsStream.Subscribe(new DelegatingObserver<IOp>(op =>
+            UnitUnderTest.MsgOpsStream.Subscribe(op =>
             {
                 if (countA == 0)
                 {
@@ -235,9 +235,9 @@ namespace UnitTests
                 }
 
                 countA += 1;
-            }, ex => caughtEx = ex));
-            UnitUnderTest.MsgOpsStream.Subscribe(new DelegatingObserver<IOp>(op => countB += 1));
-            UnitUnderTest.MsgOpsStream.Subscribe(new DelegatingObserver<IOp>(op => countC += 1));
+            }, ex => caughtEx = ex);
+            UnitUnderTest.MsgOpsStream.Subscribe(op => countB += 1);
+            UnitUnderTest.MsgOpsStream.Subscribe(op => countC += 1);
 
             UnitUnderTest.Dispatch(msgOp);
             UnitUnderTest.Dispatch(msgOp);
@@ -249,7 +249,7 @@ namespace UnitTests
         }
 
         [Fact]
-        public void Dispatching_MsgOp_Should_continue_dispatching_When_using_AnonymousObserver_without_error_handler_but_failing_observer_gets_discarded()
+        public void Dispatching_MsgOp_Should_continue_dispatching_When_using_observer_without_error_handler_but_failing_observer_gets_discarded()
         {
             var msgOp = new MsgOp("TestSubject", "60a152d4b5804b23abe088eeac63b55e", new byte[0]);
             var countA = 0;
@@ -278,14 +278,14 @@ namespace UnitTests
         }
 
         [Fact]
-        public void Dispatching_MsgOp_Should_continue_dispatching_When_using_DelegatingObserver_without_error_handler_but_failing_observer_gets_discarded()
+        public void Dispatching_MsgOp_Should_continue_dispatching_When_using_delegate_without_error_handler_but_failing_observer_gets_discarded()
         {
             var msgOp = new MsgOp("TestSubject", "e8fb57beeb094bbfb545056057a8f7f2", new byte[0]);
             var countA = 0;
             var countB = 0;
             var countC = 0;
 
-            UnitUnderTest.MsgOpsStream.Subscribe(new DelegatingObserver<IOp>(op =>
+            UnitUnderTest.MsgOpsStream.Subscribe(op =>
             {
                 if (countA == 0)
                 {
@@ -294,9 +294,9 @@ namespace UnitTests
                 }
 
                 countA += 1;
-            }));
-            UnitUnderTest.MsgOpsStream.Subscribe(new DelegatingObserver<IOp>(op => countB += 1));
-            UnitUnderTest.MsgOpsStream.Subscribe(new DelegatingObserver<IOp>(op => countC += 1));
+            });
+            UnitUnderTest.MsgOpsStream.Subscribe(op => countB += 1);
+            UnitUnderTest.MsgOpsStream.Subscribe(op => countC += 1);
 
             UnitUnderTest.Dispatch(msgOp);
             UnitUnderTest.Dispatch(msgOp);
