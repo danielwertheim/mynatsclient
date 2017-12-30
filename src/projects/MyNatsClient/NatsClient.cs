@@ -166,7 +166,7 @@ namespace MyNatsClient
                 var ops = connectionResult.Item2;
                 if (ops.Any())
                     foreach (var op in ops)
-                        _opMediator.Dispatch(op);
+                        _opMediator.Emit(op);
 
                 _consumer = Task.Factory
                     .StartNew(
@@ -220,7 +220,7 @@ namespace MyNatsClient
 
                         lastOpReceivedAt = DateTime.UtcNow;
 
-                        _opMediator.Dispatch(op);
+                        _opMediator.Emit(op);
                     }
                 }
                 catch (IOException ioex)
@@ -253,7 +253,7 @@ namespace MyNatsClient
             if (errOp != null)
             {
                 Logger.Error($"Consumer stopped with ErrOp with message='{errOp.Message}'.");
-                _opMediator.Dispatch(errOp);
+                _opMediator.Emit(errOp);
             }
         }
 

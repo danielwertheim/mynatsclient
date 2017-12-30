@@ -32,7 +32,7 @@ namespace MyNatsClient
             _msgOpStream = null;
         }
 
-        public void Dispatch(IOp op)
+        public void Emit(IOp op)
         {
             if (op is MsgOp msgOp)
                 _msgOpStream.Emit(msgOp);
