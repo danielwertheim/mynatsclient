@@ -17,8 +17,11 @@ namespace MyNatsClient
 
     public class ObservableOf<T> : Observable, INatsObservable<T>, IDisposable where T : class
     {
-        private readonly ConcurrentDictionary<Guid, ObserverSubscription<T>> _subscriptions = new ConcurrentDictionary<Guid, ObserverSubscription<T>>();
+        private readonly ConcurrentDictionary<Guid, ObserverSubscription<T>> _subscriptions
+            = new ConcurrentDictionary<Guid, ObserverSubscription<T>>();
+
         private bool _isDisposed;
+        private bool _hasFailed;
 
         public Action<T, Exception> OnException { private get; set; }
 
@@ -40,52 +43,67 @@ namespace MyNatsClient
             Try.DisposeAll(copy);
         }
 
-        public virtual void Dispatch(T ev)
+        public void Emit(T value)
         {
+            ThrowIfDisposed();
+
+            //ThrowIfFailed();
+
             foreach (var subscription in _subscriptions.Values)
+                NotifyObserver(value, subscription);
+        }
+
+        private void NotifyObserver(T value, ObserverSubscription<T> subscription)
+        {
+            try
             {
-                try
-                {
-                    subscription.OnNext(ev);
-                }
-                catch (Exception ex)
-                {
+                subscription.OnNext(value);
+            }
+            catch (Exception ex)
+            {
+                _hasFailed = true;
+
+                OnException?.Invoke(value, ex);
+
+                var aggEx = new Exception("An exception occured while notifying observers of a new value.", ex);
+
+                //foreach (var s in _subscriptions.Values)
+                //{
                     Logger.Error("Error in observer while processing message.", ex);
 
-                    Swallow.Everything(
-                        () => subscription.OnError(ex),
-                        () => subscription.Dispose());
+                Swallow.Everything(
+                    () => subscription.OnError(ex),
+                    () => subscription.Dispose());
 
-                    OnException?.Invoke(ev, ex);
-                }
+                    //Swallow.Everything(
+                    //    () => s.OnError(ex),
+                    //    () => s.Dispose());
+                //}
+
+                //throw aggEx;
             }
         }
 
-        public virtual IDisposable Subscribe(IObserver<T> observer)
+        public IDisposable Subscribe(IObserver<T> observer)
         {
             ThrowIfDisposed();
 
-            return Subscribe(ObserverSubscription<T>.Default(observer, OnDisposeSubscription));
-        }
+            ThrowIfFailed();
 
-        public virtual IDisposable Subscribe(IObserver<T> observer, Func<T, bool> filter)
-        {
-            ThrowIfDisposed();
+            var observerSubscription = ObserverSubscription<T>.Default(observer, OnDisposeSubscription);
 
-            return Subscribe(ObserverSubscription<T>.Filtered(observer, filter, OnDisposeSubscription));
-        }
+            if (!_subscriptions.TryAdd(observerSubscription.Id, observerSubscription))
+                throw new InvalidOperationException("Could not register observer.");
 
-        private IDisposable Subscribe(ObserverSubscription<T> observerSubscription)
-        {
-            if (_subscriptions.TryAdd(observerSubscription.Id, observerSubscription))
-                return observerSubscription;
-
-            throw new InvalidOperationException("Could not register observer.");
+            return observerSubscription;
         }
 
         private void OnDisposeSubscription(ObserverSubscription<T> observerSubscription)
         {
-            if (_subscriptions.TryRemove(observerSubscription.Id, out observerSubscription))
+            if (!_subscriptions.TryRemove(observerSubscription.Id, out observerSubscription))
+                return;
+
+            if (!_hasFailed)
                 observerSubscription.OnCompleted();
         }
 
@@ -93,6 +111,12 @@ namespace MyNatsClient
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(GetType().Name);
+        }
+
+        private void ThrowIfFailed()
+        {
+            if (_hasFailed)
+                throw new InvalidOperationException("The observable is marked as failed.");
         }
     }
 }

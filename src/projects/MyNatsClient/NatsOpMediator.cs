@@ -42,9 +42,9 @@ namespace MyNatsClient
             OpCount++;
 
             if (op is MsgOp msgOp)
-                _msgOpStream.Dispatch(msgOp);
+                _msgOpStream.Emit(msgOp);
 
-            _opStream.Dispatch(op);
+            _opStream.Emit(op);
         }
     }
 }

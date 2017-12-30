@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive;
 using System.Threading;
 using FluentAssertions;
 using Moq;
@@ -17,7 +18,7 @@ namespace UnitTests
         [Fact]
         public void Dispatching_Should_not_fail_When_no_observers_exists()
         {
-            Action a = () => UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
+            Action a = () => UnitUnderTest.Emit(Mock.Of<IClientEvent>());
 
             a.ShouldNotThrow();
         }
@@ -30,7 +31,7 @@ namespace UnitTests
             UnitUnderTest.Subscribe(ev => Interlocked.Increment(ref callCount));
             UnitUnderTest.Subscribe(ev => Interlocked.Increment(ref callCount));
 
-            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
+            UnitUnderTest.Emit(Mock.Of<IClientEvent>());
 
             callCount.Should().Be(2);
         }
@@ -44,7 +45,7 @@ namespace UnitTests
                 ev => throw thrown,
                 ex => caught = ex);
 
-            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
+            UnitUnderTest.Emit(Mock.Of<IClientEvent>());
 
             caught.Should().NotBeNull();
             caught.Should().BeSameAs(thrown);
@@ -56,7 +57,7 @@ namespace UnitTests
             var thrown = new Exception("I FAILED!");
             UnitUnderTest.Subscribe(new AnonymousObserver<IClientEvent>(msg => throw thrown));
 
-            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
+            UnitUnderTest.Emit(Mock.Of<IClientEvent>());
 
             FakeLogger.Verify(f => f.Error("Error in observer while processing message.", thrown), Times.Once);
         }
@@ -74,7 +75,7 @@ namespace UnitTests
                 ev => throw thrown,
                 ex => caughtInObserverHandler = ex);
 
-            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
+            UnitUnderTest.Emit(Mock.Of<IClientEvent>());
 
             caughtInCommonHandler.Should().NotBeNull();
             caughtInCommonHandler.Should().BeSameAs(thrown);
@@ -91,8 +92,8 @@ namespace UnitTests
             fakeObserver.Setup(f => f.OnNext(It.IsAny<IClientEvent>())).Throws<Exception>();
             UnitUnderTest.Subscribe(fakeObserver.Object);
 
-            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
-            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
+            UnitUnderTest.Emit(Mock.Of<IClientEvent>());
+            UnitUnderTest.Emit(Mock.Of<IClientEvent>());
 
             fakeObserver.Verify(f => f.OnNext(It.IsAny<IClientEvent>()), Times.Exactly(1));
             fakeObserver.Verify(f => f.OnError(It.IsAny<Exception>()), Times.Exactly(1));
@@ -108,8 +109,8 @@ namespace UnitTests
             UnitUnderTest.Subscribe(nonFailingObserver.Object);
             UnitUnderTest.Subscribe(failingObserver.Object);
 
-            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
-            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
+            UnitUnderTest.Emit(Mock.Of<IClientEvent>());
+            UnitUnderTest.Emit(Mock.Of<IClientEvent>());
 
             nonFailingObserver.Verify(f => f.OnNext(It.IsAny<IClientEvent>()), Times.Exactly(2));
             nonFailingObserver.Verify(f => f.OnError(It.IsAny<Exception>()), Times.Never);
@@ -130,9 +131,9 @@ namespace UnitTests
                 Interlocked.Increment(ref s2CallCount);
             });
 
-            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
+            UnitUnderTest.Emit(Mock.Of<IClientEvent>());
             s1.Dispose();
-            UnitUnderTest.Dispatch(Mock.Of<IClientEvent>());
+            UnitUnderTest.Emit(Mock.Of<IClientEvent>());
 
             s1CallCount.Should().Be(1);
             s2CallCount.Should().Be(2);

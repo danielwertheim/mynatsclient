@@ -107,7 +107,7 @@ namespace MyNatsClient
             }
 
             if (!IsConnected)
-                _eventMediator.Dispatch(new ClientAutoReconnectFailed(this));
+                _eventMediator.Emit(new ClientAutoReconnectFailed(this));
         }
 
         public void Dispose()
@@ -723,13 +723,13 @@ namespace MyNatsClient
         }
 
         private void RaiseClientConnected()
-            => _eventMediator.Dispatch(new ClientConnected(this));
+            => _eventMediator.Emit(new ClientConnected(this));
 
         private void RaiseClientDisconnected(DisconnectReason reason)
-            => _eventMediator.Dispatch(new ClientDisconnected(this, reason));
+            => _eventMediator.Emit(new ClientDisconnected(this, reason));
 
         private void RaiseClientConsumerFailed(Exception ex)
-            => _eventMediator.Dispatch(new ClientConsumerFailed(this, ex));
+            => _eventMediator.Emit(new ClientConsumerFailed(this, ex));
 
         private void ThrowIfDisposed()
         {
