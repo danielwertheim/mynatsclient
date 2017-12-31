@@ -58,15 +58,6 @@ namespace MyNatsClient
             _connectionManager = new NatsConnectionManager(socketFactory ?? new SocketFactory());
             _consumerIsCancelled = () => _cancellation == null || _cancellation.IsCancellationRequested;
 
-            OpStream.Subscribe(new AnonymousObserver<IOp>(op =>
-            {
-                if (!IsConnected)
-                    return;
-
-                if (_connectionInfo.AutoRespondToPing && op is PingOp)
-                    Pong();
-            }));
-
             Events.Subscribe(new AnonymousObserver<IClientEvent>(ev =>
             {
                 if (ev is ClientConnected)
@@ -163,9 +154,9 @@ namespace MyNatsClient
 
                 _connection = connectionResult.Item1;
 
-                var ops = connectionResult.Item2;
-                if (ops.Any())
-                    foreach (var op in ops)
+                var opsReceivedWhileConnecting = connectionResult.Item2;
+                if (opsReceivedWhileConnecting.Any())
+                    foreach (var op in opsReceivedWhileConnecting)
                         _opMediator.Emit(op);
 
                 _consumer = Task.Factory
@@ -205,7 +196,7 @@ namespace MyNatsClient
             {
                 Logger.Trace("Consume cycle");
 
-                DateTime lastOpReceivedAt = DateTime.UtcNow;
+                var lastOpReceivedAt = DateTime.UtcNow;
 
                 try
                 {
@@ -219,6 +210,12 @@ namespace MyNatsClient
                             break;
 
                         lastOpReceivedAt = DateTime.UtcNow;
+
+                        if (op is PingOp && _connectionInfo.AutoRespondToPing)
+                        {
+                            Pong();
+                            return;
+                        }
 
                         _opMediator.Emit(op);
                     }
