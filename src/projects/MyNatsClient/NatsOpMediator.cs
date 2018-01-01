@@ -7,16 +7,16 @@ namespace MyNatsClient
     public class NatsOpMediator : IDisposable
     {
         private bool _isDisposed;
-        private ObservableOf<IOp> _opStream;
-        private ObservableOf<MsgOp> _msgOpStream;
+        private SafeObservableOf<IOp> _opStream;
+        private SafeObservableOf<MsgOp> _msgOpStream;
 
-        public INatsObservable<IOp> AllOpsStream => _opStream;
-        public INatsObservable<MsgOp> MsgOpsStream => _msgOpStream;
+        public IObservable<IOp> AllOpsStream => _opStream;
+        public IObservable<MsgOp> MsgOpsStream => _msgOpStream;
 
         public NatsOpMediator()
         {
-            _opStream = new ObservableOf<IOp>();
-            _msgOpStream = new ObservableOf<MsgOp>();
+            _opStream = new SafeObservableOf<IOp>();
+            _msgOpStream = new SafeObservableOf<MsgOp>();
         }
 
         public void Dispose()

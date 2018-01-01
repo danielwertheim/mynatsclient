@@ -460,9 +460,6 @@ If `ConsumerPingAfterMsSilenceFromServer` (20000ms) has passed, it will start to
 If `ConsumerMaxMsSilenceFromServer` (40000ms) has passed, it will cause an exception and you will get notified via a `ClientConsumerFailed` event dispatched via `client.Events`. The Client will also be disconnected, and you will get the `ClientDisconnected` event, which you can use to reconnect.
 
 ## Exceptions
-### Catch all unhandled exceptions per stream
-The Client exposes e.g. `MsgOpStream` which has a `OnException` delegate defined. You can use it to get notified about exceptions. These exceptions will automatically be logged via `ILogger.Error` which is resolved via `LoggerManager.Resolve` which is something you can hook into.
-
 ### Catch exceptions using the AnonymousObserver
 Subscribing with the use of an observer makes it easy for you to catch exceptions and handle them.
 

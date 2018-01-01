@@ -35,15 +35,15 @@ namespace MyNatsClient
         private CancellationTokenSource _cancellation;
         private INatsConnection _connection;
         private Task _consumer;
-        private ObservableOf<IClientEvent> _eventMediator;
+        private SafeObservableOf<IClientEvent> _eventMediator;
         private NatsOpMediator _opMediator;
         private bool _isDisposed;
 
         private bool ShouldAutoFlush => _connectionInfo.PubFlushMode != PubFlushMode.Manual;
 
-        public INatsObservable<IClientEvent> Events => _eventMediator;
-        public INatsObservable<IOp> OpStream => _opMediator.AllOpsStream;
-        public INatsObservable<MsgOp> MsgOpStream => _opMediator.MsgOpsStream;
+        public IObservable<IClientEvent> Events => _eventMediator;
+        public IObservable<IOp> OpStream => _opMediator.AllOpsStream;
+        public IObservable<MsgOp> MsgOpStream => _opMediator.MsgOpsStream;
         public bool IsConnected => _connection != null && _connection.IsConnected;
 
         public NatsClient(ConnectionInfo connectionInfo, ISocketFactory socketFactory = null)
@@ -53,7 +53,7 @@ namespace MyNatsClient
             _sync = new Locker();
             _connectionInfo = connectionInfo.Clone();
             _subscriptions = new ConcurrentDictionary<string, Subscription>();
-            _eventMediator = new ObservableOf<IClientEvent>();
+            _eventMediator = new SafeObservableOf<IClientEvent>();
             _opMediator = new NatsOpMediator();
             _connectionManager = new NatsConnectionManager(socketFactory ?? new SocketFactory());
             _consumerIsCancelled = () => _cancellation == null || _cancellation.IsCancellationRequested;
@@ -557,7 +557,7 @@ namespace MyNatsClient
         public ISubscription Sub(string subject, IObserver<MsgOp> observer)
             => Sub(new SubscriptionInfo(subject), observer);
 
-        public ISubscription Sub(string subject, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory)
+        public ISubscription Sub(string subject, Func<IObservable<MsgOp>, IDisposable> subscriptionFactory)
             => Sub(new SubscriptionInfo(subject), subscriptionFactory);
 
         public ISubscription Sub(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler)
@@ -566,7 +566,7 @@ namespace MyNatsClient
         public ISubscription Sub(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
             => Sub(subscriptionInfo, msgStream => msgStream.Where(msg => subscriptionInfo.Matches(msg.Subject)).Subscribe(observer));
 
-        public ISubscription Sub(SubscriptionInfo subscriptionInfo, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory)
+        public ISubscription Sub(SubscriptionInfo subscriptionInfo, Func<IObservable<MsgOp>, IDisposable> subscriptionFactory)
         {
             ThrowIfDisposed();
 
@@ -599,7 +599,7 @@ namespace MyNatsClient
         public Task<ISubscription> SubAsync(string subject, IObserver<MsgOp> observer)
             => SubAsync(new SubscriptionInfo(subject), observer);
 
-        public Task<ISubscription> SubAsync(string subject, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory)
+        public Task<ISubscription> SubAsync(string subject, Func<IObservable<MsgOp>, IDisposable> subscriptionFactory)
             => SubAsync(new SubscriptionInfo(subject), subscriptionFactory);
 
         public Task<ISubscription> SubAsync(SubscriptionInfo subscriptionInfo)
@@ -611,7 +611,7 @@ namespace MyNatsClient
         public Task<ISubscription> SubAsync(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer)
             => SubAsync(subscriptionInfo, msgStream => msgStream.Where(msg => subscriptionInfo.Matches(msg.Subject)).Subscribe(observer));
 
-        public async Task<ISubscription> SubAsync(SubscriptionInfo subscriptionInfo, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory)
+        public async Task<ISubscription> SubAsync(SubscriptionInfo subscriptionInfo, Func<IObservable<MsgOp>, IDisposable> subscriptionFactory)
         {
             ThrowIfDisposed();
 
@@ -635,7 +635,7 @@ namespace MyNatsClient
             await writer.FlushAsync().ForAwait();
         }).ForAwait();
 
-        private Subscription CreateMsgOpSubscription(SubscriptionInfo subscriptionInfo, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory)
+        private Subscription CreateMsgOpSubscription(SubscriptionInfo subscriptionInfo, Func<IObservable<MsgOp>, IDisposable> subscriptionFactory)
         {
             var subscription = Subscription.Create(subscriptionInfo, subscriptionFactory(MsgOpStream), info =>
             {
