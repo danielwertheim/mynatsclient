@@ -139,7 +139,7 @@ using (var client = new NatsClient(connectionInfo))
     client.Events.OfType<ClientConnected>().Subscribe(ev
         => Console.WriteLine("Client connected!"););
     
-    client.Events.OfType<ClientConsumerFailed>().Subscribe(ev
+    client.Events.OfType<ClientWorkerFailed>().Subscribe(ev
         => Console.WriteLine($"Client consumer failed with Exception: '{ev.Exception}'.");
 
     //Disconnected, either by client.Disconnect() call
@@ -230,7 +230,7 @@ The events aren't normal events, the events are distributed via `client.Events` 
 * ClientConnected
 * ClientDisconnected
 * ClientAutoReconnectFailed
-* ClientConsumerFailed
+* ClientWorkerFailed
 
 ### ClientConnected
 Signals that the client is connected and ready for use.
@@ -265,7 +265,7 @@ client.Events.OfType<ClientAutoReconnectFailed>().Subscribe(ev =>
 });
 ```
 
-### ClientConsumerFailed
+### ClientWorkerFailed
 This would be dispatched from the client, if the `Consumer` (internal part that continuously reads from server and dispatches messages) gets an `ErrOp` or if there's an `Exception`. E.g. if there's an unhandled exception from one of your **subscribed observers**.
 
 ## Connection behaviour
@@ -445,7 +445,7 @@ The Consumer keeps track of how long it was since it got a message from the brok
 
 If `ConsumerPingAfterMsSilenceFromServer` (20000ms) has passed, it will start to `PING` the server.
 
-If `ConsumerMaxMsSilenceFromServer` (40000ms) has passed, it will cause an exception and you will get notified via a `ClientConsumerFailed` event dispatched via `client.Events`. The Client will also be disconnected, and you will get the `ClientDisconnected` event, which you can use to reconnect.
+If `ConsumerMaxMsSilenceFromServer` (40000ms) has passed, it will cause an exception and you will get notified via a `ClientWorkerFailed` event dispatched via `client.Events`. The Client will also be disconnected, and you will get the `ClientDisconnected` event, which you can use to reconnect.
 
 ## Exceptions
 ### Catch exceptions using the AnonymousObserver
