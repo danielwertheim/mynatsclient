@@ -40,12 +40,6 @@ If you just want the client and not the Reactive Extensions packages, use:
 install-package MyNatsClient
 ```
 
-For convenience, if you want a consumer that makes use of Reactive Extensions, use:
-
-```
-install-package MyNatsClient.Rx
-```
-
 ### Encodings
 You can also get simplified support for specific payload encodings.
 
@@ -385,8 +379,6 @@ The Client has both synchronous and asynchronous methods. They are pure versions
 
 ## Observable message streams
 The message streams are exposed as `Observables`. So you can use [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) to consume e.g. the `client.OpStream` for `IOp` implementations: `ErrOp`, `InfoOp`, `MsgOp`, `PingOp`, `PongOp`. You do this using `client.OpStream.Subscribe(...)`. For `MsgOp`ONLY, use the `client.MsgOpStream.Subscribe(...)`.
-
-For convenience you can install the `MyNatsClient.Rx` [NuGet package](http://www.nuget.org/packages/mynatsclient.rx), which then lets you do stuff like:
 
 ```csharp
 //Subscribe to OpStream ALL ops e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
