@@ -11,5 +11,6 @@ namespace MyNatsClient
         public const string NoDataReceivedFromServer = "NoDataReceivedFromServer";
         public const string RequestTimedOut = "RequestTimedOut";
         public const string ConnectionFoundIdling = "ConnectionFoundIdling";
+        public const string ClientReceivedErrOp = "ClientReceivedErrOp";
     }
 }

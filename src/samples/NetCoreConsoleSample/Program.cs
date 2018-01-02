@@ -16,11 +16,11 @@ namespace NetCoreConsoleSample
             _client = new NatsClient(cnInfo);
             _client.Connect();
 
-            _client.Sub("getTemp", msg =>
+            _client.Sub("getTemp", stream => stream.Subscribe(msg =>
             {
                 var parts = msg.GetPayloadAsString().Split('@');
                 _client.Pub(msg.ReplyTo, $"Temp is {TempService.Get(parts[0], parts[1])}C");
-            });
+            }));
 
             var c = 0;
 

@@ -76,14 +76,14 @@ await client1.PubAsJsonAsync("tickItem", new Tick { Value = GetNextTick() });
 var cnInfo2 = new ConnectionInfo("192.168.1.20");
 var client2 = new NatsClient(cnInfo);
 
-await client2.SubAsync("tick", msg => {
+await client2.SubAsync("tick", stream => stream.Subscribe(msg => {
     Console.WriteLine($"Clock ticked. Tick is {msg.GetPayloadAsString()}");
-});
+}));
 
 //or using an encoding package e.g Json
-await client2.Subsync("tickItem", msg => {
+await client2.Subsync("tickItem", stream => stream.Subscribe(msg => {
     Console.WriteLine($"Clock ticked. Tick is {msg.FromJson<TestItem>().Value}");
-})
+}))
 ```
 
 ## Request-Response sample
@@ -105,9 +105,9 @@ Console.WriteLine($"Temp in Stockholm is {response.GetPayloadAsString()}");
 var cnInfo2 = new ConnectionInfo("192.168.1.20");
 var client2 = new NatsClient(cnInfo);
 
-await client2.SubAsync("getTemp", msg => {
-    client.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
-});
+await client2.SubAsync("getTemp", stream.Subscribe(msg => {
+    client2.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
+}));
 ```
 
 ## Advanced usage
@@ -216,14 +216,10 @@ The Client will keep track of subscriptions done. And you can set them up before
 
 When subscribing to a subject using the client, you will be returned a `ISubscription`. The methods for subscribing are:
 
-- `client.Sub(subscriptionInfo)`
-- `client.Sub(subscriptionInfo, msg => {})`
-- `client.Sub(subscriptionInfo, observer)`
-- `client.Sub(subscriptionInfo, msgs => msgs.Subscribe(...))`
-- `client.SubAsync(subscriptionInfo)`
-- `client.SubAsync(subscriptionInfo, msg => {})`
-- `client.SubAsync(subscriptionInfo, observer)`
-- `client.SubAsync(subscriptionInfo, msgs => msgs.Subscribe(...))`
+- `client.Sub(string|subscriptionInfo)`
+- `client.Sub(string|subscriptionInfo, msgs => msgs.Subscribe(...))`
+- `client.SubAsync(string|subscriptionInfo)`
+- `client.SubAsync(string|subscriptionInfo, msgs => msgs.Subscribe(...))`
 
 To `Unsubscribe`, you can do **any of the following**:
 
@@ -438,9 +434,9 @@ There's no buffering or anything going on with incoming `IOp` messages. So if yo
 The above is `in process subscribers` and you will not get any `IOp` dispatched to your handlers, unless you have told the client to subscribe to a NATS subject.
 
 ```csharp
-client.Sub("subject", "subId");
+client.Sub("subject");
 //OR
-await client.SubAsync("subject", "subId");
+await client.SubAsync("subject");
 ```
 
 ### Terminate an InProcess Subscription
@@ -481,7 +477,7 @@ var myObserver = new AnonymousObserver<MsgOp>(
 
 //Subscribe to subject "test" and hook up the observer
 //for incoming messages on that subject
-var sub = _client.Sub("test", myObserver);
+var sub = _client.Sub("test", stream => stream.Subscribe(myObserver));
 
 
 //Publish some messages
@@ -523,12 +519,12 @@ The handler will just swallow the exception and continue working.
 Changing the subscribing part from the first sample above to:
 
 ```csharp
-var sub = _client.Sub("test", msg =>
+var sub = _client.Sub("test", stream => stream.Subscribe(msg =>
 {
   Console.WriteLine($"Observer OnNext got: {msg.GetPayloadAsString()}");
 
   throw new Exception(c++.ToString());
-});
+}));
 ```
 
 This will give the following output:

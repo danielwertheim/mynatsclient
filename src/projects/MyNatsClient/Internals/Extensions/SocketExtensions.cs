@@ -19,8 +19,7 @@ namespace MyNatsClient.Internals.Extensions
             var connectTask = socket.ConnectAsync(endPoint);
 #endif
 
-            var firstCompletedTask = Task.WhenAny(connectTask, Task.Delay(timeoutMs, cancellationToken));
-            if (firstCompletedTask == connectTask && connectTask.IsCompleted)
+            if(connectTask.Wait(timeoutMs, cancellationToken))
                 return;
 
             throw NatsException.FailedToConnectToHost(

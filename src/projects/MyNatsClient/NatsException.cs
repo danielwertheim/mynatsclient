@@ -1,4 +1,5 @@
 using System;
+using MyNatsClient.Ops;
 
 namespace MyNatsClient
 {
@@ -35,5 +36,8 @@ namespace MyNatsClient
 
         internal static NatsException ConnectionFoundIdling(string host, int port)
             => new NatsException(NatsExceptionCodes.ConnectionFoundIdling, $"The Connection against server {host}:{port.ToString()} has not received any data in a to long period.");
+
+        internal static NatsException ClientReceivedErrOp(ErrOp errOp)
+            => new NatsException(NatsExceptionCodes.ClientReceivedErrOp, $"Client received ErrOp with message='{errOp.Message}'.");
     }
 }

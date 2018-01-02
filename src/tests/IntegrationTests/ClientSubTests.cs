@@ -34,11 +34,11 @@ namespace IntegrationTests
             var otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            _client.Sub(subject, new AnonymousObserver<MsgOp>(msg =>
+            _client.Sub(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
-            }));
+            })));
             _client.Sub(otherSubject);
 
             await _client.PubAsync(subject, "Test1");
@@ -59,11 +59,11 @@ namespace IntegrationTests
             var otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            await _client.SubAsync(subject, new AnonymousObserver<MsgOp>(msg =>
+            await _client.SubAsync(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
-            }));
+            })));
             _client.Sub(otherSubject);
 
             await _client.PubAsync(subject, "Test1");
@@ -84,11 +84,11 @@ namespace IntegrationTests
             var otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            _client.Sub(subject, msg =>
+            _client.Sub(subject, stream => stream.Subscribe(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
-            });
+            }));
             _client.Sub(otherSubject);
 
             await _client.PubAsync(subject, "Test1");
@@ -109,11 +109,11 @@ namespace IntegrationTests
             var otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            await _client.SubAsync(subject, msg =>
+            await _client.SubAsync(subject, stream => stream.Subscribe(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
-            });
+            }));
             _client.Sub(otherSubject);
 
             await _client.PubAsync(subject, "Test1");
@@ -133,11 +133,11 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var s = _client.Sub(subject, new AnonymousObserver<MsgOp>(msg =>
+            var s = _client.Sub(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
-            }));
+            })));
 
             await _client.PubAsync(subject, "Test1");
             WaitOne();
@@ -158,11 +158,11 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var s = await _client.SubAsync(subject, new AnonymousObserver<MsgOp>(msg =>
+            var s = await _client.SubAsync(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
-            }));
+            })));
 
             await _client.PubAsync(subject, "Test1");
             WaitOne();
@@ -183,11 +183,11 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var s = _client.Sub(subject, msg =>
+            var s = _client.Sub(subject, stream => stream.Subscribe(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
-            });
+            }));
 
             await _client.PubAsync(subject, "Test1");
             WaitOne();
@@ -208,11 +208,11 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var s = await _client.SubAsync(subject, msg =>
+            var s = await _client.SubAsync(subject, stream => stream.Subscribe(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
-            });
+            }));
 
             await _client.PubAsync(subject, "Test1");
             WaitOne();
@@ -233,11 +233,11 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var subscription = _client.Sub(subject, new AnonymousObserver<MsgOp>(msg =>
+            var subscription = _client.Sub(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
-            }));
+            })));
 
             await _client.PubAsync(subject, "Test1");
             WaitOne();
@@ -258,11 +258,11 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var subscription = _client.Sub(subject, new AnonymousObserver<MsgOp>(msg =>
+            var subscription = _client.Sub(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
-            }));
+            })));
 
             await _client.PubAsync(subject, "Test1");
             WaitOne();
@@ -283,11 +283,11 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            _client.Sub(subject, new AnonymousObserver<MsgOp>(msg =>
+            _client.Sub(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
-            }));
+            })));
 
             await _client.PubAsync(subject, "Test1");
             WaitOne();
@@ -306,11 +306,11 @@ namespace IntegrationTests
             const string subjectNs = "foo.tests.";
             var interceptedSubjects = new List<string>();
 
-            _client.Sub(subjectNs + "*", new AnonymousObserver<MsgOp>(msg =>
+            _client.Sub(subjectNs + "*", stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
-            }));
+            })));
 
             await _client.PubAsync(subjectNs + "type1", "Test1");
             WaitOne();
@@ -329,11 +329,11 @@ namespace IntegrationTests
             const string subjectNs = "foo.tests.";
             var interceptedSubjects = new List<string>();
 
-            await _client.SubAsync(subjectNs + "*", new AnonymousObserver<MsgOp>(msg =>
+            await _client.SubAsync(subjectNs + "*", stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
-            }));
+            })));
 
             await _client.PubAsync(subjectNs + "type1", "Test1");
             WaitOne();
@@ -352,11 +352,11 @@ namespace IntegrationTests
             const string subjectNs = "foo.tests.";
             var interceptedSubjects = new List<string>();
 
-            _client.Sub(subjectNs + "*", msg =>
+            _client.Sub(subjectNs + "*", stream => stream.Subscribe(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
-            });
+            }));
 
             await _client.PubAsync(subjectNs + "type1", "Test1");
             WaitOne();
@@ -375,11 +375,11 @@ namespace IntegrationTests
             const string subjectNs = "foo.tests.";
             var interceptedSubjects = new List<string>();
 
-            await _client.SubAsync(subjectNs + "*", msg =>
+            await _client.SubAsync(subjectNs + "*", stream => stream.Subscribe(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
-            });
+            }));
 
             await _client.PubAsync(subjectNs + "type1", "Test1");
             WaitOne();

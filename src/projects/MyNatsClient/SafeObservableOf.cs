@@ -46,8 +46,6 @@ namespace MyNatsClient
 
         public void Emit(T value)
         {
-            ThrowIfDisposed();
-
             foreach (var subscription in _subscriptions.Values)
             {
                 try

@@ -12,8 +12,11 @@
 - **Changed**: All methods in `INatsClient` for subscribing is now called `Sub` or `SubAsync`. Hence, `SubWithObserver(...)`, `SubWithHandler(...)` and `SubWithObservableSubscription(...)` is now `Sub(...)`. And `SubWithObserverAsync(...)`, `SubWithHandlerAsync(...)` and `SubWithObservableSubscriptionAsync(...)` is now `SubAsync(...)`
 - **Changed**: Support for statistics defined by `INatsClientStats` has been dropped and is not accessible via `client.Stats` anymore.
 - **Changed**: `OnException` hook has been removed.
+- **Changed**: `ClientConsumerFailed` is now `ClientWorkerFailed`.
 - **Changed**: `MyNatsClient.Encodings.Json` now uses `DefaultContractResolver` and `DefaultNamingStrategy` instead of `CamelCase`. If you want the latter, this has to be explicitly configured.
 - **Changed**: `MyNatsClient.Encodings.Json*  now uses `DateTimeZoneHandling.RoundtripKind` instead of `DateTimeZoneHandling.Utc`. If you want the latter, this has to be explicitly configured.
+- **Changed**: Removed all variants of `client.Sub` that accepts an `IObserver<T>` or `Action<T>` as you as the user of the client should own the `stream.Subscribe` call. You will get the stream passed: `client.Sub("mysubject", stream => stream.Subscribe(msg => {}))` or e.g. `client.Sub("mysubject", stream => stream.SubscribeSafe(myObserver)`.
+- **Fix**: Bug with `Unsub` not being performed correctly if `ISubscription` was disposed.
 - **New**: Constructor for `NatsClient` now accepts an optional `ISocketFactory`.
 - **New**: `SocketOptions.UseNagleAlgorithm`, defaults to (false).
 - **New**: New overloads of `client.Unsub(...)` and `client.UnsubAsync(...)`, which now accepts the `ISubscription`.

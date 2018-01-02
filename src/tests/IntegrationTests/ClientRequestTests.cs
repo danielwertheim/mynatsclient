@@ -39,7 +39,7 @@ namespace IntegrationTests
         {
             var value = Guid.NewGuid().ToString("N");
 
-            _responder.Sub("getValue", msg => _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString()));
+            _responder.Sub("getValue", stream => stream.Subscribe(msg => _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString())));
 
             var response = await _requester.RequestAsync("getValue", value);
 
@@ -51,7 +51,7 @@ namespace IntegrationTests
         {
             var value = Guid.NewGuid().ToString("N");
 
-            _responder.Sub("getValue", msg => _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString()));
+            _responder.Sub("getValue", stream => stream.Subscribe(msg => _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString())));
 
             var response = await _requester.RequestAsync("getValue", Encoding.UTF8.GetBytes(value));
 
@@ -65,7 +65,7 @@ namespace IntegrationTests
             var payloadBuilder = new PayloadBuilder();
             payloadBuilder.Append(Encoding.UTF8.GetBytes(value));
 
-            _responder.Sub("getValue", msg => _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString()));
+            _responder.Sub("getValue", stream => stream.Subscribe(msg => _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString())));
 
             var response = await _requester.RequestAsync("getValue", payloadBuilder.ToPayload());
 
@@ -81,21 +81,21 @@ namespace IntegrationTests
 
             _requester.MsgOpStream.Subscribe(msgOp => Interlocked.Increment(ref responderReplyCount));
 
-            _responder.Sub("getValue", msg =>
+            _responder.Sub("getValue", stream => stream.Subscribe(msg =>
             {
                 Interlocked.Increment(ref responderReplyingCount);
                 _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString());
-            });
+            }));
 
             MsgOp response;
             using (var responder2 = new NatsClient(ConnectionInfo))
             {
                 responder2.Connect();
-                responder2.Sub("getValue", msg =>
+                responder2.Sub("getValue", stream => stream.Subscribe(msg =>
                 {
                     Interlocked.Increment(ref responderReplyingCount);
                     responder2.Pub(msg.ReplyTo, msg.GetPayloadAsString());
-                });
+                }));
 
                 response = await _requester.RequestAsync("getValue", value);
             }

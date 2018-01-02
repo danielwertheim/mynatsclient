@@ -11,7 +11,7 @@ namespace MyNatsClient
         /// E.g.
         /// <see cref="MyNatsClient.Events.ClientConnected"/>,
         /// <see cref="MyNatsClient.Events.ClientDisconnected"/>,
-        /// <see cref="MyNatsClient.Events.ClientConsumerFailed"/>.
+        /// <see cref="MyNatsClient.Events.ClientWorkerFailed"/>.
         /// </summary>
         IObservable<IClientEvent> Events { get; }
 
@@ -182,24 +182,6 @@ namespace MyNatsClient
 
         /// <summary>
         /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
-        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="handler"/>.
-        /// </summary>
-        /// <param name="subject">The subject that this subscription should be consuming.</param>
-        /// <param name="handler">The action that will be invoked by observer for each <see cref="MsgOp"/> message in the stream.</param>
-        /// <returns></returns>
-        ISubscription Sub(string subject, Action<MsgOp> handler);
-
-        /// <summary>
-        /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
-        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="observer"/>.
-        /// </summary>
-        /// <param name="subject">The subject that this subscription should be consuming.</param>
-        /// <param name="observer">The observer that will observe the stream of <see cref="MsgOp"/> for this subscription.</param>
-        /// <returns></returns>
-        ISubscription Sub(string subject, IObserver<MsgOp> observer);
-
-        /// <summary>
-        /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
         /// Also sets up a subscripion that consumes <see cref="MsgOp"/>.
         /// </summary>
         /// <param name="subject">The subject that this subscription should be consuming.</param>
@@ -214,24 +196,6 @@ namespace MyNatsClient
         /// <returns></returns>
         /// <remarks>You still need to setup a manual subscription against <see cref="MsgOpStream"/> with a handler.</remarks>
         ISubscription Sub(SubscriptionInfo subscriptionInfo);
-
-        /// <summary>
-        /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
-        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="handler"/>.
-        /// </summary>
-        /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
-        /// <param name="handler">The action that will be invoked by observer for each <see cref="MsgOp"/> message in the stream.</param>
-        /// <returns></returns>
-        ISubscription Sub(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler);
-
-        /// <summary>
-        /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
-        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="observer"/>.
-        /// </summary>
-        /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
-        /// <param name="observer">The observer that will observe the stream of <see cref="MsgOp"/> for this subscription.</param>
-        /// <returns></returns>
-        ISubscription Sub(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer);
 
         /// <summary>
         /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
@@ -252,24 +216,6 @@ namespace MyNatsClient
 
         /// <summary>
         /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
-        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="handler"/>.
-        /// </summary>
-        /// <param name="subject">The subject that this subscription should be consuming.</param>
-        /// <param name="handler">The action that will be invoked by observer for each <see cref="MsgOp"/> message in the stream.</param>
-        /// <returns></returns>
-        Task<ISubscription> SubAsync(string subject, Action<MsgOp> handler);
-
-        /// <summary>
-        /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
-        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="observer"/>.
-        /// </summary>
-        /// <param name="subject">The subject that this subscription should be consuming.</param>
-        /// <param name="observer">The observer that will observe the stream of <see cref="MsgOp"/> for this subscription.</param>
-        /// <returns></returns>
-        Task<ISubscription> SubAsync(string subject, IObserver<MsgOp> observer);
-
-        /// <summary>
-        /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
         /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream.
         /// </summary>
         /// <param name="subject">The subject that this subscription should be consuming.</param>
@@ -284,24 +230,6 @@ namespace MyNatsClient
         /// <returns></returns>
         /// <remarks>You still need to setup a manual subscription against <see cref="MsgOpStream"/> with a handler.</remarks>
         Task<ISubscription> SubAsync(SubscriptionInfo subscriptionInfo);
-
-        /// <summary>
-        /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
-        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="handler"/>.
-        /// </summary>
-        /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
-        /// <param name="handler">The action that will be invoked by observer for each <see cref="MsgOp"/> message in the stream.</param>
-        /// <returns></returns>
-        Task<ISubscription> SubAsync(SubscriptionInfo subscriptionInfo, Action<MsgOp> handler);
-
-        /// <summary>
-        /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.
-        /// Also sets up a subscripion that consumes <see cref="MsgOp"/> stream using passed <paramref name="observer"/>.
-        /// </summary>
-        /// <param name="subscriptionInfo">The Subscrition info indicating what subject etc. that this subscription should be consuming.</param>
-        /// <param name="observer">The observer that will observe the stream of <see cref="MsgOp"/> for this subscription.</param>
-        /// <returns></returns>
-        Task<ISubscription> SubAsync(SubscriptionInfo subscriptionInfo, IObserver<MsgOp> observer);
 
         /// <summary>
         /// Creates a <see cref="ISubscription"/> which sets up a subscription against the NATS server.

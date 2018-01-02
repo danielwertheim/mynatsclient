@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Sockets;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -100,10 +101,7 @@ namespace IntegrationTests
                     ReleaseOne();
                 });
 
-            _client.MsgOpStream.Subscribe(msg =>
-            {
-                throw new Exception("FAIL");
-            });
+            _client.MsgOpStream.Subscribe(msg => throw new Exception("Fail"));
 
             await _client.PubAsync(subject, "This message will fail");
 
@@ -114,6 +112,16 @@ namespace IntegrationTests
             wasDisconnectedDueToFailure.Should().BeTrue();
             wasReconnected.Should().BeFalse();
             _client.IsConnected.Should().BeFalse();
+        }
+
+        public class Foo : ISocketFactory
+        {
+            public Socket Socket { get; set; }
+
+            public Socket Create(SocketOptions options)
+            {
+                return Socket;
+            }
         }
 
         [Fact]
