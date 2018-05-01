@@ -23,7 +23,7 @@ namespace UnitTests.Encodings
             encoded.Should().NotBeNullOrEmpty();
 
             var decoded = UnitUnderTest.Decode(encoded.GetBytes().ToArray(), testItem.GetType());
-            decoded.ShouldBeEquivalentTo(testItem);
+            decoded.Should().BeEquivalentTo(testItem);
         }
 
         [Fact]

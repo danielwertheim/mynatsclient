@@ -40,7 +40,7 @@ namespace IntegrationTests.Encodings
             _client.PubAsJson("ClientJsonEncodingTests", orgItem);
             WaitOne();
 
-            orgItem.ShouldBeEquivalentTo(decodedItem);
+            orgItem.Should().BeEquivalentTo(decodedItem);
         }
 
         [Fact]
@@ -58,7 +58,7 @@ namespace IntegrationTests.Encodings
             await _client.PubAsJsonAsync("ClientJsonEncodingTests", orgItem);
             WaitOne();
 
-            orgItem.ShouldBeEquivalentTo(decodedItem);
+            orgItem.Should().BeEquivalentTo(decodedItem);
         }
 
         private class TestItem

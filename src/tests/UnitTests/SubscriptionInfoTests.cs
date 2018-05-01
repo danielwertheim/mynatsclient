@@ -35,7 +35,7 @@ namespace UnitTests
         {
             Action test = () => new SubscriptionInfo(subject);
 
-            test.ShouldThrow<ArgumentException>()
+            test.Should().Throw<ArgumentException>()
                 .Where(ex => ex.Message.StartsWith("Subject can not contain both the wildcard and full wildcard character."))
                 .And.ParamName.Should().Be("subject");
         }

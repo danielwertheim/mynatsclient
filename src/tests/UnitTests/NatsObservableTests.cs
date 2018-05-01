@@ -30,7 +30,7 @@ namespace UnitTests
         {
             Action a = () => UnitUnderTest.Emit(Mock.Of<Data>());
 
-            a.ShouldNotThrow();
+            a.Should().NotThrow();
         }
 
         [Fact]

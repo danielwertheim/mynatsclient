@@ -95,7 +95,7 @@ namespace UnitTests
 
             var cloned = other.Clone();
 
-            cloned.ShouldBeEquivalentTo(other);
+            cloned.Should().BeEquivalentTo(other);
         }
     }
 }
