@@ -1,5 +1,6 @@
 ﻿using System;
 using MyNatsClient;
+using MyNatsClient.Extensions;
 
 namespace NetCoreConsoleSample
 {

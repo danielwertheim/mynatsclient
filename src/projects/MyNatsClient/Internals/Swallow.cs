@@ -9,6 +9,7 @@ namespace MyNatsClient.Internals
             if (actions == null)
                 return;
 
+            // ReSharper disable once ForCanBeConvertedToForeach
             for (var i = 0; i < actions.Length; i++)
                 try
                 {

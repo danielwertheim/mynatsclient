@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MyNatsClient;
+using MyNatsClient.Extensions;
 using MyNatsClient.Ops;
 using Xunit;
 

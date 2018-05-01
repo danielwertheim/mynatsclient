@@ -1,8 +1,7 @@
 using System;
-using System.Reactive;
 using FluentAssertions;
-using Moq;
 using MyNatsClient;
+using MyNatsClient.Extensions;
 using MyNatsClient.Ops;
 using Xunit;
 
@@ -21,8 +20,8 @@ namespace UnitTests
             var msgOp = new MsgOp("TestSubject", "0a3282e769e34677809db5d756dfd768", new byte[0]);
             var opStreamRec = false;
             var msgOpStreamRec = false;
-            UnitUnderTest.AllOpsStream.Subscribe(new AnonymousObserver<IOp>(op => opStreamRec = true));
-            UnitUnderTest.MsgOpsStream.Subscribe(new AnonymousObserver<MsgOp>(op => msgOpStreamRec = true));
+            UnitUnderTest.AllOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op => opStreamRec = true));
+            UnitUnderTest.MsgOpsStream.Subscribe(NatsObserver.Delegating<MsgOp>(op => msgOpStreamRec = true));
 
             UnitUnderTest.Emit(msgOp);
 
@@ -35,8 +34,8 @@ namespace UnitTests
         {
             var opStreamRec = false;
             var msgOpStreamRec = false;
-            UnitUnderTest.AllOpsStream.Subscribe(new AnonymousObserver<IOp>(op => opStreamRec = true));
-            UnitUnderTest.MsgOpsStream.Subscribe(new AnonymousObserver<MsgOp>(op => msgOpStreamRec = true));
+            UnitUnderTest.AllOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op => opStreamRec = true));
+            UnitUnderTest.MsgOpsStream.Subscribe(NatsObserver.Delegating<MsgOp>(op => msgOpStreamRec = true));
 
             UnitUnderTest.Emit(PingOp.Instance);
 
@@ -53,7 +52,7 @@ namespace UnitTests
             var exToThrow = new Exception(Guid.NewGuid().ToString());
             Exception caughtEx = null;
 
-            UnitUnderTest.AllOpsStream.Subscribe(new AnonymousObserver<IOp>(op =>
+            UnitUnderTest.AllOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op =>
             {
                 if (countA == 0)
                 {
@@ -63,8 +62,8 @@ namespace UnitTests
 
                 countA += 1;
             }, ex => caughtEx = ex));
-            UnitUnderTest.AllOpsStream.Subscribe(new AnonymousObserver<IOp>(op => countB += 1));
-            UnitUnderTest.AllOpsStream.Subscribe(new AnonymousObserver<IOp>(op => countC += 1));
+            UnitUnderTest.AllOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op => countB += 1));
+            UnitUnderTest.AllOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op => countC += 1));
 
             UnitUnderTest.Emit(PingOp.Instance);
             UnitUnderTest.Emit(PingOp.Instance);
@@ -113,7 +112,7 @@ namespace UnitTests
             var countB = 0;
             var countC = 0;
 
-            UnitUnderTest.AllOpsStream.Subscribe(new AnonymousObserver<IOp>(op =>
+            UnitUnderTest.AllOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op =>
             {
                 if (countA == 0)
                 {
@@ -123,8 +122,8 @@ namespace UnitTests
 
                 countA += 1;
             }));
-            UnitUnderTest.AllOpsStream.Subscribe(new AnonymousObserver<IOp>(op => countB += 1));
-            UnitUnderTest.AllOpsStream.Subscribe(new AnonymousObserver<IOp>(op => countC += 1));
+            UnitUnderTest.AllOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op => countB += 1));
+            UnitUnderTest.AllOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op => countC += 1));
 
             UnitUnderTest.Emit(PingOp.Instance);
             UnitUnderTest.Emit(PingOp.Instance);
@@ -172,7 +171,7 @@ namespace UnitTests
             var exToThrow = new Exception(Guid.NewGuid().ToString());
             Exception caughtEx = null;
 
-            UnitUnderTest.MsgOpsStream.Subscribe(new AnonymousObserver<IOp>(op =>
+            UnitUnderTest.MsgOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op =>
             {
                 if (countA == 0)
                 {
@@ -182,8 +181,8 @@ namespace UnitTests
 
                 countA += 1;
             }, ex => caughtEx = ex));
-            UnitUnderTest.MsgOpsStream.Subscribe(new AnonymousObserver<IOp>(op => countB += 1));
-            UnitUnderTest.MsgOpsStream.Subscribe(new AnonymousObserver<IOp>(op => countC += 1));
+            UnitUnderTest.MsgOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op => countB += 1));
+            UnitUnderTest.MsgOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op => countC += 1));
 
             UnitUnderTest.Emit(msgOp);
             UnitUnderTest.Emit(msgOp);
@@ -234,7 +233,7 @@ namespace UnitTests
             var countB = 0;
             var countC = 0;
 
-            UnitUnderTest.MsgOpsStream.Subscribe(new AnonymousObserver<IOp>(op =>
+            UnitUnderTest.MsgOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op =>
             {
                 if (countA == 0)
                 {
@@ -244,8 +243,8 @@ namespace UnitTests
 
                 countA += 1;
             }));
-            UnitUnderTest.MsgOpsStream.Subscribe(new AnonymousObserver<IOp>(op => countB += 1));
-            UnitUnderTest.MsgOpsStream.Subscribe(new AnonymousObserver<IOp>(op => countC += 1));
+            UnitUnderTest.MsgOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op => countB += 1));
+            UnitUnderTest.MsgOpsStream.Subscribe(NatsObserver.Delegating<IOp>(op => countC += 1));
 
             UnitUnderTest.Emit(msgOp);
             UnitUnderTest.Emit(msgOp);

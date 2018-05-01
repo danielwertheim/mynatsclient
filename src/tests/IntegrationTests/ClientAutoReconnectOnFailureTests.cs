@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Net.Sockets;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MyNatsClient;
 using MyNatsClient.Events;
+using MyNatsClient.Extensions;
 using Xunit;
 
 namespace IntegrationTests

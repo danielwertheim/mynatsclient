@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MyNatsClient;
+using MyNatsClient.Extensions;
 using MyNatsClient.Ops;
 using Xunit;
 
@@ -34,7 +34,7 @@ namespace IntegrationTests
             var otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            _client.Sub(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
+            _client.Sub(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
@@ -59,7 +59,7 @@ namespace IntegrationTests
             var otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            await _client.SubAsync(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
+            await _client.SubAsync(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
@@ -133,7 +133,7 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var s = _client.Sub(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
+            var s = _client.Sub(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
@@ -158,7 +158,7 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var s = await _client.SubAsync(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
+            var s = await _client.SubAsync(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
@@ -233,7 +233,7 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var subscription = _client.Sub(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
+            var subscription = _client.Sub(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
@@ -258,7 +258,7 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            var subscription = _client.Sub(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
+            var subscription = _client.Sub(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
@@ -283,7 +283,7 @@ namespace IntegrationTests
             var subject = GenerateSubject();
             var interceptCount = 0;
 
-            _client.Sub(subject, stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
+            _client.Sub(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg =>
             {
                 Interlocked.Increment(ref interceptCount);
                 ReleaseOne();
@@ -306,7 +306,7 @@ namespace IntegrationTests
             const string subjectNs = "foo.tests.";
             var interceptedSubjects = new List<string>();
 
-            _client.Sub(subjectNs + "*", stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
+            _client.Sub(subjectNs + "*", stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
@@ -329,7 +329,7 @@ namespace IntegrationTests
             const string subjectNs = "foo.tests.";
             var interceptedSubjects = new List<string>();
 
-            await _client.SubAsync(subjectNs + "*", stream => stream.Subscribe(new AnonymousObserver<MsgOp>(msg =>
+            await _client.SubAsync(subjectNs + "*", stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
