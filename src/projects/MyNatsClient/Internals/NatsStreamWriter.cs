@@ -1,7 +1,6 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using MyNatsClient.Internals.Extensions;
 
 namespace MyNatsClient.Internals
 {
@@ -19,14 +18,10 @@ namespace MyNatsClient.Internals
         }
 
         public void Flush()
-        {
-            _stream.Flush();
-        }
+            => _stream.Flush();
 
         public async Task FlushAsync()
-        {
-            await _stream.FlushAsync(_cancellationToken).ForAwait();
-        }
+            => await _stream.FlushAsync(_cancellationToken).ConfigureAwait(false);
 
         public void Write(byte[] data)
         {
@@ -50,7 +45,7 @@ namespace MyNatsClient.Internals
             if (data.Length > _maxPayloadSize)
                 throw NatsException.ExceededMaxPayload(_maxPayloadSize, data.Length);
 
-            await _stream.WriteAsync(data, 0, data.Length, _cancellationToken).ForAwait();
+            await _stream.WriteAsync(data, 0, data.Length, _cancellationToken).ConfigureAwait(false);
         }
 
         public async Task WriteAsync(IPayload data)
@@ -59,7 +54,7 @@ namespace MyNatsClient.Internals
                 throw NatsException.ExceededMaxPayload(_maxPayloadSize, data.Size);
 
             for (var i = 0; i < data.BlockCount; i++)
-                await _stream.WriteAsync(data[i], 0, data[i].Length, _cancellationToken).ForAwait();
+                await _stream.WriteAsync(data[i], 0, data[i].Length, _cancellationToken).ConfigureAwait(false);
         }
     }
 }

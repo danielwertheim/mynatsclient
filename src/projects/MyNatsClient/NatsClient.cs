@@ -10,7 +10,6 @@ using MyNatsClient.Events;
 using MyNatsClient.Extensions;
 using MyNatsClient.Internals;
 using MyNatsClient.Internals.Commands;
-using MyNatsClient.Internals.Extensions;
 using MyNatsClient.Ops;
 
 namespace MyNatsClient
@@ -284,8 +283,8 @@ namespace MyNatsClient
             ThrowIfDisposed();
 
             await _connection.WithWriteLockAsync(
-                async writer => await writer.FlushAsync().ForAwait()
-            ).ForAwait();
+                async writer => await writer.FlushAsync().ConfigureAwait(false)
+            ).ConfigureAwait(false);
         }
 
         public void Ping()
@@ -309,9 +308,9 @@ namespace MyNatsClient
 
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await writer.WriteAsync(cmdPayload).ForAwait();
-                await writer.FlushAsync().ForAwait();
-            }).ForAwait();
+                await writer.WriteAsync(cmdPayload).ConfigureAwait(false);
+                await writer.FlushAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
 
         public void Pong()
@@ -335,9 +334,9 @@ namespace MyNatsClient
 
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await writer.WriteAsync(cmdPayload).ForAwait();
-                await writer.FlushAsync().ForAwait();
-            }).ForAwait();
+                await writer.WriteAsync(cmdPayload).ConfigureAwait(false);
+                await writer.FlushAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
 
         public void Pub(string subject, string body, string replyTo = null)
@@ -390,10 +389,10 @@ namespace MyNatsClient
 
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await writer.WriteAsync(cmdPayload).ForAwait();
+                await writer.WriteAsync(cmdPayload).ConfigureAwait(false);
                 if (ShouldAutoFlush)
-                    await writer.FlushAsync().ForAwait();
-            }).ForAwait();
+                    await writer.FlushAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
 
         public async Task PubAsync(string subject, IPayload body, string replyTo = null)
@@ -404,10 +403,10 @@ namespace MyNatsClient
 
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await writer.WriteAsync(cmdPayload).ForAwait();
+                await writer.WriteAsync(cmdPayload).ConfigureAwait(false);
                 if (ShouldAutoFlush)
-                    await writer.FlushAsync().ForAwait();
-            }).ForAwait();
+                    await writer.FlushAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
 
         public async Task PubAsync(string subject, string body, string replyTo = null)
@@ -418,10 +417,10 @@ namespace MyNatsClient
 
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await writer.WriteAsync(cmdPayload).ForAwait();
+                await writer.WriteAsync(cmdPayload).ConfigureAwait(false);
                 if (ShouldAutoFlush)
-                    await writer.FlushAsync().ForAwait();
-            }).ForAwait();
+                    await writer.FlushAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
 
         public void PubMany(Action<IPublisher> p)
@@ -443,7 +442,7 @@ namespace MyNatsClient
             EnsureArg.IsNotNullOrWhiteSpace(subject, nameof(subject));
             EnsureArg.IsNotNullOrWhiteSpace(body, nameof(body));
 
-            return await DoRequestAsync(subject, NatsEncoder.GetBytes(body), timeoutMs).ForAwait();
+            return await DoRequestAsync(subject, NatsEncoder.GetBytes(body), timeoutMs).ConfigureAwait(false);
         }
 
         public async Task<MsgOp> RequestAsync(string subject, byte[] body, int? timeoutMs = null)
@@ -453,7 +452,7 @@ namespace MyNatsClient
             EnsureArg.IsNotNullOrWhiteSpace(subject, nameof(subject));
             EnsureArg.HasItems(body, nameof(body));
 
-            return await DoRequestAsync(subject, body, timeoutMs).ForAwait();
+            return await DoRequestAsync(subject, body, timeoutMs).ConfigureAwait(false);
         }
 
         public async Task<MsgOp> RequestAsync(string subject, IPayload body, int? timeoutMs = null)
@@ -463,7 +462,7 @@ namespace MyNatsClient
             EnsureArg.IsNotNullOrWhiteSpace(subject, nameof(subject));
             EnsureArg.IsNotNull(body, nameof(body));
 
-            return await DoRequestAsync(subject, body.GetBytes().ToArray(), timeoutMs).ForAwait();
+            return await DoRequestAsync(subject, body.GetBytes().ToArray(), timeoutMs).ConfigureAwait(false);
         }
 
         private async Task<MsgOp> DoRequestAsync(string subject, byte[] body, int? timeoutMs)
@@ -482,12 +481,12 @@ namespace MyNatsClient
 
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await writer.WriteAsync(subCmd).ForAwait();
-                await writer.WriteAsync(unsubCmd).ForAwait();
-                await writer.FlushAsync().ForAwait();
-                await writer.WriteAsync(pubCmd).ForAwait();
-                await writer.FlushAsync().ForAwait();
-            }).ForAwait();
+                await writer.WriteAsync(subCmd).ConfigureAwait(false);
+                await writer.WriteAsync(unsubCmd).ConfigureAwait(false);
+                await writer.FlushAsync().ConfigureAwait(false);
+                await writer.WriteAsync(pubCmd).ConfigureAwait(false);
+                await writer.FlushAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
 
             Task.WaitAny(new[] { Task.Delay(timeoutMs ?? _connectionInfo.RequestTimeoutMs), taskComp.Task }, _cancellation.Token);
             if (!taskComp.Task.IsCompleted)
@@ -509,7 +508,7 @@ namespace MyNatsClient
 
                     throw ex;
                 })
-                .ForAwait();
+                .ConfigureAwait(false);
         }
 
         public ISubscription Sub(string subject)
@@ -563,20 +562,20 @@ namespace MyNatsClient
             if (!IsConnected)
                 return subscription;
 
-            await DoSubAsync(subscriptionInfo).ForAwait();
+            await DoSubAsync(subscriptionInfo).ConfigureAwait(false);
 
             return subscription;
         }
 
         private async Task DoSubAsync(SubscriptionInfo subscriptionInfo) => await _connection.WithWriteLockAsync(async writer =>
         {
-            await writer.WriteAsync(SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup)).ForAwait();
+            await writer.WriteAsync(SubCmd.Generate(subscriptionInfo.Subject, subscriptionInfo.Id, subscriptionInfo.QueueGroup)).ConfigureAwait(false);
 
             if (subscriptionInfo.MaxMessages.HasValue)
-                await writer.WriteAsync(UnsubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages)).ForAwait();
+                await writer.WriteAsync(UnsubCmd.Generate(subscriptionInfo.Id, subscriptionInfo.MaxMessages)).ConfigureAwait(false);
 
-            await writer.FlushAsync().ForAwait();
-        }).ForAwait();
+            await writer.FlushAsync().ConfigureAwait(false);
+        }).ConfigureAwait(false);
 
         private Subscription CreateMsgOpSubscription(SubscriptionInfo subscriptionInfo, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory)
         {
@@ -648,9 +647,9 @@ namespace MyNatsClient
                 if (!IsConnected)
                     return;
 
-                await writer.WriteAsync(cmdPayload).ForAwait();
-                await writer.FlushAsync().ForAwait();
-            }).ForAwait();
+                await writer.WriteAsync(cmdPayload).ConfigureAwait(false);
+                await writer.FlushAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
 
         private bool TryRemoveSubscription(SubscriptionInfo subscriptionInfo)

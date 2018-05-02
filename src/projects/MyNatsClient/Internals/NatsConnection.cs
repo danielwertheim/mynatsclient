@@ -125,8 +125,8 @@ namespace MyNatsClient.Internals
 
             ThrowIfNotConnected();
 
-            using (await _writeStreamSync.LockAsync(_cancellationToken).ForAwait())
-                await a(_writer).ForAwait();
+            using (await _writeStreamSync.LockAsync(_cancellationToken).ConfigureAwait(false))
+                await a(_writer).ConfigureAwait(false);
         }
 
         private void ThrowIfDisposed()
