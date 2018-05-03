@@ -75,10 +75,15 @@ await client2.SubAsync("tick", stream => stream.Subscribe(msg => {
 }));
 
 //or using an encoding package e.g Json
-await client2.Subsync("tickItem", stream => stream.Subscribe(msg => {
+await client2.SubAsync("tickItem", stream => stream.Subscribe(msg => {
     Console.WriteLine($"Clock ticked. Tick is {msg.FromJson<TestItem>().Value}");
 }))
 ```
+
+### Stream.Subscribe vs Stream.SubscribeSafe
+If you subscribe to e.g. the `MessageOpStream` using `Stream.Subscribe` and your handler is throwing an exception. That handler will get `OnError` invoked and then removed.
+
+If you instead subscribe using `Stream.SubscribeSafe` any unhandled exception will get swallowed.
 
 ## Request-Response sample
 Simple request-response sample. This sample also makes use of two clients. It can of course be the same client requesting and responding, you can also have more responders forming a queue group. Where one will be giving the answer.
