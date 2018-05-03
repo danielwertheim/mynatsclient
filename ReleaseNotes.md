@@ -4,10 +4,9 @@
 
 - **Changed**: Multi targeting frameworks: `NETStandard2.0`, `.NET4.5.1`.
 - **Changed**: The `MyNatsClient.Rx` NuGet package is no longer needed as a separate package as the `MyNatsClient` NuGet package now takes a dependency on `System.Reactive`.
-- **Changed**: `IFilteredObservable<T>` has been dropped as the main package now has access to `System.Reactive` which contains that logic.
-- **Changed**: `INatsObservable<T>` has been dropped and `IObservable<T>` is used instead.
-- **Changed**: `ObservableOf<T>` is now `SafeObservableOf<T>` and does not call `IObserver<T>.OnError` if a handler causes an exception.
-- **Changed**: Custom `DelegatingObserver` has been dropped as the main package now has access to `AnonymousObserver` in `System.Reactive`.
+- **Changed**: `IFilteredObservable<T>` has been dropped in favour for a pure `INatsObsevable<T>` which now uses custom operators for: `Where`, `Cast`, `OfType`, hence it's like `System.Reactive` so if you want to use that instead just don't use the extensions in `MyNatsClient`.
+- **Changed**: When using `Subscribe` against the streams, `ObservableOf<T>` does call `IObserver<T>.OnError` if a handler causes an exception. When using `SubscribeSafe` it will silently swallow any unhandled exception that your handler might cause.
+- **Changed**: Use `NatsObserver.Delegating|Safe` as `DelegatingObserver` is not made public anymore. You can easily copy it if you want it or use `AnonymousObserver` in `System.Reactive`.
 - **Changed**: Constructor for `NatsClient` no longer accepts `Id` as it has no usage.
 - **Changed**: All methods in `INatsClient` for subscribing is now called `Sub` or `SubAsync`. Hence, `SubWithObserver(...)`, `SubWithHandler(...)` and `SubWithObservableSubscription(...)` is now `Sub(...)`. And `SubWithObserverAsync(...)`, `SubWithHandlerAsync(...)` and `SubWithObservableSubscriptionAsync(...)` is now `SubAsync(...)`
 - **Changed**: Support for statistics defined by `INatsClientStats` has been dropped and is not accessible via `client.Stats` anymore.
