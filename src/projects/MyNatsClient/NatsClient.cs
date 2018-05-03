@@ -16,7 +16,7 @@ namespace MyNatsClient
 {
     public class NatsClient : INatsClient, IDisposable
     {
-        private static readonly ILogger Logger = LoggerManager.Resolve(typeof(NatsClient));
+        private readonly ILogger _logger = LoggerManager.Resolve(typeof(NatsClient));
 
         //TODO: Make available as options
         private const int ConsumerPingAfterMsSilenceFromServer = 20000;
@@ -73,13 +73,13 @@ namespace MyNatsClient
             {
                 for (var attempts = 0; !IsConnected && attempts < MaxReconnectDueToFailureAttempts; attempts++)
                 {
-                    Logger.Debug($"Trying to reconnect after disconnection due to failure. attempt={attempts.ToString()}");
+                    _logger.Debug($"Trying to reconnect after disconnection due to failure. attempt={attempts.ToString()}");
                     Connect();
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("Failed while trying to reconnect client.", ex);
+                _logger.Error("Failed while trying to reconnect client.", ex);
             }
 
             if (!IsConnected)
@@ -174,7 +174,7 @@ namespace MyNatsClient
                         if (ex == null)
                             return;
 
-                        Logger.Error("Internal client worker exception.", ex);
+                        _logger.Error("Internal client worker exception.", ex);
 
                         _eventMediator.Emit(new ClientWorkerFailed(this, ex));
                     });
@@ -188,7 +188,7 @@ namespace MyNatsClient
                 !_cancellation.IsCancellationRequested &&
                 IsConnected)
             {
-                Logger.Trace("Worker cycle.");
+                _logger.Trace("Worker cycle.");
 
                 var lastOpReceivedAt = DateTime.UtcNow;
 
@@ -209,14 +209,14 @@ namespace MyNatsClient
                 }
                 catch (IOException ioex)
                 {
-                    Logger.Error("Worker task got IOException.", ioex);
+                    _logger.Error("Worker task got IOException.", ioex);
 
                     if (_cancellation?.IsCancellationRequested == true)
                         break;
 
                     if (ioex.InnerException is SocketException socketEx)
                     {
-                        Logger.Error($"Worker task got SocketException with SocketErrorCode='{socketEx.SocketErrorCode}'");
+                        _logger.Error($"Worker task got SocketException with SocketErrorCode='{socketEx.SocketErrorCode}'");
 
                         if (socketEx.SocketErrorCode == SocketError.Interrupted)
                             break;
@@ -504,7 +504,7 @@ namespace MyNatsClient
                     if (ex == null)
                         return t.Result;
 
-                    Logger.Error("Exception while performing request.", ex);
+                    _logger.Error("Exception while performing request.", ex);
 
                     throw ex;
                 })

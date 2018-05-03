@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Moq;
 using MyNatsClient;
 using MyNatsClient.Events;
 using MyNatsClient.Extensions;
@@ -37,6 +38,11 @@ namespace IntegrationTests
             var wasDisconnectedDueToFailure = false;
             var wasReconnected = false;
 
+            var ex = new Exception("This will destroy things.");
+            var throwingLogger = new Mock<ILogger>();
+            throwingLogger.Setup(f => f.Error(It.Is<string>(m => m == "Error in observer while emitting value."), It.IsAny<Exception>())).Throws(ex);
+            LoggerManager.Resolve = type => throwingLogger.Object;
+
             _client = new NatsClient(_cnInfoWithAutoReconnect);
             _client.Connect();
 
@@ -57,7 +63,7 @@ namespace IntegrationTests
                     ReleaseOne();
                 });
 
-            _client.MsgOpStream.Subscribe(msg => throw new Exception("FAIL"));
+            _client.MsgOpStream.Subscribe(msg => throw new Exception("Fail"));
 
             await _client.PubAsync(subject, "This message will fail");
 
@@ -76,6 +82,11 @@ namespace IntegrationTests
             const string subject = "test";
             var wasDisconnectedDueToFailure = false;
             var wasReconnected = false;
+
+            var ex = new Exception("This will destroy things.");
+            var throwingLogger = new Mock<ILogger>();
+            throwingLogger.Setup(f => f.Error(It.Is<string>(m => m == "Error in observer while emitting value."), It.IsAny<Exception>())).Throws(ex);
+            LoggerManager.Resolve = type => throwingLogger.Object;
 
             _client = new NatsClient(_cnInfoWithNoAutoReconnect);
             _client.Connect();

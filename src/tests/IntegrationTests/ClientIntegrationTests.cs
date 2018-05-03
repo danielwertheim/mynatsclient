@@ -18,6 +18,8 @@ namespace IntegrationTests
 
         protected ClientIntegrationTests()
         {
+            LoggerManager.UseNullLogger();
+
             _sync = new AutoResetEvent(false);
 
             var hosts = TestSettings.GetHosts();
