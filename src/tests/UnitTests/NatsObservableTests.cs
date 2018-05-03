@@ -125,6 +125,26 @@ namespace UnitTests
         }
 
         [Fact]
+        public void Emitting_Should_not_continue_emitting_to_failing_observer_but_to_other_observers_When_an_observer_has_failed_in_error_handler()
+        {
+            var failingObserver = new Mock<IObserver<Data>>();
+            failingObserver.Setup(f => f.OnNext(It.IsAny<Data>())).Throws<Exception>();
+            failingObserver.Setup(f => f.OnError(It.IsAny<Exception>())).Throws<Exception>();
+            var nonFailingObserver = new Mock<IObserver<Data>>();
+
+            UnitUnderTest.Subscribe(failingObserver.Object);
+            UnitUnderTest.Subscribe(nonFailingObserver.Object);
+
+            UnitUnderTest.Emit(Mock.Of<Data>());
+            UnitUnderTest.Emit(Mock.Of<Data>());
+
+            failingObserver.Verify(f => f.OnNext(It.IsAny<Data>()), Times.Once);
+            failingObserver.Verify(f => f.OnError(It.IsAny<Exception>()), Times.Once);
+            nonFailingObserver.Verify(f => f.OnNext(It.IsAny<Data>()), Times.Exactly(2));
+            nonFailingObserver.Verify(f => f.OnError(It.IsAny<Exception>()), Times.Never);
+        }
+
+        [Fact]
         public void Emitting_Should_invoke_logger_for_error_When_exception_is_thrown()
         {
             var thrown = new Exception("I FAILED!");

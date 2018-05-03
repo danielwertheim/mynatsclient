@@ -34,12 +34,12 @@ namespace IntegrationTests
             var otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            _client.Sub(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg =>
+            _client.Sub(subject, stream => stream.Subscribe(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
-            })));
-            _client.Sub(otherSubject);
+            }));
+            _client.Sub(otherSubject, stream => stream.Subscribe(msg => ReleaseOne()));
 
             await _client.PubAsync(subject, "Test1");
             WaitOne();
@@ -59,12 +59,12 @@ namespace IntegrationTests
             var otherSubject = subject + "fail";
             var interceptedSubjects = new List<string>();
 
-            await _client.SubAsync(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg =>
+            await _client.SubAsync(subject, stream => stream.Subscribe(msg =>
             {
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
-            })));
-            _client.Sub(otherSubject);
+            }));
+            _client.Sub(otherSubject, stream => stream.Subscribe(msg => ReleaseOne()));
 
             await _client.PubAsync(subject, "Test1");
             WaitOne();
@@ -89,7 +89,7 @@ namespace IntegrationTests
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
             }));
-            _client.Sub(otherSubject);
+            _client.Sub(otherSubject, stream => stream.Subscribe(msg => ReleaseOne()));
 
             await _client.PubAsync(subject, "Test1");
             WaitOne();
@@ -114,7 +114,7 @@ namespace IntegrationTests
                 interceptedSubjects.Add(msg.Subject);
                 ReleaseOne();
             }));
-            _client.Sub(otherSubject);
+            _client.Sub(otherSubject, stream => stream.Subscribe(msg => ReleaseOne()));
 
             await _client.PubAsync(subject, "Test1");
             WaitOne();

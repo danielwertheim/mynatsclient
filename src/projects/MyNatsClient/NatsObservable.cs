@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using MyNatsClient.Internals;
 
 namespace MyNatsClient
 {
@@ -46,9 +47,9 @@ namespace MyNatsClient
                 {
                     Logger.Error("Error in observer while emitting value.", ex);
 
-                    subscription.Value.Observer.OnError(ex);
+                    RemoveSubscription(subscription.Key);
 
-                    Unsubscribe(subscription.Key);
+                    Swallow.Everything(() => subscription.Value.Observer.OnError(ex));
                 }
             }
         }
@@ -57,14 +58,14 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
-            var sub = new ObSubscription(observer, Unsubscribe);
+            var sub = new ObSubscription(observer, RemoveSubscription);
 
             _subscriptions[sub.Id] = sub;
 
             return sub;
         }
 
-        private void Unsubscribe(Guid subscriptionId)
+        private void RemoveSubscription(Guid subscriptionId)
             => _subscriptions.TryRemove(subscriptionId, out var _);
 
         private void ThrowIfDisposed()
