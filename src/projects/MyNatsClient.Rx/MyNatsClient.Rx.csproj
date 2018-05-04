@@ -8,12 +8,17 @@
     <RepositoryType>Git</RepositoryType>
     <PackageReleaseNotes>https://github.com/danielwertheim/mynatsclient/blob/master/ReleaseNotes.md</PackageReleaseNotes>
     <PackageTags>NATS NATS.io messaging PubSub pub-sub request-response rx reactivex reactiveextensions</PackageTags>
-    <Description>Provides a simple, effective sync and async library for interacting with NATS Server using .NET and .NET Core. It uses IObservable so it is ReactiveX (RX) friendly.</Description>
+    <Description>Convenience package that installs MyNatsClient and ReactiveExtensions (System.Reactive). MyNatsClient, provides a simple, effective sync and async library for interacting with NATS Server using .NET and .NET Core. It uses IObservable so it is ReactiveX (RX) friendly.</Description>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Ensure.That" Version="8.0.0" />
+    <PackageReference Include="System.Reactive" Version="3.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyNatsClient\MyNatsClient.csproj" />
   </ItemGroup>
 
 </Project>

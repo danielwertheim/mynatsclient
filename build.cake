@@ -18,8 +18,7 @@ Task("Default")
 Task("CI")
     .IsDependentOn("Default")
     .IsDependentOn("IntegrationTests")
-    .IsDependentOn("Pack")
-    .IsDependentOn("Upload");
+    .IsDependentOn("Pack");
 /********************************************/
 Task("InitOutDir").Does(() => {
     EnsureDirectoryExists(config.OutDir);
