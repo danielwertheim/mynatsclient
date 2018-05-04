@@ -40,6 +40,12 @@ If you just want the client and not the Reactive Extensions packages, use:
 install-package MyNatsClient
 ```
 
+For convenience, if you want a consumer that makes use of Reactive Extensions, use:
+
+```
+install-package MyNatsClient.Rx
+```
+
 ### Encodings
 You can also get simplified support for specific payload encodings.
 
@@ -55,27 +61,27 @@ Simple pub-sub sample showing one client that publishes and one that subscribes.
 **Publisher**
 
 ```csharp
-var cnInfo1 = new ConnectionInfo("192.168.1.10");
-var client1 = new NatsClient(cnInfo);
+var cnInfo = new ConnectionInfo("192.168.1.10");
+var client = new NatsClient(cnInfo);
 
-await client1.PubAsync("tick", GetNextTick());
+await client.PubAsync("tick", GetNextTick());
 
 //or using an encoding package e.g. Json
-await client1.PubAsJsonAsync("tickItem", new Tick { Value = GetNextTick() });
+await client.PubAsJsonAsync("tickItem", new Tick { Value = GetNextTick() });
 ```
 
 **Subscriber**
 
 ```csharp
-var cnInfo2 = new ConnectionInfo("192.168.1.20");
-var client2 = new NatsClient(cnInfo);
+var cnInfo = new ConnectionInfo("192.168.1.10");
+var client = new NatsClient(cnInfo);
 
-await client2.SubAsync("tick", stream => stream.Subscribe(msg => {
+await client.SubAsync("tick", stream => stream.Subscribe(msg => {
     Console.WriteLine($"Clock ticked. Tick is {msg.GetPayloadAsString()}");
 }));
 
 //or using an encoding package e.g Json
-await client2.SubAsync("tickItem", stream => stream.Subscribe(msg => {
+await client.SubAsync("tickItem", stream => stream.Subscribe(msg => {
     Console.WriteLine($"Clock ticked. Tick is {msg.FromJson<TestItem>().Value}");
 }))
 ```
@@ -83,7 +89,15 @@ await client2.SubAsync("tickItem", stream => stream.Subscribe(msg => {
 ### Stream.Subscribe vs Stream.SubscribeSafe
 If you subscribe to e.g. the `MessageOpStream` using `Stream.Subscribe` and your handler is throwing an exception. That handler will get `OnError` invoked and then removed.
 
+```csharp
+await client.SubAsync("mySubject", stream => stream.Subscribe(msg => DoSomething(msg)));
+```
+
 If you instead subscribe using `Stream.SubscribeSafe` any unhandled exception will get swallowed.
+
+```csharp
+await client.SubAsync("mySubject", stream => stream.SubscribeSafe(msg => DoSomething(msg)));
+```
 
 ## Request-Response sample
 Simple request-response sample. This sample also makes use of two clients. It can of course be the same client requesting and responding, you can also have more responders forming a queue group. Where one will be giving the answer.
@@ -91,21 +105,21 @@ Simple request-response sample. This sample also makes use of two clients. It ca
 **Requester**
 
 ```csharp
-var cnInfo1 = new ConnectionInfo("192.168.1.10");
-var client1 = new NatsClient(cnInfo);
+var cnInfo = new ConnectionInfo("192.168.1.10");
+var client = new NatsClient(cnInfo);
 
-var response = await client1.RequestAsync("getTemp", "stockholm@sweden");
+var response = await client.RequestAsync("getTemp", "stockholm@sweden");
 Console.WriteLine($"Temp in Stockholm is {response.GetPayloadAsString()}");
 ```
 
 **Responder**
 
 ```csharp
-var cnInfo2 = new ConnectionInfo("192.168.1.20");
-var client2 = new NatsClient(cnInfo);
+var cnInfo = new ConnectionInfo("192.168.1.10");
+var client = new NatsClient(cnInfo);
 
-await client2.SubAsync("getTemp", stream.Subscribe(msg => {
-    client2.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
+await client.SubAsync("getTemp", stream.Subscribe(msg => {
+    client.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
 }));
 ```
 
