@@ -3,7 +3,6 @@
 ## v0.12.0 - UPCOMING
 
 - **Changed**: Multi targeting frameworks: `NETStandard2.0`, `.NET4.5.1`.
-- **Changed**: The `MyNatsClient.Rx` NuGet package is no longer needed as a separate package as the `MyNatsClient` NuGet package now takes a dependency on `System.Reactive`.
 - **Changed**: `IFilteredObservable<T>` has been dropped in favour for a pure `INatsObsevable<T>` which now uses custom operators for: `Where`, `Cast`, `OfType`, hence it's like `System.Reactive` so if you want to use that instead just don't use the extensions in `MyNatsClient`.
 - **Changed**: When using `Subscribe` against the streams, `ObservableOf<T>` does call `IObserver<T>.OnError` if a handler causes an exception. When using `SubscribeSafe` it will silently swallow any unhandled exception that your handler might cause.
 - **Changed**: Use `NatsObserver.Delegating|Safe` as `DelegatingObserver` is not made public anymore. You can easily copy it if you want it or use `AnonymousObserver` in `System.Reactive`.
