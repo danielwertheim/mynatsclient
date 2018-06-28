@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net451;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net46;netstandard2.0</TargetFrameworks>
     <PackageLicenseUrl>https://raw.githubusercontent.com/danielwertheim/mynatsclient/master/LICENSE.txt</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/danielwertheim/mynatsclient</PackageProjectUrl>
     <RepositoryUrl>https://github.com/danielwertheim/mynatsclient</RepositoryUrl>
@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Reactive" Version="3.1.1" />
+    <PackageReference Include="System.Reactive" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>
