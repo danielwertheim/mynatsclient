@@ -6,8 +6,6 @@ namespace MyNatsClient
 {
     public interface INatsConnectionManager
     {
-        ISocketFactory SocketFactory { set; }
-
         /// <summary>
         /// Tries to establish a connection to any of the specified hosts in the
         /// sent <see cref="ConnectionInfo"/>.

@@ -1,11 +1,11 @@
 # MyNatsClient
-A **.NET4.5+ and .NET Core supported**, `async` and [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) (RX) friendly client for [NATS Server](https://nats.io). It's RX friendly cause it's based around `IObservable<T>`. It keeps as much of NATS domain language as possible but does not limit itself to follow the APIs of other NATS clients, but instead offer one that fits the .NET domain and one that first and foremost is a client written for .NET. Not GO or JAVA or Foo.
+A **.NETStandard2.0 and .NET 4.5.1+**, `async` and [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) (RX) friendly client for [NATS Server](https://nats.io). It's RX friendly cause it's based around `IObservable<T>`. It keeps as much of NATS domain language as possible but does not limit itself to follow the APIs of other NATS clients, but instead offer one that fits the .NET domain and one that first and foremost is a client written for .NET. Not GO or JAVA or Foo.
 
 It offers both simple and advanced usage. By default it's configured to auto reply on heartbeat pings and to reconnect on failures. You can seed it with multiple hosts in a cluster. So if one fails it will reconnect to another one.
 
 If one of your in-process observer subscription fails, it will not unsubscribe them. It will however invoke the observers `OnError` callback. This is done so that one failing message against a certain subject does not prevent future messages from being handled.
 
-It keeps track of stats of when last contact to a server was, so that it can send a `PING` to see if server is still alive.
+It keeps track of when the last contact to a server was, so that it can send a `PING` to see if server is still alive.
 
 Instead of relying on background flushing like other clients do, it **auto flushes** for each `PUB`. You can also use the construct `client.PubMany` to publish many messages and get one flush for them all. Finally **you can also control the flushing manually**.
 
@@ -18,8 +18,11 @@ It supports:
 ## Samples
 There's a separate repo for [the samples](https://github.com/danielwertheim/mynatsclient-samples)
 
-## .NET and .NET Core
-Two different DLL's are provided. One for traditional **.NET4.5+** and one for **.NET Core** via .NET Standard 1.6.
+## .NET and .NET Standard
+The project multi targets the following frameworks:
+
+- .NET4.5.1
+- .NETStandard2.0
 
 ## Metrics
 Fast? Yes it is. More info can be found here: [MyNatsClient - It flushes, but so can you](http://danielwertheim.se/mynatsclient-it-flushes-but-so-can-you/)
@@ -50,7 +53,7 @@ You can also get simplified support for specific payload encodings.
 install-package MyNatsClient.Encodings.Json
 ```
 
-This gives you a `JsonEncoding` and some premade extension methods under `MyNatsClient.Encodings.Json.Extensions`
+This gives you a `JsonEncoding` and some pre-made extension methods under `MyNatsClient.Encodings.Json.Extensions`
 
 ## Pub-Sub sample
 Simple pub-sub sample showing one client that publishes and one that subscribes. This can of course be the same client and you can also have more clients subscribing etc.
@@ -58,29 +61,42 @@ Simple pub-sub sample showing one client that publishes and one that subscribes.
 **Publisher**
 
 ```csharp
-var cnInfo1 = new ConnectionInfo("192.168.1.10");
-var client1 = new NatsClient("client1", cnInfo);
+var cnInfo = new ConnectionInfo("192.168.1.10");
+var client = new NatsClient(cnInfo);
 
-await client1.PubAsync("tick", GetNextTick());
+await client.PubAsync("tick", GetNextTick());
 
 //or using an encoding package e.g. Json
-await client1.PubAsJsonAsync("tickItem", new Tick { Value = GetNextTick() });
+await client.PubAsJsonAsync("tickItem", new Tick { Value = GetNextTick() });
 ```
 
 **Subscriber**
 
 ```csharp
-var cnInfo2 = new ConnectionInfo("192.168.1.20");
-var client2 = new NatsClient("client2", cnInfo);
+var cnInfo = new ConnectionInfo("192.168.1.10");
+var client = new NatsClient(cnInfo);
 
-await client2.SubWithHandlerAsync("tick", msg => {
+await client.SubAsync("tick", stream => stream.Subscribe(msg => {
     Console.WriteLine($"Clock ticked. Tick is {msg.GetPayloadAsString()}");
-});
+}));
 
 //or using an encoding package e.g Json
-await client2.SubWithHandlerAsync("tickItem", msg => {
+await client.SubAsync("tickItem", stream => stream.Subscribe(msg => {
     Console.WriteLine($"Clock ticked. Tick is {msg.FromJson<TestItem>().Value}");
-})
+}))
+```
+
+### Stream.Subscribe vs Stream.SubscribeSafe
+If you subscribe to e.g. the `MessageOpStream` using `Stream.Subscribe` and your handler is throwing an exception. That handler will get `OnError` invoked and then removed.
+
+```csharp
+await client.SubAsync("mySubject", stream => stream.Subscribe(msg => DoSomething(msg)));
+```
+
+If you instead subscribe using `Stream.SubscribeSafe` any unhandled exception will get swallowed.
+
+```csharp
+await client.SubAsync("mySubject", stream => stream.SubscribeSafe(msg => DoSomething(msg)));
 ```
 
 ## Request-Response sample
@@ -89,22 +105,22 @@ Simple request-response sample. This sample also makes use of two clients. It ca
 **Requester**
 
 ```csharp
-var cnInfo1 = new ConnectionInfo("192.168.1.10");
-var client1 = new NatsClient("client1", cnInfo);
+var cnInfo = new ConnectionInfo("192.168.1.10");
+var client = new NatsClient(cnInfo);
 
-var response = await client1.RequestAsync("getTemp", "stockholm@sweden");
+var response = await client.RequestAsync("getTemp", "stockholm@sweden");
 Console.WriteLine($"Temp in Stockholm is {response.GetPayloadAsString()}");
 ```
 
 **Responder**
 
 ```csharp
-var cnInfo2 = new ConnectionInfo("192.168.1.20");
-var client2 = new NatsClient("client2", cnInfo);
+var cnInfo = new ConnectionInfo("192.168.1.10");
+var client = new NatsClient(cnInfo);
 
-await client2.SubWithHandlerAsync("getTemp", msg => {
+await client.SubAsync("getTemp", stream.Subscribe(msg => {
     client.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
-});
+}));
 ```
 
 ## Advanced usage
@@ -135,16 +151,14 @@ var connectionInfo = new ConnectionInfo(
     }
 };
 
-//The ClientId is not really used. Something you can use to look at
-//if you have many clients running and same event handlers or something.
-using (var client = new NatsClient("myClientId", connectionInfo))
+using (var client = new NatsClient(connectionInfo))
 {
     //You can subscribe to dispatched client events
     //to react on something that happened to the client
     client.Events.OfType<ClientConnected>().Subscribe(ev
         => Console.WriteLine("Client connected!"););
     
-    client.Events.OfType<ClientConsumerFailed>().Subscribe(ev
+    client.Events.OfType<ClientWorkerFailed>().Subscribe(ev
         => Console.WriteLine($"Client consumer failed with Exception: '{ev.Exception}'.");
 
     //Disconnected, either by client.Disconnect() call
@@ -164,7 +178,6 @@ using (var client = new NatsClient("myClientId", connectionInfo))
     {
         Console.WriteLine("===== RECEIVED =====");
         Console.Write(op.GetAsString());
-        Console.WriteLine($"OpCount: {client.Stats.OpCount}");
     });
 
     //Filter for specific types
@@ -193,10 +206,7 @@ using (var client = new NatsClient("myClientId", connectionInfo))
         Console.WriteLine($"Payload: {Encoding.UTF8.GetString(msg.Payload)}");
     });
 
-    var subscription = client.MsgOpStream.Subscribe(msg =>
-    {
-        //Will handle MsgOp matching Subject 'foo'
-    }, msg => msg.Subject == "foo");
+    var subscription = client.Sub("foo");
 
     client.Connect();
 
@@ -219,20 +229,16 @@ The Client will keep track of subscriptions done. And you can set them up before
 
 When subscribing to a subject using the client, you will be returned a `ISubscription`. The methods for subscribing are:
 
-- `client.Sub(subscriptionInfo)`
-- `client.SubAsync(subscriptionInfo)`
-- `client.SubWithHandler(subscriptionInfo, msg => {})`
-- `client.SubWithHandlerAsync(subscriptionInfo, msg => {})`
-- `client.SubWithObserver(subscriptionInfo, observer)`
-- `client.SubWithObserverAsync(subscriptionInfo, observer)`
-- `client.SubWithObservableSubscription(subscriptionInfo, msgs => msgs.Subscribe(...))`
-- `client.SubWithObservableSubscriptionAsync(subscriptionInfo, msgs => msgs.Subscribe(...))`
+- `client.Sub(string|subscriptionInfo)`
+- `client.Sub(string|subscriptionInfo, msgs => msgs.Subscribe(...))`
+- `client.SubAsync(string|subscriptionInfo)`
+- `client.SubAsync(string|subscriptionInfo, msgs => msgs.Subscribe(...))`
 
 To `Unsubscribe`, you can do **any of the following**:
 
 - Dispose the `ISubscription` returned by any of the subscribing methods listed above.
 - Dispose the `NatsClient` and it will take care of the subscriptions.
-- Pass the `ISubscription.SubscriptionInfo` to any of the `client.Unsub|UnsubAsync` methods
+- Pass the `ISubscription` or the `SubscriptionInfo` to any of the `client.Unsub|UnsubAsync` methods
 - Create the subscription using a `SubscriptionInfo` with `MaxMessages`, then it will auto unsubscribe after receiving the messages.
 
 **NOTE** it's perfectly fine to do both e.g. `subscription.Dispose` as well as `consumer.Dispose` or e.g. `consumer.Unsubscribe` and then `subscription.Dispose`.
@@ -243,7 +249,7 @@ The events aren't normal events, the events are distributed via `client.Events` 
 * ClientConnected
 * ClientDisconnected
 * ClientAutoReconnectFailed
-* ClientConsumerFailed
+* ClientWorkerFailed
 
 ### ClientConnected
 Signals that the client is connected and ready for use.
@@ -278,7 +284,7 @@ client.Events.OfType<ClientAutoReconnectFailed>().Subscribe(ev =>
 });
 ```
 
-### ClientConsumerFailed
+### ClientWorkerFailed
 This would be dispatched from the client, if the `Consumer` (internal part that continuously reads from server and dispatches messages) gets an `ErrOp` or if there's an `Exception`. E.g. if there's an unhandled exception from one of your **subscribed observers**.
 
 ## Connection behaviour
@@ -349,14 +355,20 @@ public class SocketOptions
     /// Gets or sets the Connect timeout in milliseconds for the Socket.
     /// </summary>
     public int ConnectTimeoutMs { get; set; } = 5000;
+
+    /// <summary>
+    /// Gets or sets value indicating if the Nagle algoritm should be used or not
+    /// on the created Socket.
+    /// </summary>
+    public bool? UseNagleAlgorithm { get; set; } = false;
 }
 ```
 
 ## SocketFactory
-If you like to tweak socket options, you inject your custom implementation of `ISocketFactory` on the client:
+If you like to tweak socket options, you inject your custom implementation of `ISocketFactory` to the client:
 
 ```csharp
-client.ConnectionManager..SocketFactory = new MyMonoOptimizedSocketFactory();
+var client = new NatsClient(cnInfo, new MyMonoOptimizedSocketFactory());
 ```
 
 ## Logging
@@ -364,6 +376,7 @@ Some information is passed to a logger, e.g. Errors while trying to connect to a
 
 ```csharp
 public class MyLogger : ILogger {
+    public void void Trace(string message) {}
     public void Debug(string message) {}
     public void Info(string message) {}
     public void Error(string message) {}
@@ -386,15 +399,12 @@ The Client has both synchronous and asynchronous methods. They are pure versions
 ## Observable message streams
 The message streams are exposed as `Observables`. So you can use [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) to consume e.g. the `client.OpStream` for `IOp` implementations: `ErrOp`, `InfoOp`, `MsgOp`, `PingOp`, `PongOp`. You do this using `client.OpStream.Subscribe(...)`. For `MsgOp`ONLY, use the `client.MsgOpStream.Subscribe(...)`.
 
-For convenience you can install the `MyNatsClient.Rx` [NuGet package](http://www.nuget.org/packages/mynatsclient.rx), which then lets you do stuff like:
-
 ```csharp
 //Subscribe to OpStream ALL ops e.g InfoOp, ErrorOp, MsgOp, PingOp, PongOp.
 client.OpStream.Subscribe(op =>
 {
     Console.WriteLine("===== RECEIVED =====");
     Console.Write(op.GetAsString());
-    Console.WriteLine($"OpCount: {client.Stats.OpCount}");
 });
 
 //Also proccess PingOp explicitly
@@ -435,9 +445,9 @@ There's no buffering or anything going on with incoming `IOp` messages. So if yo
 The above is `in process subscribers` and you will not get any `IOp` dispatched to your handlers, unless you have told the client to subscribe to a NATS subject.
 
 ```csharp
-client.Sub("subject", "subId");
+client.Sub("subject");
 //OR
-await client.SubAsync("subject", "subId");
+await client.SubAsync("subject");
 ```
 
 ### Terminate an InProcess Subscription
@@ -448,26 +458,23 @@ This will happen automatically if your subscription is causing an unhandled exce
 **PLEASE NOTE!** The NATS subscription is still there. Use `client.Unsub(...)` or `client.UnsubAsync(...)` to let the server know that your client should not receive messages for a certain subject anymore.
 
 ## Consumer pings and stuff
-The Consumer looks at `client.Stats.LastOpReceivedAt` to see if it has taken to long time since it heard from the server.
+The Consumer keeps track of how long it was since it got a message from the broker to see if it has taken to long time since it heard from it.
 
 **NOTE** this only kicks in as long as the client thinks the `Socket` is connected. If there's a known hard disconnect it will cleanly just get disconnected.
 
 If `ConsumerPingAfterMsSilenceFromServer` (20000ms) has passed, it will start to `PING` the server.
 
-If `ConsumerMaxMsSilenceFromServer` (40000ms) has passed, it will cause an exception and you will get notified via a `ClientConsumerFailed` event dispatched via `client.Events`. The Client will also be disconnected, and you will get the `ClientDisconnected` event, which you can use to reconnect.
+If `ConsumerMaxMsSilenceFromServer` (40000ms) has passed, it will cause an exception and you will get notified via a `ClientWorkerFailed` event dispatched via `client.Events`. The Client will also be disconnected, and you will get the `ClientDisconnected` event, which you can use to reconnect.
 
 ## Exceptions
-### Catch all unhandled exceptions per stream
-The Client exposes e.g. `MsgOpStream` which has a `OnException` delegate defined. You can use it to get notified about exceptions. These exceptions will automatically be logged via `ILogger.Error` which is resolved via `LoggerManager.Resolve` which is something you can hook into.
-
-### Catch exceptions using the DelegatingObserver
+### Catch exceptions using the AnonymousObserver
 Subscribing with the use of an observer makes it easy for you to catch exceptions and handle them.
 
 ```csharp
 var c = 0;
 
 //Only the OnNext (the first argument) is required.
-var myObserver = new DelegatingObserver<MsgOp>(
+var myObserver = new AnonymousObserver<MsgOp>(
   msg =>
   {
     Console.WriteLine($"Observer OnNext got: {msg.GetPayloadAsString()}");
@@ -481,7 +488,7 @@ var myObserver = new DelegatingObserver<MsgOp>(
 
 //Subscribe to subject "test" and hook up the observer
 //for incoming messages on that subject
-var sub = _client.SubWithObserver("test", myObserver);
+var sub = _client.Sub("test", stream => stream.Subscribe(myObserver));
 
 
 //Publish some messages
@@ -523,12 +530,12 @@ The handler will just swallow the exception and continue working.
 Changing the subscribing part from the first sample above to:
 
 ```csharp
-var sub = _client.SubWithHandler("test", msg =>
+var sub = _client.Sub("test", stream => stream.Subscribe(msg =>
 {
   Console.WriteLine($"Observer OnNext got: {msg.GetPayloadAsString()}");
 
   throw new Exception(c++.ToString());
-});
+}));
 ```
 
 This will give the following output:

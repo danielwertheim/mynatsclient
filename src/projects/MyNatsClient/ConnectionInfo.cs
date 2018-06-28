@@ -92,7 +92,8 @@ namespace MyNatsClient
                     SendBufferSize = SocketOptions.SendBufferSize,
                     ReceiveTimeoutMs = SocketOptions.ReceiveTimeoutMs,
                     SendTimeoutMs = SocketOptions.SendTimeoutMs,
-                    ConnectTimeoutMs = SocketOptions.ConnectTimeoutMs
+                    ConnectTimeoutMs = SocketOptions.ConnectTimeoutMs,
+                    UseNagleAlgorithm = SocketOptions.UseNagleAlgorithm
                 }
             };
         }

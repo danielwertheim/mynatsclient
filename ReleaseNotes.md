@@ -1,6 +1,26 @@
 # Release notes
+
+## v0.12.0 - UPCOMING
+
+- **Changed**: Multi targeting frameworks: `NETStandard2.0` and `.NET4.5.1` for `MyNatsClient` and `NETStandard2.0` and `.NET4.6` for `MyNatsClient.Rx`.
+- **Changed**: `IFilteredObservable<T>` has been dropped in favour for a pure `INatsObsevable<T>` which now uses custom operators for: `Where`, `Cast`, `OfType`, hence it's like `System.Reactive` so if you want to use that instead just don't use the extensions in `MyNatsClient`.
+- **Changed**: When using `Subscribe` against the streams, `ObservableOf<T>` does call `IObserver<T>.OnError` if a handler causes an exception. When using `SubscribeSafe` it will silently swallow any unhandled exception that your handler might cause.
+- **Changed**: Use `NatsObserver.Delegating|Safe` as `DelegatingObserver` is not made public anymore. You can easily copy it if you want it or use `AnonymousObserver` in `System.Reactive`.
+- **Changed**: Constructor for `NatsClient` no longer accepts `Id` as it has no usage.
+- **Changed**: All methods in `INatsClient` for subscribing is now called `Sub` or `SubAsync`. Hence, `SubWithObserver(...)`, `SubWithHandler(...)` and `SubWithObservableSubscription(...)` is now `Sub(...)`. And `SubWithObserverAsync(...)`, `SubWithHandlerAsync(...)` and `SubWithObservableSubscriptionAsync(...)` is now `SubAsync(...)`
+- **Changed**: Support for statistics defined by `INatsClientStats` has been dropped and is not accessible via `client.Stats` anymore.
+- **Changed**: `OnException` hook has been removed.
+- **Changed**: `ClientConsumerFailed` is now `ClientWorkerFailed`.
+- **Changed**: `MyNatsClient.Encodings.Json` now uses `DefaultContractResolver` and `DefaultNamingStrategy` instead of `CamelCase`. If you want the latter, this has to be explicitly configured.
+- **Changed**: `MyNatsClient.Encodings.Json*  now uses `DateTimeZoneHandling.RoundtripKind` instead of `DateTimeZoneHandling.Utc`. If you want the latter, this has to be explicitly configured.
+- **Changed**: Removed all variants of `client.Sub` that accepts an `IObserver<T>` or `Action<T>` as you as the user of the client should own the `stream.Subscribe` call. You will get the stream passed: `client.Sub("mysubject", stream => stream.Subscribe(msg => {}))` or e.g. `client.Sub("mysubject", stream => stream.SubscribeSafe(myObserver)`.
+- **Fix**: Bug with `Unsub` not being performed correctly if `ISubscription` was disposed.
+- **New**: Constructor for `NatsClient` now accepts an optional `ISocketFactory`.
+- **New**: `SocketOptions.UseNagleAlgorithm`, defaults to (false).
+- **New**: New overloads of `client.Unsub(...)` and `client.UnsubAsync(...)`, which now accepts the `ISubscription`.
+
 ## v0.11.0 - 2017-01-26
-- **Fixed**: Although it workes as it was, the `RequestAsync` method now uses same patter as other clients, and invokes an automatic `unsub` with `maxMessages=1` so that many responders doesn't make the client get unnecessary replies.
+- **Fixed**: Although it worked as it was, the `RequestAsync` method now uses same patter as other clients, and invokes an automatic `unsub` with `maxMessages=1` so that many responders doesn't make the client get unnecessary replies.
 
 ## v0.10.0 - 2017-01-10
 - **Added**: New NuGet `MyNatsClient.Encodings.Json` which ads simple `Encode` and `Decode` support for JSON and simplifying extension methods for it.

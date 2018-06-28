@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using MyNatsClient.Internals.Commands;
-using MyNatsClient.Internals.Extensions;
 
 namespace MyNatsClient.Internals
 {
@@ -34,12 +33,12 @@ namespace MyNatsClient.Internals
             => _pubPayloadSync(PubCmd.Generate(subject, body, replyTo));
 
         public async Task PubAsync(string subject, string body, string replyTo = null)
-            => await _pubBytesAsync(PubCmd.Generate(subject, body, replyTo)).ForAwait();
+            => await _pubBytesAsync(PubCmd.Generate(subject, body, replyTo)).ConfigureAwait(false);
 
         public async Task PubAsync(string subject, byte[] body, string replyTo = null)
-            => await _pubBytesAsync(PubCmd.Generate(subject, body, replyTo)).ForAwait();
+            => await _pubBytesAsync(PubCmd.Generate(subject, body, replyTo)).ConfigureAwait(false);
 
         public async Task PubAsync(string subject, IPayload body, string replyTo = null)
-            => await _pubPayloadAsync(PubCmd.Generate(subject, body, replyTo)).ForAwait();
+            => await _pubPayloadAsync(PubCmd.Generate(subject, body, replyTo)).ConfigureAwait(false);
     }
 }

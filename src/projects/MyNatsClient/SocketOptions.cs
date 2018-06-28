@@ -33,5 +33,11 @@ namespace MyNatsClient
         /// Gets or sets the Connect timeout in milliseconds for the Socket.
         /// </summary>
         public int ConnectTimeoutMs { get; set; } = 5000;
+
+        /// <summary>
+        /// Gets or sets value indicating if the Nagle algoritm should be used or not
+        /// on the created Socket.
+        /// </summary>
+        public bool? UseNagleAlgorithm { get; set; } = false;
     }
 }

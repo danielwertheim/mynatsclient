@@ -2,91 +2,101 @@
 
 var config = BuildConfig.Create(Context, BuildSystem);
 
-Information("BuildProfile: " + config.BuildProfile);
-Information("SemVer: " + config.SemVer);
+Information($"SrcDir: '{config.SrcDir}'");
+Information($"OutDir: '{config.OutDir}'");
+Information($"SemVer: '{config.SemVer}'");
+Information($"BuildVersion: '{config.BuildVersion}'");
+Information($"BuildProfile: '{config.BuildProfile}'");
+Information($"IsTeamCityBuild: '{config.IsTeamCityBuild}'");
 
 Task("Default")
     .IsDependentOn("InitOutDir")
     .IsDependentOn("Restore")
-    .IsDependentOn("Bump")
     .IsDependentOn("Build")
-    .IsDependentOn("UnitTest")
-    .IsDependentOn("IntegrationTest");
+    .IsDependentOn("UnitTests");
 
 Task("CI")
     .IsDependentOn("Default")
+    .IsDependentOn("IntegrationTests")
     .IsDependentOn("Pack");
+/********************************************/
+Task("InitOutDir").Does(() => {
+    EnsureDirectoryExists(config.OutDir);
+    CleanDirectory(config.OutDir);
+});
 
-Task("InitOutDir")
-    .Does(() => {
-        EnsureDirectoryExists(config.OutDir);
-        CleanDirectory(config.OutDir);
-    });
+Task("Restore").Does(() => {
+    foreach(var sln in GetFiles($"{config.SrcDir}*.sln")) {
+        MSBuild(sln, settings =>
+            settings
+                .SetConfiguration(config.BuildProfile)
+                .SetVerbosity(Verbosity.Minimal)
+                .WithTarget("Restore")
+                .WithProperty("TreatWarningsAsErrors", "true")
+                .WithProperty("Version", config.SemVer));
+    }
+});
 
-Task("Bump")
-    .Does(() => {
-        var files = GetFiles(config.SrcDir + "projects/**/project.json");
-        foreach(var file in files)
-        {
-            Information("Processing: {0}", file);
+Task("Build").Does(() => {
+    foreach(var sln in GetFiles($"{config.SrcDir}*.sln")) {
+        MSBuild(sln, settings =>
+            settings
+                .SetConfiguration(config.BuildProfile)
+                .SetVerbosity(Verbosity.Minimal)
+                .WithTarget("Rebuild")
+                .WithProperty("TreatWarningsAsErrors", "true")
+                .WithProperty("NoRestore", "true")
+                .WithProperty("Version", config.SemVer)
+                .WithProperty("AssemblyVersion", config.BuildVersion)
+                .WithProperty("FileVersion", config.BuildVersion));
+    }
+});
 
-            var path = file.ToString();
-            var trg = new StringBuilder();
-            var regExVersion = new System.Text.RegularExpressions.Regex("\"version\":(\\s)?\"0.0.0-\\*\",");
-            using (var src = System.IO.File.OpenRead(path))
-            {
-                using (var reader = new StreamReader(src))
-                {
-                    while (!reader.EndOfStream)
-                    {
-                        var line = reader.ReadLine();
-                        if(line == null)
-                            continue;
-
-                        line = regExVersion.Replace(line, string.Format("\"version\": \"{0}\",", config.SemVer));
-
-                        trg.AppendLine(line);
-                    }
-                }
-            }
-
-            System.IO.File.WriteAllText(path, trg.ToString());
-        }
-    });
-    
-Task("Restore")
-    .Does(() => DotNetCoreRestore(config.SrcDir));
-
-Task("Build")
-    .Does(() => DotNetCoreBuild(
-        config.SrcDir + "**/project.json",
-        new DotNetCoreBuildSettings {
-            Configuration = config.BuildProfile
-        }));
-
-Task("UnitTest").Does(() => {
+Task("UnitTests").Does(() => {
     var settings = new DotNetCoreTestSettings {
-        Configuration = config.BuildProfile
+        Configuration = config.BuildProfile,
+        NoBuild = true
     };
-    foreach(var testProj in GetFiles(config.SrcDir + "tests/**/*.UnitTests/project.json")) {
+    foreach(var testProj in GetFiles($"{config.SrcDir}tests/**/UnitTests.csproj")) {
         DotNetCoreTest(testProj.FullPath, settings);
     }
 });
 
-Task("IntegrationTest").Does(() => {
+Task("IntegrationTests").Does(() => {
     var settings = new DotNetCoreTestSettings {
-        Configuration = config.BuildProfile
+        Configuration = config.BuildProfile,
+        NoBuild = true
     };
-    foreach(var testProj in GetFiles(config.SrcDir + "tests/**/*.IntegrationTests/project.json")) {
+    foreach(var testProj in GetFiles($"{config.SrcDir}tests/**/IntegrationTests.csproj")) {
         DotNetCoreTest(testProj.FullPath, settings);
     }
 });
 
 Task("Pack").Does(() => {
-    foreach(var proj in GetFiles(config.SrcDir + "projects/**/project.json")) {
-        DotNetCorePack(proj.FullPath, new DotNetCorePackSettings {
-            Configuration = config.BuildProfile,
-            OutputDirectory = config.OutDir
+    DeleteFiles($"{config.SrcDir}projects/**/*.nupkg");
+
+    foreach(var proj in GetFiles($"{config.SrcDir}projects/**/*.csproj")) {
+        MSBuild(proj, settings =>
+            settings
+                .SetConfiguration(config.BuildProfile)
+                .SetVerbosity(Verbosity.Minimal)
+                .WithTarget("Pack")
+                .WithProperty("TreatWarningsAsErrors", "true")
+                .WithProperty("NoRestore", "true")
+                .WithProperty("NoBuild", "true")
+                .WithProperty("Version", config.SemVer));
+    }
+
+    CopyFiles(
+        GetFiles($"{config.SrcDir}projects/**/*.nupkg"),
+        config.OutDir);
+});
+
+Task("Upload").Does(() => {
+    foreach(var nupkg in GetFiles($"{config.OutDir}*.nupkg")) {
+        NuGetPush(nupkg, new NuGetPushSettings {
+            Source = config.NuGetSource,
+            ApiKey = config.NuGetApiKey
         });
     }
 });

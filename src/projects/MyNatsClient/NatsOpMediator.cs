@@ -4,23 +4,19 @@ using MyNatsClient.Ops;
 
 namespace MyNatsClient
 {
-    public class NatsOpMediator :
-        INatsClientStats,
-        IDisposable
+    public class NatsOpMediator : IDisposable
     {
         private bool _isDisposed;
-        private ObservableOf<IOp> _opStream;
-        private ObservableOf<MsgOp> _msgOpStream;
+        private NatsObservableOf<IOp> _opStream;
+        private NatsObservableOf<MsgOp> _msgOpStream;
 
         public INatsObservable<IOp> AllOpsStream => _opStream;
         public INatsObservable<MsgOp> MsgOpsStream => _msgOpStream;
-        public DateTime LastOpReceivedAt { get; private set; }
-        public ulong OpCount { get; private set; }
 
         public NatsOpMediator()
         {
-            _opStream = new ObservableOf<IOp>();
-            _msgOpStream = new ObservableOf<MsgOp>();
+            _opStream = new NatsObservableOf<IOp>();
+            _msgOpStream = new NatsObservableOf<MsgOp>();
         }
 
         public void Dispose()
@@ -36,16 +32,12 @@ namespace MyNatsClient
             _msgOpStream = null;
         }
 
-        public void Dispatch(IOp op)
+        public void Emit(IOp op)
         {
-            LastOpReceivedAt = DateTime.UtcNow;
-            OpCount++;
+            if (op is MsgOp msgOp)
+                _msgOpStream.Emit(msgOp);
 
-            var msgOp = op as MsgOp;
-            if (msgOp != null)
-                _msgOpStream.Dispatch(msgOp);
-
-            _opStream.Dispatch(op);
+            _opStream.Emit(op);
         }
     }
 }
