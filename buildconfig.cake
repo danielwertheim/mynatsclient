@@ -22,8 +22,8 @@ public class BuildConfig
             throw new ArgumentNullException("context");
 
         var buildRevision = context.Argument("buildrevision", "0");
-        var nuGetSource = context.EnvironmentVariable("Finch_NuGetSource") ?? context.Argument("nugetsource", string.Empty);
-        var nuGetApiKey = context.EnvironmentVariable("Finch_NuGetApiKey") ?? context.Argument("nugetapikey", string.Empty);
+        var nuGetSource = context.EnvironmentVariable("NuGetSource") ?? context.Argument("nugetsource", string.Empty);
+        var nuGetApiKey = context.EnvironmentVariable("NuGetApiKey") ?? context.Argument("nugetapikey", string.Empty);
 
         return new BuildConfig
         {
