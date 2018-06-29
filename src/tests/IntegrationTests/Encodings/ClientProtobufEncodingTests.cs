@@ -7,13 +7,13 @@ using Xunit;
 
 namespace IntegrationTests.Encodings
 {
-    public class ClientJsonEncodingTests : ClientIntegrationTests
+    public class ClientProtobufEncodingTests : ClientIntegrationTests
     {
-        private const string Subject = nameof(ClientJsonEncodingTests);
+        private const string Subject = nameof(ClientProtobufEncodingTests);
 
         private NatsClient _client;
 
-        public ClientJsonEncodingTests()
+        public ClientProtobufEncodingTests()
         {
             _client = new NatsClient(ConnectionInfo);
             _client.Connect();
@@ -32,13 +32,13 @@ namespace IntegrationTests.Encodings
             var orgItem = EncodingTestItem.Create();
             EncodingTestItem decodedItem = null;
 
-            _client.Sub(Subject, stream => stream.Subscribe(msg =>
+            _client.Sub("ClientProtobufEncodingTests", stream => stream.Subscribe(msg =>
             {
                 decodedItem = msg.FromJson<EncodingTestItem>();
                 ReleaseOne();
             }));
 
-            _client.PubAsJson(Subject, orgItem);
+            _client.PubAsJson("ClientProtobufEncodingTests", orgItem);
             WaitOne();
 
             orgItem.Should().BeEquivalentTo(decodedItem);
@@ -50,13 +50,13 @@ namespace IntegrationTests.Encodings
             var orgItem = EncodingTestItem.Create();
             EncodingTestItem decodedItem = null;
 
-            await _client.SubAsync(Subject, stream => stream.Subscribe(msg =>
+            await _client.SubAsync("ClientProtobufEncodingTests", stream => stream.Subscribe(msg =>
             {
                 decodedItem = msg.FromJson<EncodingTestItem>();
                 ReleaseOne();
             }));
 
-            await _client.PubAsJsonAsync(Subject, orgItem);
+            await _client.PubAsJsonAsync("ClientProtobufEncodingTests", orgItem);
             WaitOne();
 
             orgItem.Should().BeEquivalentTo(decodedItem);

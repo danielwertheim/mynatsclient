@@ -47,13 +47,19 @@ install-package MyNatsClient.Rx
 ```
 
 ### Encodings
-You can also get simplified support for specific payload encodings.
+You can also get simplified support for specific payload encodings:
 
 ```
 install-package MyNatsClient.Encodings.Json
 ```
 
 This gives you a `JsonEncoding` and some pre-made extension methods under `MyNatsClient.Encodings.Json.Extensions`
+
+```
+install-package MyNatsClient.Encodings.Protobuf
+```
+
+This gives you a `ProtobufEncoding` and some pre-made extension methods under `MyNatsClient.Encodings.Protobuf.Extensions`
 
 ## Pub-Sub sample
 Simple pub-sub sample showing one client that publishes and one that subscribes. This can of course be the same client and you can also have more clients subscribing etc.
