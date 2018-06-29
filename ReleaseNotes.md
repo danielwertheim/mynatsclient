@@ -1,6 +1,6 @@
 # Release notes
 
-## v0.12.0 - UPCOMING
+## v0.12.0 - 2018-06-29
 
 - **Changed**: Multi targeting frameworks: `NETStandard2.0` and `.NET4.5.1` for `MyNatsClient` and `NETStandard2.0` and `.NET4.6` for `MyNatsClient.Rx`.
 - **Changed**: `IFilteredObservable<T>` has been dropped in favour for a pure `INatsObsevable<T>` which now uses custom operators for: `Where`, `Cast`, `OfType`, hence it's like `System.Reactive` so if you want to use that instead just don't use the extensions in `MyNatsClient`.
