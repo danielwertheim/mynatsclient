@@ -2,7 +2,7 @@
 
 ## v0.13.0 - 2018-06-29
 
-- **New**: Adds `MyNatsClient.Encodings.Protobuf package which brings support for Protobuf serialization of messages.
+- **New**: Adds `MyNatsClient.Encodings.Protobuf` package which brings support for Protobuf serialization of messages.
 
 # v0.12.0 - 2018-06-29
 
