@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\projects\MyNatsClient.Encodings.Json\MyNatsClient.Encodings.Json.csproj" />
+    <ProjectReference Include="..\..\projects\MyNatsClient.Encodings.Protobuf\MyNatsClient.Encodings.Protobuf.csproj" />
     <ProjectReference Include="..\..\projects\MyNatsClient\MyNatsClient.csproj" />
   </ItemGroup>
 
