@@ -3,7 +3,7 @@ A **.NETStandard2.0 and .NET 4.5.1+**, `async` and [ReactiveExtensions](https://
 
 It offers both simple and advanced usage. By default it's configured to auto reply on heartbeat pings and to reconnect on failures. You can seed it with multiple hosts in a cluster. So if one fails it will reconnect to another one.
 
-If one of your in-process observer subscription fails, it will not unsubscribe them. It will however invoke the observers `OnError` callback. This is done so that one failing message against a certain subject does not prevent future messages from being handled.
+Similar to RX you decide the behavior of your in-process observer subscriptions upon failures. If it should be auto unsubscribed or continue to live. See `Subscribe` vs `SubscribeSafe` below.
 
 It keeps track of when the last contact to a server was, so that it can send a `PING` to see if server is still alive.
 
@@ -16,7 +16,9 @@ It supports:
 - Queue groups
 
 ## Samples
-There's a separate repo for [the samples](https://github.com/danielwertheim/mynatsclient-samples)
+Some simple samples will be kept in the same repo as the project, under [src\samples](https://github.com/danielwertheim/mynatsclient/tree/master/src/samples)
+
+There's also a separate repo (potentially outdated) [with samples](https://github.com/danielwertheim/mynatsclient-samples)
 
 ## .NET and .NET Standard
 The project multi targets the following frameworks:
