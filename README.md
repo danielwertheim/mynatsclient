@@ -61,7 +61,7 @@ This gives you a `JsonEncoding` and some pre-made extension methods under `MyNat
 install-package MyNatsClient.Encodings.Protobuf
 ```
 
-This gives you a `ProtobufEncoding` and some pre-made extension methods under `MyNatsClient.Encodings.Protobuf.Extensions`
+This gives you a `ProtobufEncoding` and some pre-made extension methods under `MyNatsClient.Encodings.Protobuf`
 
 ## Pub-Sub sample
 Simple pub-sub sample showing one client that publishes and one that subscribes. This can of course be the same client and you can also have more clients subscribing etc.
