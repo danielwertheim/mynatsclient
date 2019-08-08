@@ -126,7 +126,7 @@ Console.WriteLine($"Temp in Stockholm is {response.GetPayloadAsString()}");
 var cnInfo = new ConnectionInfo("192.168.1.10");
 var client = new NatsClient(cnInfo);
 
-await client.SubAsync("getTemp", stream.Subscribe(msg => {
+await client.SubAsync("getTemp", stream => stream.Subscribe(msg => {
     client.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
 }));
 ```
