@@ -1,9 +1,5 @@
-# node
-node_modules/
-
 # vs
 .vs/
-[Aa]pp_[Dd]ata/
 [Bb]in/
 [D]ebug/
 [Aa]rtifacts/
@@ -15,12 +11,6 @@ node_modules/
 *.vssscc
 *.suo
 *.cache
-project.lock.json
-
-# deploy
-build/
-tools/
-!tools/packages.config
 
 # misc
 *~
@@ -29,8 +19,8 @@ tools/
 *.orig
 *.pfx
 
-# nuget
-[Pp]ackages/
+# rider
+.idea
 
 # resharper
 _ReSharper.*

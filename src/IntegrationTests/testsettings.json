@@ -1,0 +1,22 @@
+﻿{
+  "defaultContext": {
+    "hosts": [
+      {
+        "address": "localhost",
+        "port": 4222
+      }
+    ]
+  },
+  "basicAuthContext": {
+    "hosts": [
+      {
+        "address": "localhost",
+        "port": 4223,
+        "credentials": {
+          "usr": "test",
+          "pwd": "p@ssword123"
+        }
+      }
+    ]
+  }
+}
