@@ -9,3 +9,10 @@ services:
     ports:
       - "4223:4222"
     command: --user test --pass p@ssword123
+  nats-tls:
+    image: "nats"
+    ports:
+      - "4224:4222"
+    command: "-c ./config/tls.config"
+    volumes:
+      - ./docker-config:/config
