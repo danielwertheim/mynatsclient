@@ -13,11 +13,11 @@ namespace MyNatsClient.Internals
         public string Host { get; private set; }
         public int Port { get; private set; }
         public bool AuthRequired { get; private set; }
-        public bool SslRequired { get; private set; }
         public bool TlsRequired { get; private set; }
         public bool TlsVerify { get; private set; }
         public int MaxPayload { get; private set; }
         public List<string> ConnectUrls { get; } = new List<string>();
+        public string Ip { get; set; }
 
         private NatsServerInfo() { }
 
@@ -47,9 +47,6 @@ namespace MyNatsClient.Internals
             if (root.TryGetProperty("auth_required", out el))
                 result.AuthRequired = el.GetBoolean();
 
-            if (root.TryGetProperty("ssl_required", out el))
-                result.SslRequired = el.GetBoolean();
-
             if (root.TryGetProperty("tls_required", out el))
                 result.TlsRequired = el.GetBoolean();
 
@@ -61,6 +58,9 @@ namespace MyNatsClient.Internals
 
             if (root.TryGetProperty("connect_urls", out el))
                 result.ConnectUrls.AddRange(el.EnumerateArray().Select(i => i.GetString()));
+
+            if (root.TryGetProperty("ip", out el))
+                result.Ip = el.GetString();
 
             return result;
         }

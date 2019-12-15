@@ -10,7 +10,6 @@ namespace MyNatsClient
         string Host { get; }
         int Port { get; }
         bool AuthRequired { get; }
-        bool SslRequired { get; }
         bool TlsRequired { get; }
         bool TlsVerify { get; }
         int MaxPayload { get; }
