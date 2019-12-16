@@ -16,8 +16,11 @@ namespace MyNatsClient.Internals.Extensions
 
             await Task.WhenAny(Task.Delay(timeoutMs, cancellationToken), connectTask).ConfigureAwait(false);
 
-            var connectedOk = socket.Connected && connectTask.IsCompleted && !connectTask.IsCanceled && !connectTask.IsFaulted;
-            if(connectedOk)
+            //var connectedOk = socket.Connected && connectTask.IsCompletedSuccessfully;
+            //if (connectedOk)
+            //    return;
+
+            if (socket.Connected)
                 return;
 
             socket.Close();
@@ -28,22 +31,35 @@ namespace MyNatsClient.Internals.Extensions
 
         internal static NetworkStream CreateReadStream(this Socket socket)
         {
-            var s = new NetworkStream(socket, FileAccess.Read, false);
+            var ns = new NetworkStream(socket, FileAccess.Read, false);
 
             if (socket.ReceiveTimeout > 0)
-                s.ReadTimeout = socket.ReceiveTimeout;
+                ns.ReadTimeout = socket.ReceiveTimeout;
 
-            return s;
+            return ns;
         }
 
         internal static NetworkStream CreateWriteStream(this Socket socket)
         {
-            var s = new NetworkStream(socket, FileAccess.Write, false);
+            var ns = new NetworkStream(socket, FileAccess.Write, false);
 
             if (socket.SendTimeout > 0)
-                s.WriteTimeout = socket.SendTimeout;
+                ns.WriteTimeout = socket.SendTimeout;
 
-            return s;
+            return ns;
+        }
+
+        internal static NetworkStream CreateReadWriteStream(this Socket socket)
+        {
+            var ns = new NetworkStream(socket, FileAccess.ReadWrite, false);
+
+            if (socket.SendTimeout > 0)
+                ns.WriteTimeout = socket.SendTimeout;
+
+            if (socket.ReceiveTimeout > 0)
+                ns.ReadTimeout = socket.ReceiveTimeout;
+
+            return ns;
         }
     }
 }

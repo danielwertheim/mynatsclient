@@ -258,5 +258,70 @@ namespace MyNatsClient
                 op = null;
             }
         }
+
+        public IOp ReadOneOp()
+        {
+            IOp op = null;
+            using var workspace = new MemoryStream();
+            var opMarkerChars = new byte[4];
+            var i = -1;
+
+            while (true)
+            {
+                var curr = _stream.ReadByte();
+                if (curr == -1)
+                    return null;
+
+                var c = (byte)curr;
+                if (!IsDelimMarker(c) && c != Cr && c != Lf)
+                {
+                    opMarkerChars[++i] = c;
+                    continue;
+                }
+
+                if (i == -1)
+                    continue;
+
+                if (opMarkerChars[0] == M)
+                    op = ParseMsgOp(_stream, workspace);
+                else if (opMarkerChars[0] == P)
+                {
+                    if (opMarkerChars[1] == I)
+                        op = ParsePingOp(_stream);
+                    else if (opMarkerChars[1] == O)
+                        op = ParsePongOp(_stream);
+                }
+                else if (opMarkerChars[0] == I)
+                    op = ParseInfoOp(_stream, workspace);
+                else if (opMarkerChars[0] == Plus)
+                    op = ParseOkOp(_stream);
+                else if (opMarkerChars[0] == Minus)
+                    op = ParseErrorOp(_stream, workspace);
+
+                if (op == null)
+                {
+                    var opMarker = string.Create(i + 1, opMarkerChars, (t, v) =>
+                    {
+                        if (t.Length == 4)
+                            t[3] = (char)v[3];
+
+                        t[2] = (char)v[2];
+                        t[1] = (char)v[1];
+                        t[0] = (char)v[0];
+                    });
+
+                    throw NatsException.OpParserUnsupportedOp(opMarker);
+                }
+
+                i = -1;
+                opMarkerChars[0] = EmptyOpMarker;
+                opMarkerChars[1] = EmptyOpMarker;
+                opMarkerChars[2] = EmptyOpMarker;
+                opMarkerChars[3] = EmptyOpMarker;
+                workspace.Position = 0;
+
+                return op;
+            }
+        }
     }
 }

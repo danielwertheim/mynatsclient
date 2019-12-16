@@ -5,6 +5,7 @@ namespace MyNatsClient
         internal const string Unknown = "Unknown";
         public const string CouldNotCreateSubscription = "CouldNotCreateSubscription";
         public const string MissingCredentials = "MissingCredentials";
+        public const string MissingClientCertificates = "MissingClientCertificates";
         public const string FailedToConnectToHost = "FailedToConnectToHost";
         public const string CouldNotEstablishAnyConnection = "CouldNotEstablishAnyConnection";
         public const string ExceededMaxPayload = "ExceededMaxPayload";

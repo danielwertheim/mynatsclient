@@ -18,5 +18,13 @@
         }
       }
     ]
+  },
+  "tlsContext": {
+    "hosts": [
+      {
+        "address": "localhost",
+        "port": 4224
+      }
+    ]
   }
 }

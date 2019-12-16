@@ -70,4 +70,13 @@ namespace IntegrationTests
             : base(TestSettings.GetHosts(Name))
         {}
     }
+
+    public sealed class TlsContext : TestContext
+    {
+        public const string Name = nameof(TlsContext);
+
+        public TlsContext()
+            : base(TestSettings.GetHosts(Name))
+        {}
+    }
 }

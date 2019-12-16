@@ -14,7 +14,10 @@ namespace MyNatsClient
         }
 
         internal static NatsException MissingCredentials(Host host)
-            => new NatsException(NatsExceptionCodes.MissingCredentials, $"Error while connecting to {host}. Host requires credentials to be passed. None was specified. Pass for specific host or for all hosts.");
+            => new NatsException(NatsExceptionCodes.MissingCredentials, $"Error while connecting to {host}. Host requires credentials to be passed. None was specified. Pass credentials for specific host or for all hosts.");
+
+        internal static NatsException MissingClientCertificates(Host host)
+            => new NatsException(NatsExceptionCodes.MissingClientCertificates, $"Error while connecting to {host}. Host requires client certificates. None was specified.");
 
         internal static NatsException FailedToConnectToHost(Host host, string message)
             => new NatsException(NatsExceptionCodes.FailedToConnectToHost, $"Error while connecting to {host}. {message}");

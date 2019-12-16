@@ -15,8 +15,7 @@ namespace MyNatsClient.Internals
         private readonly CancellationToken _cancellationToken;
 
         private Socket _socket;
-        private Stream _readStream;
-        private Stream _writeStream;
+        private Stream _stream;
         private SemaphoreSlim _writeStreamSync;
         private NatsOpStreamReader _reader;
         private NatsStreamWriter _writer;
@@ -29,8 +28,7 @@ namespace MyNatsClient.Internals
         internal NatsConnection(
             NatsServerInfo serverInfo,
             Socket socket,
-            BufferedStream writeStream,
-            BufferedStream readStream,
+            Stream stream,
             NatsOpStreamReader reader,
             CancellationToken cancellationToken)
         {
@@ -40,15 +38,14 @@ namespace MyNatsClient.Internals
             if (!socket.Connected)
                 throw new ArgumentException("Socket is not connected.", nameof(socket));
 
-            _writeStream = writeStream ?? throw new ArgumentNullException(nameof(writeStream));
-            _readStream = readStream ?? throw new ArgumentNullException(nameof(readStream));
+            _stream = stream ?? throw new ArgumentNullException(nameof(stream));
             _reader = reader ?? throw new ArgumentNullException(nameof(reader));
             _cancellationToken = cancellationToken;
             _writeStreamSync = new SemaphoreSlim(1, 1);
-            _writer = new NatsStreamWriter(_writeStream, _cancellationToken);
+            _writer = new NatsStreamWriter(stream, _cancellationToken);
 
-            _socketIsConnected = () => _socket != null && _socket.Connected;
-            _canRead = () => _socketIsConnected() && _readStream != null && _readStream.CanRead && !_cancellationToken.IsCancellationRequested;
+            _socketIsConnected = () => _socket?.Connected == true;
+            _canRead = () => _socket?.Connected == true && _stream != null && _stream.CanRead && !_cancellationToken.IsCancellationRequested;
         }
 
         public void Dispose()
@@ -71,8 +68,7 @@ namespace MyNatsClient.Internals
                 }
             }
 
-            TryDispose(_readStream);
-            TryDispose(_writeStream);
+            TryDispose(_stream);
             try
             {
                 _socket.Shutdown(SocketShutdown.Both);
@@ -84,8 +80,7 @@ namespace MyNatsClient.Internals
             TryDispose(_socket);
             TryDispose(_writeStreamSync);
 
-            _readStream = null;
-            _writeStream = null;
+            _stream = null;
             _socket = null;
             _writeStreamSync = null;
             _reader = null;

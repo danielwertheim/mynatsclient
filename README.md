@@ -1,5 +1,5 @@
 # MyNatsClient
-A **.NETStandard** based, `async` and [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) (RX) friendly client for [NATS Server](https://nats.io). It's RX friendly cause it's based around `IObservable<T>`. It keeps as much of NATS domain language as possible but does not limit itself to follow the APIs of other NATS clients, but instead offer one that fits the .NET domain and one that first and foremost is a client written for .NET. Not GO or JAVA or Foo.
+A **.NetStandard** based, `async` and [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) (RX) friendly client for [NATS Server](https://nats.io). It's RX friendly cause it's based around `IObservable<T>`. It keeps as much of NATS domain language as possible but does not limit itself to follow the APIs of other NATS clients, but instead offer one that fits the .NET domain and one that first and foremost is a client written for .NET. Not GO or JAVA or Foo.
 
 It offers both simple and advanced usage. By default it's configured to auto reply on heartbeat pings and to reconnect on failures. You can seed it with multiple hosts in a cluster. So if one fails it will reconnect to another one.
 
@@ -127,6 +127,11 @@ await client.SubAsync("getTemp", stream.Subscribe(msg => {
 }));
 ```
 
+## Security
+Currently the client supports:
+- TLS1.2 (configured via `ConnectionInfo.ServerCertificateValidation` and `ConnectionInfo.ClientCertificates`)
+- Credentials authentication via `ConnectionInfo.Credentials` or `ConnectionInfo.Host[0..n].Credentials`
+
 ## Advanced usage
 Some code showing more advanced usage.
 
@@ -136,7 +141,11 @@ var connectionInfo = new ConnectionInfo(
     //and try to connect. First successful will be used.
     new[]
     {
-        new Host("192.168.1.176", 4222)
+        new Host("192.168.1.176", 4222),
+        new Host("192.168.1.177", 4222)
+        {
+            Credentials = new Credentials("foo_user", "bar_pwd")
+        }
     })
 {
     UseInboxRequests = true,
@@ -146,6 +155,8 @@ var connectionInfo = new ConnectionInfo(
     Credentials = new Credentials("testuser", "p@ssword1234"),
     RequestTimeoutMs = 5000,
     PubFlushMode = PubFlushMode.Auto,
+    ClientCertificates = new X509Certificate2Collection(),
+    ServerCertificateValidation = (x509Cert, x509Chain, policyErrors) => { ... }
     SocketOptions = new SocketOptions
     {
         AddressType = SocketAddressType.IpV4, //Set to null to auto detect (.NET & OS default)
@@ -361,7 +372,6 @@ public class SocketOptions
     /// Gets or sets the Send timeout in milliseconds for the Socket.
     /// </summary>
     public int? SendTimeoutMs { get; set; } = 5000;
-
 
     /// <summary>
     /// Gets or sets the Connect timeout in milliseconds for the Socket.

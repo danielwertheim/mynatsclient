@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 
 namespace MyNatsClient
 {
@@ -57,6 +59,20 @@ namespace MyNatsClient
         public int RequestTimeoutMs { get; set; } = 5000;
 
         /// <summary>
+        /// Gets or sets certificate collection used when authenticating the client against the server
+        /// when the server is configured to use TLS and to verify the clients.
+        /// If the server is onyl configured to use TLS but not configured to verfify the
+        /// clients, no client certificates need to be provided.
+        /// </summary>
+        public X509Certificate2Collection ClientCertificates { get; set; } = new X509Certificate2Collection();
+
+        /// <summary>
+        /// Gets or sets custom handler to use for verifying the server certificate.
+        /// This is used if the server is configured to use TLS.
+        /// </summary>
+        public Func<X509Certificate, X509Chain, SslPolicyErrors, bool> ServerCertificateValidation { get; set; }
+
+        /// <summary>
         /// Gets or sets <see cref="SocketOptions"/> to use when creating the clients
         /// underlying socket via <see cref="ISocketFactory"/>.
         /// </summary>
@@ -70,7 +86,7 @@ namespace MyNatsClient
 
         public ConnectionInfo(Host[] hosts)
         {
-            if(hosts?.Any() == false)
+            if (hosts?.Any() == false)
                 throw new ArgumentException("At least one host need to be specified.", nameof(hosts));
 
             Hosts = hosts;
@@ -96,6 +112,8 @@ namespace MyNatsClient
                 Verbose = Verbose,
                 RequestTimeoutMs = RequestTimeoutMs,
                 PubFlushMode = PubFlushMode,
+                ClientCertificates = new X509Certificate2Collection(ClientCertificates),
+                ServerCertificateValidation = ServerCertificateValidation,
                 SocketOptions = new SocketOptions
                 {
                     AddressType = SocketOptions.AddressType,

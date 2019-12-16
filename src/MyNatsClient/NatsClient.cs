@@ -169,7 +169,6 @@ namespace MyNatsClient
 
                 _opMediator.Emit(opsReceivedWhileConnecting);
 
-
                 await DoSubAsync(_subscriptions.Values.Select(i => i.SubscriptionInfo).ToArray()).ConfigureAwait(false);
 
                 _consumer = Task.Factory

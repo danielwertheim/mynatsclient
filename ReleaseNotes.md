@@ -15,6 +15,7 @@
   - Improved locking strategy.
   - Improved reply subject matches in requests.
 - **New**: Added support so that you can define that the underlying Socket should use `IPv6`.
+- **New**: Support for TLS1.2
 - **Fix**: Max payload validation is now done on the payload not the whole message.
 - **Fix**: Support for parsing JSON from server that contains IPv6-addresses.
 - **Fix**: If exception occurred during reconnect attempt, no further reconnect attempts would be made, even if max reconnect limit wasn't execeeded.
