@@ -36,7 +36,7 @@ namespace IntegrationTests
                 Verbose = false
             };
 
-        public NatsClient CreateClient(ConnectionInfo connectionInfo = null)
+        public virtual NatsClient CreateClient(ConnectionInfo connectionInfo = null)
             => new NatsClient(connectionInfo ?? GetConnectionInfo());
 
         public async Task<NatsClient> ConnectClientAsync(ConnectionInfo connectionInfo = null)
@@ -66,9 +66,27 @@ namespace IntegrationTests
     {
         public const string Name = nameof(BasicAuthContext);
 
+        public Credentials ValidCredentials { get; }
+
         public BasicAuthContext()
             : base(TestSettings.GetHosts(Name))
-        {}
+        {
+            ValidCredentials = TestSettings.GetCredentials();
+        }
+
+        public override NatsClient CreateClient(ConnectionInfo connectionInfo = null)
+        {
+            if(connectionInfo == null)
+            {
+                connectionInfo = GetConnectionInfo();
+                foreach (var host in connectionInfo.Hosts)
+                {
+                    host.Credentials = ValidCredentials;
+                }
+            }
+
+            return base.CreateClient(connectionInfo);
+        }
     }
 
     public sealed class TlsContext : TestContext

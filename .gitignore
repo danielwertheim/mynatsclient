@@ -12,6 +12,11 @@
 *.suo
 *.cache
 
+.env
+*.local
+*.local.json
+*.local.ini
+
 # misc
 *~
 *.swp

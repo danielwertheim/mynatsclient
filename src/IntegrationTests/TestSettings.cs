@@ -14,25 +14,33 @@ namespace IntegrationTests
             var builder = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory);
 
-            builder.AddJsonFile("testsettings.json");
+            builder
+                .AddJsonFile("integrationtests.json", false, false)
+                .AddJsonFile("integrationtests.local.json", true, false)
+                .AddEnvironmentVariables("MyNats_");
+
             Config = builder.Build();
+        }
+
+        public static Credentials GetCredentials()
+        {
+            var credentialsConfig = Config.GetSection("credentials");
+            if (!credentialsConfig.Exists())
+                throw new Exception("Test configuration is missing 'credentials' section.");
+
+            return new Credentials(credentialsConfig["user"], credentialsConfig["pass"]);
         }
 
         public static Host[] GetHosts(string context)
         {
-            if(string.IsNullOrWhiteSpace(context))
+            if (string.IsNullOrWhiteSpace(context))
                 throw new ArgumentException("Context must be provided.", nameof(context));
 
-            return Config.GetSection($"{context}:hosts").GetChildren().Select(i =>
-            {
-                var u = i["credentials:usr"];
-                var p = i["credentials:pwd"];
-
-                return new Host(i["address"], int.Parse(i["port"]))
-                {
-                    Credentials = !string.IsNullOrWhiteSpace(u) ? new Credentials(u, p) : Credentials.Empty
-                };
-            }).ToArray();
+            return Config
+                .GetSection($"{context}:hosts")
+                .GetChildren()
+                .Select(i => new Host(i["address"], int.Parse(i["port"])))
+                .ToArray();
         }
     }
 }

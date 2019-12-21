@@ -1,5 +1,7 @@
 # MyNatsClient
-A **.NetStandard** based, `async` and [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) (RX) friendly client for [NATS Server](https://nats.io). It's RX friendly cause it's based around `IObservable<T>`. It keeps as much of NATS domain language as possible but does not limit itself to follow the APIs of other NATS clients, but instead offer one that fits the .NET domain and one that first and foremost is a client written for .NET. Not GO or JAVA or Foo.
+[![Build Status](https://dev.azure.com/danielwertheim/mynatsclient/_apis/build/status/danielwertheim.mynatsclient-CI?branchName=master)](https://dev.azure.com/danielwertheim/mynatsclient/_build/latest?definitionId=27&branchName=master)
+
+A **.NET Standard** based, `async` and [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) (RX) friendly client for [NATS Server](https://nats.io). It's RX friendly cause it's based around `IObservable<T>`. It keeps as much of NATS domain language as possible but does not limit itself to follow the APIs of other NATS clients, but instead offer one that fits the .NET domain and one that first and foremost is a client written for .NET. Not GO or JAVA or Foo.
 
 It offers both simple and advanced usage. By default it's configured to auto reply on heartbeat pings and to reconnect on failures. You can seed it with multiple hosts in a cluster. So if one fails it will reconnect to another one.
 
@@ -577,4 +579,51 @@ y
 Run? (y=yes;n=no)
 Observer OnNext got: test3
 n
+```
+
+## Developement
+
+## Integration tests
+The `./.env` file and `./src/IntegrationTests/integrationtests.local.json` files are `.gitignored`. In order to create sample files of these, you can run:
+
+```
+. init-local-config.sh
+```
+
+### Docker-Compose
+There's a `docker-compose.yml` file, that defines usage of necessary NATS nodes. Credentials are configured via environment key `MyNats_credentials__user` and `MyNats_credentials__pass`; which can either be specified via:
+
+- Environment variable: `MyNats_credentials__user` and `MyNats_credentials__pass`, e.g.:
+```
+MyNats_credentials__user=sample_user
+MyNats_credentials__pass=sample_password
+```
+
+- Docker Environment file `./.env` (`.gitignored`), e.g.:
+```
+MyNats_credentials__user=sample_user
+MyNats_credentials__pass=sample_password
+```
+
+### Docker
+There's a `Dockerfile` that can be used to build and run the tests in a container. First spin up the necessary NATS-Server nodes via `docker-compose up` then you can run `docker build -t mynats --network host .`
+
+### Test configuration
+Credentials need to be provided, either via:
+
+- Local-JSON-file (`.gitignored`): `./src/IntegrationTests/integrationtests.local.json`, e.g.:
+```
+{
+  "credentials": {
+    "user": "sample_user",
+    "pass": "sample_password"
+  }
+}
+```
+
+- Environment variables: `MyNats_credentials__user` and `MyNats_credentials__pass`, e.g.:
+
+```
+MyNats_credentials__user=sample_user
+MyNats_credentials__pass=sample_password
 ```

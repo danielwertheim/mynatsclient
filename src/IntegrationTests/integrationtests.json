@@ -11,11 +11,7 @@
     "hosts": [
       {
         "address": "localhost",
-        "port": 4223,
-        "credentials": {
-          "usr": "test",
-          "pwd": "p@ssword123"
-        }
+        "port": 4223
       }
     ]
   },

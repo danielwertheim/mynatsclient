@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
   nats:
     image: "nats"
@@ -8,11 +8,16 @@ services:
     image: "nats"
     ports:
       - "4223:4222"
-    command: --user test --pass p@ssword123
+    environment:
+      - MyNats_credentials__user
+      - MyNats_credentials__pass
+    command: "-c /nats_config/auth.config"
+    volumes:
+      - ./nats_config:/nats_config
   nats-tls:
     image: "nats"
     ports:
       - "4224:4222"
-    command: "-c ./config/tls.config"
+    command: "-c /nats_config/tls.config"
     volumes:
-      - ./docker-config:/config
+      - ./nats_config:/nats_config
