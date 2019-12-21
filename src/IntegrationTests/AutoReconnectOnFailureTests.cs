@@ -67,6 +67,8 @@ namespace IntegrationTests
 
             _client.MsgOpStream.Subscribe(msg => throw new Exception("Fail"));
 
+            await Context.DelayAsync();
+
             await _client.PubAsync(subject, "This message will fail");
 
             //Wait for the Disconnected release and the Connected release
@@ -116,6 +118,8 @@ namespace IntegrationTests
                 });
 
             _client.MsgOpStream.Subscribe(msg => throw new Exception("Fail"));
+
+            await Context.DelayAsync();
 
             await _client.PubAsync(subject, "This message will fail");
 

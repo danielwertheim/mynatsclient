@@ -8,7 +8,7 @@ namespace IntegrationTests
 {
     public class Sync : IDisposable
     {
-        private static readonly TimeSpan MaxWaitTime = TimeSpan.FromMilliseconds(5000);
+        private static readonly TimeSpan MaxWaitTime = TimeSpan.FromMilliseconds(10000);
 
         private readonly int _maxNumOfRequests;
         private readonly SemaphoreSlim _semaphore;

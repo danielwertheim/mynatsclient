@@ -43,6 +43,8 @@ namespace IntegrationTests
 
             _responder.Sub("getValue", stream => stream.Subscribe(msg => _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString())));
 
+            await Context.DelayAsync();
+
             var response = await _requester.RequestAsync("getValue", value);
 
             response.GetPayloadAsString().Should().Be(value);
@@ -57,6 +59,8 @@ namespace IntegrationTests
             _requester = await Context.ConnectClientAsync();
 
             _responder.Sub("getValue", stream => stream.Subscribe(msg => _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString())));
+
+            await Context.DelayAsync();
 
             var response = await _requester.RequestAsync("getValue", Encoding.UTF8.GetBytes(value));
 
@@ -86,14 +90,15 @@ namespace IntegrationTests
                 _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString());
             }));
 
-            using (var responder2 = new NatsClient(cnInfoResponder))
+            using (var responder2 = await Context.ConnectClientAsync(cnInfoResponder))
             {
-                await responder2.ConnectAsync();
                 responder2.Sub("getValue", stream => stream.Subscribe(msg =>
                 {
                     responderReceived.Enqueue(msg);
                     responder2.Pub(msg.ReplyTo, msg.GetPayloadAsString());
                 }));
+
+                await Context.DelayAsync();
 
                 var response = await _requester.RequestAsync("getValue", value);
                 responsesReceived.Enqueue(response);
@@ -102,7 +107,7 @@ namespace IntegrationTests
             responsesReceived.Should().HaveCount(1);
             requesterReceived.Should().HaveCount(2);
             responderReceived.Should().HaveCount(2);
-            responsesReceived.First().GetPayloadAsString().Should().Be(value);
+            responsesReceived.Single().GetPayloadAsString().Should().Be(value);
         }
 
         [Fact]
@@ -136,6 +141,8 @@ namespace IntegrationTests
                     responderReceived.Enqueue(msg);
                     responder2.Pub(msg.ReplyTo, msg.GetPayloadAsString());
                 }));
+
+                await Context.DelayAsync();
 
                 var response = await _requester.RequestAsync("getValue", value);
                 responsesReceived.Enqueue(response);

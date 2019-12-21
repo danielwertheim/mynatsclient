@@ -66,6 +66,8 @@ namespace IntegrationTests
             _client1.MsgOpStream.Subscribe(msg => _sync.Release(msg));
             _client1.Sub(subject);
 
+            await Context.DelayAsync();
+
             _client1.Pub(subject, messages[0]);
             _client1.Pub(subject, Encoding.UTF8.GetBytes(messages[1]));
             await _client1.PubAsync(subject, messages[2]);
@@ -92,6 +94,8 @@ namespace IntegrationTests
             _client1 = await Context.ConnectClientAsync();
             _client1.MsgOpStream.Subscribe(msg => _sync.Release(msg));
             _client1.Sub(subject);
+
+            await Context.DelayAsync();
 
             _client1.PubMany(async p =>
             {
@@ -135,6 +139,8 @@ namespace IntegrationTests
             });
             await _client3.SubAsync(subject);
 
+            await Context.DelayAsync();
+
             _client1.Pub(subject, "mess1");
             _sync.WaitForAll();
 
@@ -157,6 +163,8 @@ namespace IntegrationTests
             _client1.OpStream.OfType<MsgOp>().Subscribe(msg => _sync.Release(msg));
             _client1.Sub(subject);
 
+            await Context.DelayAsync();
+
             _client1.Pub(subject, "mess1");
             _sync.WaitForAll();
 
@@ -168,7 +176,7 @@ namespace IntegrationTests
         {
             var subject = Context.GenerateSubject();
 
-            _sync = Sync.MaxOne();
+            _sync = Sync.MaxTwo();
             _client1 = await Context.ConnectClientAsync();
             _client1.OpStream.OfType<MsgOp>().Subscribe(msg => _sync.Release(msg));
             _client1.Sub(subject);
@@ -194,6 +202,8 @@ namespace IntegrationTests
             _client1.OpStream.OfType<MsgOp>().Where(m => m.Subject == subject2).Subscribe(msg => _sync.Release(msg));
             _client1.Sub(subject1);
             _client1.Sub(subject2);
+
+            await Context.DelayAsync();
 
             _client1.Pub(subject1, "mess1");
             _client1.Pub(subject2, "mess2");

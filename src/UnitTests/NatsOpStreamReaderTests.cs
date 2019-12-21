@@ -96,8 +96,8 @@ namespace UnitTests
                 op.SubscriptionId.Should().Be("siddw1");
                 op.ReplyTo.Should().BeEmpty();
                 op.Payload.ToArray().Should().HaveCount(6);
-                op.GetAsString().Should().Be("MSG foo siddw1 6\r\nte\r\nst");
-                op.GetPayloadAsString().Should().Be("te\r\nst");
+                op.GetAsString().Should().Be($"MSG foo siddw1 6{Environment.NewLine}te\r\nst");
+                op.GetPayloadAsString().Should().Be($"te\r\nst");
             }
         }
 
@@ -116,7 +116,7 @@ namespace UnitTests
                 op.SubscriptionId.Should().Be("siddw1");
                 op.ReplyTo.Should().BeEmpty();
                 op.Payload.ToArray().Should().HaveCount(5);
-                op.GetAsString().Should().Be("MSG foo siddw1 5\r\nte\tst");
+                op.GetAsString().Should().Be($"MSG foo siddw1 5{Environment.NewLine}te\tst");
                 op.GetPayloadAsString().Should().Be("te\tst");
             }
         }
@@ -136,7 +136,7 @@ namespace UnitTests
                 op.SubscriptionId.Should().Be("siddw1");
                 op.ReplyTo.Should().BeEmpty();
                 op.Payload.ToArray().Should().HaveCount(4);
-                op.GetAsString().Should().Be("MSG foo siddw1 4\r\ntest");
+                op.GetAsString().Should().Be($"MSG foo siddw1 4{Environment.NewLine}test");
                 op.GetPayloadAsString().Should().Be("test");
             }
         }

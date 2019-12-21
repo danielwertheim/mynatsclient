@@ -85,6 +85,8 @@ namespace IntegrationTests
                 _sync.Release();
             }));
 
+            await Context.DelayAsync();
+
             await _client.PubAsync(subject, "Test1");
             _sync.WaitForAny();
             await _client.PubAsync(subject, "Test2");
@@ -118,6 +120,8 @@ namespace IntegrationTests
                 interceptedOtherSubjects.Add(msg.Subject);
                 _sync.Release();
             }));
+
+            await Context.DelayAsync();
 
             await _client.PubAsync(subject, "Test1");
             _sync.WaitForAny();
@@ -153,6 +157,8 @@ namespace IntegrationTests
                 _sync.Release();
             }));
 
+            await Context.DelayAsync();
+
             await _client.PubAsync(subject, "Test1");
             _sync.WaitForAny();
             await _client.PubAsync(subject, "Test2");
@@ -174,6 +180,8 @@ namespace IntegrationTests
             _sync = Sync.MaxOne();
             _client = await Context.ConnectClientAsync();
             var s = _client.Sub(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg => _sync.Release(msg))));
+
+            await Context.DelayAsync();
 
             await _client.PubAsync(subject, "Test1");
             _sync.WaitForAny();
@@ -197,6 +205,8 @@ namespace IntegrationTests
             _client = await Context.ConnectClientAsync();
             var s = await _client.SubAsync(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg => _sync.Release(msg))));
 
+            await Context.DelayAsync();
+
             await _client.PubAsync(subject, "Test1");
             _sync.WaitForAny();
             await _client.PubAsync(subject, "Test2");
@@ -218,6 +228,8 @@ namespace IntegrationTests
             _sync = Sync.MaxOne();
             _client = await Context.ConnectClientAsync();
             var s = _client.Sub(subject, stream => stream.Subscribe(msg => _sync.Release(msg)));
+
+            await Context.DelayAsync();
 
             await _client.PubAsync(subject, "Test1");
             _sync.WaitForAny();
@@ -241,6 +253,8 @@ namespace IntegrationTests
             _client = await Context.ConnectClientAsync();
             var s = await _client.SubAsync(subject, stream => stream.Subscribe(msg => _sync.Release(msg)));
 
+            await Context.DelayAsync();
+
             await _client.PubAsync(subject, "Test1");
             _sync.WaitForAny();
             await _client.PubAsync(subject, "Test2");
@@ -262,6 +276,8 @@ namespace IntegrationTests
             _sync = Sync.MaxOne();
             _client = await Context.ConnectClientAsync();
             var subscription = _client.Sub(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg => _sync.Release(msg))));
+
+            await Context.DelayAsync();
 
             await _client.PubAsync(subject, "Test1");
             _sync.WaitForAny();
@@ -285,6 +301,8 @@ namespace IntegrationTests
             _client = await Context.ConnectClientAsync();
             var s = _client.Sub(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg => _sync.Release(msg))));
 
+            await Context.DelayAsync();
+
             await _client.PubAsync(subject, "Test1");
             _sync.WaitForAny();
             await _client.PubAsync(subject, "Test2");
@@ -307,6 +325,8 @@ namespace IntegrationTests
             _client = await Context.ConnectClientAsync();
             _client.Sub(subject, stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg => _sync.Release(msg))));
 
+            await Context.DelayAsync();
+
             await _client.PubAsync(subject, "Test1");
             _sync.WaitForAny();
             _client.Disconnect();
@@ -326,6 +346,8 @@ namespace IntegrationTests
             _sync = Sync.MaxOne();
             _client = await Context.ConnectClientAsync();
             _client.Sub(subjectNs + "*", stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg => _sync.Release(msg))));
+
+            await Context.DelayAsync();
 
             await _client.PubAsync(subjectNs + "type1", "Test1");
             _sync.WaitForAny();
@@ -347,6 +369,8 @@ namespace IntegrationTests
             _client = await Context.ConnectClientAsync();
             await _client.SubAsync(subjectNs + "*", stream => stream.Subscribe(NatsObserver.Delegating<MsgOp>(msg => _sync.Release(msg))));
 
+            await Context.DelayAsync();
+
             await _client.PubAsync(subjectNs + "type1", "Test1");
             _sync.WaitForAny();
             await _client.PubAsync(subjectNs + "type2", "Test2");
@@ -367,6 +391,8 @@ namespace IntegrationTests
             _client = await Context.ConnectClientAsync();
             _client.Sub(subjectNs + "*", stream => stream.Subscribe(msg => _sync.Release(msg)));
 
+            await Context.DelayAsync();
+
             await _client.PubAsync(subjectNs + "type1", "Test1");
             _sync.WaitForAny();
             await _client.PubAsync(subjectNs + "type2", "Test2");
@@ -386,6 +412,8 @@ namespace IntegrationTests
             _sync = Sync.MaxOne();
             _client = await Context.ConnectClientAsync();
             await _client.SubAsync(subjectNs + "*", stream => stream.Subscribe(msg => _sync.Release(msg)));
+
+            await Context.DelayAsync();
 
             await _client.PubAsync(subjectNs + "type1", "Test1");
             _sync.WaitForAny();

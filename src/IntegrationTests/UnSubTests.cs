@@ -190,6 +190,7 @@ namespace IntegrationTests
             var sub3 = _client3.Sub(subInfo3);
 
             await Context.DelayAsync();
+
             _client1.Pub(subject, "mess1");
             _sync.WaitForAll();
 

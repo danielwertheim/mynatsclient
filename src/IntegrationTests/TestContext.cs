@@ -33,7 +33,11 @@ namespace IntegrationTests
             => new ConnectionInfo(_hosts)
             {
                 AutoRespondToPing = false,
-                Verbose = false
+                Verbose = false,
+                SocketOptions = new SocketOptions
+                {
+                    ConnectTimeoutMs = 7500
+                }
             };
 
         public virtual NatsClient CreateClient(ConnectionInfo connectionInfo = null)
