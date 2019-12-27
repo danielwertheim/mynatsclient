@@ -16,6 +16,8 @@ namespace MyNatsClient.Internals
 
         private Socket _socket;
         private Stream _stream;
+        private BufferedStream _writeStream;
+        private BufferedStream _readStream;
         private SemaphoreSlim _writeStreamSync;
         private NatsOpStreamReader _reader;
         private NatsStreamWriter _writer;
@@ -29,7 +31,6 @@ namespace MyNatsClient.Internals
             NatsServerInfo serverInfo,
             Socket socket,
             Stream stream,
-            NatsOpStreamReader reader,
             CancellationToken cancellationToken)
         {
             ServerInfo = serverInfo ?? throw new ArgumentNullException(nameof(serverInfo));
@@ -39,10 +40,12 @@ namespace MyNatsClient.Internals
                 throw new ArgumentException("Socket is not connected.", nameof(socket));
 
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
-            _reader = reader ?? throw new ArgumentNullException(nameof(reader));
+            _writeStream = new BufferedStream(_stream, socket.SendBufferSize);
+            _readStream = new BufferedStream(_stream, socket.ReceiveBufferSize);
             _cancellationToken = cancellationToken;
             _writeStreamSync = new SemaphoreSlim(1, 1);
-            _writer = new NatsStreamWriter(stream, _cancellationToken);
+            _writer = new NatsStreamWriter(_writeStream, _cancellationToken);
+            _reader = new NatsOpStreamReader(_readStream);
 
             _socketIsConnected = () => _socket?.Connected == true;
             _canRead = () => _socket?.Connected == true && _stream != null && _stream.CanRead && !_cancellationToken.IsCancellationRequested;
@@ -51,9 +54,9 @@ namespace MyNatsClient.Internals
         public void Dispose()
         {
             ThrowIfDisposed();
-            
+
             _isDisposed = true;
-            
+
             var exs = new List<Exception>();
 
             void TryDispose(IDisposable disposable)
@@ -68,6 +71,8 @@ namespace MyNatsClient.Internals
                 }
             }
 
+            TryDispose(_writeStream);
+            TryDispose(_readStream);
             TryDispose(_stream);
             try
             {
@@ -80,13 +85,15 @@ namespace MyNatsClient.Internals
             TryDispose(_socket);
             TryDispose(_writeStreamSync);
 
+            _writeStream = null;
+            _readStream = null;
             _stream = null;
             _socket = null;
             _writeStreamSync = null;
             _reader = null;
             _writer = null;
 
-            if(exs.Any())
+            if (exs.Any())
                 throw new AggregateException("Failed while disposing connection. See inner exception(s) for more details.", exs);
         }
 

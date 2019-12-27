@@ -48,6 +48,11 @@ install-package MyNatsClient.Encodings.Protobuf
 
 This gives you a `ProtobufEncoding` and some pre-made extension methods under `MyNatsClient.Encodings.Protobuf`
 
+## Security
+Currently the client supports:
+- TLS1.2 (configured via `ConnectionInfo.ServerCertificateValidation` and `ConnectionInfo.ClientCertificates`)
+- Credentials authentication via `ConnectionInfo.Credentials` or `ConnectionInfo.Host[0..n].Credentials`
+
 ## Inbox-requests
 There's a setting: `connectionInfo.UseInboxRequests = true`; (enabled by default) controlling if the client should subscribe to the NATS-server using a wildcard subscription `IB.unique-client-id.*` and then route the incoming-response to the requestor.
 
@@ -128,11 +133,6 @@ await client.SubAsync("getTemp", stream.Subscribe(msg => {
     client.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
 }));
 ```
-
-## Security
-Currently the client supports:
-- TLS1.2 (configured via `ConnectionInfo.ServerCertificateValidation` and `ConnectionInfo.ClientCertificates`)
-- Credentials authentication via `ConnectionInfo.Credentials` or `ConnectionInfo.Host[0..n].Credentials`
 
 ## Advanced usage
 Some code showing more advanced usage.
@@ -583,7 +583,28 @@ n
 
 ## Developement
 
-## Integration tests
+### Certificates for tests
+This is **only done for testing purposes** and should not be used for production use or similar.
+
+More information: https://github.com/paulczar/omgwtfssl
+
+**1) Generate certs for CA and Server**
+
+```bash
+docker run --name servercerts -v //C/DockerData/certs/:/certs -e CA_EXPIRE=365 -e SSL_EXPIRE=365 -e SSL_KEY=server-key.pem -e SSL_CERT=server-cert.pem -e SSL_CSR=server.csr -e SSL_SUBJECT=localhost paulczar/omgwtfssl
+```
+
+**2) Generate certs for Client** *(CA files should be kept in mapped folder)*
+```bash
+docker run --name clientcerts -v //C/DockerData/certs/:/certs -e CA_EXPIRE=365 -e SSL_EXPIRE=365 -e SSL_KEY=client-key.pem -e SSL_CERT=client-cert.pem -e SSL_CSR=client.csr -e SSL_SUBJECT=localhost paulczar/omgwtfssl
+```
+
+**3) Generate PFX**
+```bash
+openssl pkcs12 -export -out client.pfx -inkey client-key.pem -in client-cert.pem
+```
+
+### Integration tests
 The `./.env` file and `./src/IntegrationTests/integrationtests.local.json` files are `.gitignored`. In order to create sample files of these, you can run:
 
 ```
@@ -591,22 +612,22 @@ The `./.env` file and `./src/IntegrationTests/integrationtests.local.json` files
 ```
 
 ### Docker-Compose
-There's a `docker-compose.yml` file, that defines usage of necessary NATS nodes. Credentials are configured via environment key `MyNats_credentials__user` and `MyNats_credentials__pass`; which can either be specified via:
+There's a `docker-compose.yml` file, that defines usage of necessary NATS nodes. Credentials are configured via environment key `MYNATS_CREDENTIALS__USER` and `MYNATS_CREDENTIALS__PASS`; which can either be specified via:
 
-- Environment variable: `MyNats_credentials__user` and `MyNats_credentials__pass`, e.g.:
+- Environment variable: `MYNATS_CREDENTIALS__USER` and `MYNATS_CREDENTIALS__PASS`, e.g.:
 ```
-MyNats_credentials__user=sample_user
-MyNats_credentials__pass=sample_password
+MYNATS_CREDENTIALS__USER=sample_user
+MYNATS_CREDENTIALS__PASS=sample_password
 ```
 
 - Docker Environment file `./.env` (`.gitignored`), e.g.:
 ```
-MyNats_credentials__user=sample_user
-MyNats_credentials__pass=sample_password
+MYNATS_CREDENTIALS__USER=sample_user
+MYNATS_CREDENTIALS__PASS=sample_password
 ```
 
 ### Docker
-There's a `Dockerfile` that can be used to build and run the tests in a container. First spin up the necessary NATS-Server nodes via `docker-compose up` then you can run `docker build -t mynats --network host .`
+There's a `Dockerfile` that can be used to build and run the tests in a container. First spin up the necessary NATS-Server nodes via `docker-compose up` then you can run `docker build --rm -t mynats --network host .`
 
 ### Test configuration
 Credentials need to be provided, either via:
@@ -621,9 +642,9 @@ Credentials need to be provided, either via:
 }
 ```
 
-- Environment variables: `MyNats_credentials__user` and `MyNats_credentials__pass`, e.g.:
+- Environment variables: `MYNATS_CREDENTIALS__USER` and `MYNATS_CREDENTIALS__PASS`, e.g.:
 
 ```
-MyNats_credentials__user=sample_user
-MyNats_credentials__pass=sample_password
+MYNATS_CREDENTIALS__USER=sample_user
+MYNATS_CREDENTIALS__PASS=sample_password
 ```

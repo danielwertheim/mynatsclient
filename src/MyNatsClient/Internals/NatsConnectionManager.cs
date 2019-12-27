@@ -146,8 +146,7 @@ namespace MyNatsClient.Internals
                     new NatsConnection(
                         serverInfo,
                         socket,
-                        new BufferedStream(stream, socket.SendBufferSize),
-                        new NatsOpStreamReader(stream),
+                        stream,
                         cancellationToken),
                     consumedOps);
             }

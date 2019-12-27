@@ -22,5 +22,13 @@
         "port": 4224
       }
     ]
+  },
+  "tlsVerifyContext": {
+    "hosts": [
+      {
+        "address": "localhost",
+        "port": 4225
+      }
+    ]
   }
 }

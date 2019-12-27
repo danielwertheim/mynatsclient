@@ -9,8 +9,8 @@ services:
     ports:
       - "4223:4222"
     environment:
-      - MyNats_credentials__user
-      - MyNats_credentials__pass
+      - MYNATS_CREDENTIALS__USER
+      - MYNATS_CREDENTIALS__PASS
     command: "-c /nats_config/auth.config"
     volumes:
       - ./nats_config:/nats_config
@@ -19,5 +19,12 @@ services:
     ports:
       - "4224:4222"
     command: "-c /nats_config/tls.config"
+    volumes:
+      - ./nats_config:/nats_config
+  nats-tlsverify:
+    image: "nats"
+    ports:
+      - "4225:4222"
+    command: "-c /nats_config/tlsVerify.config"
     volumes:
       - ./nats_config:/nats_config

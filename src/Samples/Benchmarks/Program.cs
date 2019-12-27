@@ -22,10 +22,16 @@ namespace Benchmarks
             switch (testCase?.ToLowerInvariant())
             {
                 case "a":
-                    task = Scenarios.MyNatsClientRequestAsync(N);
+                    task = Scenarios.MyNatsClientRequestAsync(N, false);
+                    break;
+                case "asec":
+                    task = Scenarios.MyNatsClientRequestAsync(N, true);
                     break;
                 case "b":
-                    task = Scenarios.NatsClientRequestAsync(N);
+                    task = Scenarios.NatsClientRequestAsync(N, false);
+                    break;
+                case "bsec":
+                    task = Scenarios.NatsClientRequestAsync(N, true);
                     break;
                 default:
                     Console.WriteLine("Select a scenario: [a,b]");
@@ -41,7 +47,7 @@ namespace Benchmarks
 
     public static class Scenarios
     {
-        public static async Task<TimeSpan> MyNatsClientRequestAsync(int n)
+        public static async Task<TimeSpan> MyNatsClientRequestAsync(int n, bool useTls)
         {
             Console.WriteLine("MyNatsClient-RequestAsync");
 
@@ -49,10 +55,14 @@ namespace Benchmarks
             using var cts = new CancellationTokenSource();
             using var sync = new AutoResetEvent(false);
             var tcs = new TaskCompletionSource<TimeSpan>();
+            var cnInfo = new ConnectionInfo("127.0.0.1");
+
+            if (useTls)
+                cnInfo.ServerCertificateValidation = (_, __, ___) => true;
 
             var responderTask = Task.Factory.StartNew(async () =>
             {
-                using var client = new NatsClient(new ConnectionInfo("127.0.0.1"));
+                using var client = new NatsClient(cnInfo);
                 await client.ConnectAsync().ConfigureAwait(false);
 
                 client.Sub(subject, messages => messages.SubscribeSafe(msg => { client.Pub(msg.ReplyTo, msg.Payload); }));
@@ -64,7 +74,7 @@ namespace Benchmarks
 
             var requesterTask = Task.Factory.StartNew(async () =>
             {
-                using var client = new NatsClient(new ConnectionInfo("127.0.0.1"));
+                using var client = new NatsClient(cnInfo);
 
                 await client.ConnectAsync().ConfigureAwait(false);
 
@@ -94,7 +104,7 @@ namespace Benchmarks
             return elapsed;
         }
 
-        public static async Task<TimeSpan> NatsClientRequestAsync(int n)
+        public static async Task<TimeSpan> NatsClientRequestAsync(int n, bool useTls)
         {
             Console.WriteLine("NatsClient-RequestAsync");
 
@@ -104,10 +114,16 @@ namespace Benchmarks
             var tcs = new TaskCompletionSource<TimeSpan>();
 
             var cf = new ConnectionFactory();
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.Url = "nats://127.0.0.1:4222";
+            opts.Secure = useTls;
+
+            if(useTls)
+                opts.TLSRemoteCertificationValidationCallback = (_, __, ___, ____) => true;
 
             var responderTask = Task.Factory.StartNew(async () =>
             {
-                using var cn = cf.CreateConnection("nats://127.0.0.1:4222");
+                using var cn = cf.CreateConnection(opts);
 
                 cn.SubscribeAsync(subject, (_, args) =>
                 {
@@ -124,7 +140,7 @@ namespace Benchmarks
 
             var requesterTask = Task.Factory.StartNew(async () =>
             {
-                using var cn = cf.CreateConnection("nats://127.0.0.1:4222");
+                using var cn = cf.CreateConnection(opts);
 
                 var body = new byte[32];
 

@@ -16,6 +16,7 @@ namespace IntegrationTests
     {
         private NatsClient _requester;
         private NatsClient _responder;
+        private Sync _sync;
 
         public RequestTests(DefaultContext context)
             : base(context)
@@ -24,6 +25,9 @@ namespace IntegrationTests
         
         public void Dispose()
         {
+            _sync?.Dispose();
+            _sync = null;
+
             _requester?.Disconnect();
             _requester?.Dispose();
             _requester = null;
@@ -70,6 +74,8 @@ namespace IntegrationTests
         [Fact]
         public async Task Given_multiple_responders_exists_and_inbox_requests_are_used_When_requesting_It_should_call_requester_twice_but_dispatch_one_response()
         {
+            _sync = Sync.MaxTwo();
+
             var cnInfoResponder = Context.GetConnectionInfo();
             var cnInfoRequester = cnInfoResponder.Clone();
             cnInfoRequester.UseInboxRequests = true;
@@ -88,6 +94,7 @@ namespace IntegrationTests
             {
                 responderReceived.Enqueue(msg);
                 _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString());
+                _sync.Release();
             }));
 
             using (var responder2 = await Context.ConnectClientAsync(cnInfoResponder))
@@ -96,6 +103,7 @@ namespace IntegrationTests
                 {
                     responderReceived.Enqueue(msg);
                     responder2.Pub(msg.ReplyTo, msg.GetPayloadAsString());
+                    _sync.Release();
                 }));
 
                 await Context.DelayAsync();
@@ -103,6 +111,8 @@ namespace IntegrationTests
                 var response = await _requester.RequestAsync("getValue", value);
                 responsesReceived.Enqueue(response);
             }
+
+            _sync.WaitForAll();
 
             responsesReceived.Should().HaveCount(1);
             requesterReceived.Should().HaveCount(2);
@@ -113,6 +123,8 @@ namespace IntegrationTests
         [Fact]
         public async Task Given_multiple_responders_exists_and_non_inbox_requests_are_used_When_requesting_It_should_call_requester_once_and_dispatch_one_response()
         {
+            _sync = Sync.MaxTwo();
+
             var cnInfoResponder = Context.GetConnectionInfo();
             var cnInfoRequester = cnInfoResponder.Clone();
             cnInfoRequester.UseInboxRequests = false;
@@ -131,6 +143,7 @@ namespace IntegrationTests
             {
                 responderReceived.Enqueue(msg);
                 _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString());
+                _sync.Release();
             }));
 
             using (var responder2 = new NatsClient(cnInfoResponder))
@@ -140,6 +153,7 @@ namespace IntegrationTests
                 {
                     responderReceived.Enqueue(msg);
                     responder2.Pub(msg.ReplyTo, msg.GetPayloadAsString());
+                    _sync.Release();
                 }));
 
                 await Context.DelayAsync();
@@ -147,6 +161,8 @@ namespace IntegrationTests
                 var response = await _requester.RequestAsync("getValue", value);
                 responsesReceived.Enqueue(response);
             }
+
+            _sync.WaitForAll();
 
             responsesReceived.Should().HaveCount(1);
             requesterReceived.Should().HaveCount(1);

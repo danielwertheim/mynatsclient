@@ -23,9 +23,13 @@
 *.sdf
 *.orig
 *.pfx
+!client.pfx
 
 # rider
 .idea
+
+# vs-code
+.vscode
 
 # resharper
 _ReSharper.*

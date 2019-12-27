@@ -17,7 +17,7 @@ namespace IntegrationTests
             builder
                 .AddJsonFile("integrationtests.json", false, false)
                 .AddJsonFile("integrationtests.local.json", true, false)
-                .AddEnvironmentVariables("MyNats_");
+                .AddEnvironmentVariables("MYNATS_");
 
             Config = builder.Build();
         }
@@ -28,7 +28,9 @@ namespace IntegrationTests
             if (!credentialsConfig.Exists())
                 throw new Exception("Test configuration is missing 'credentials' section.");
 
-            return new Credentials(credentialsConfig["user"], credentialsConfig["pass"]);
+            return new Credentials(
+                credentialsConfig["user"],
+                credentialsConfig["pass"]);
         }
 
         public static Host[] GetHosts(string context)

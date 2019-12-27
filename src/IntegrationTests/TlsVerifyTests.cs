@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using FluentAssertions;
 using IntegrationTests.Extension;
@@ -8,12 +10,12 @@ using Xunit;
 
 namespace IntegrationTests
 {
-    public class TlsTests : Tests<TlsContext>, IDisposable
+    public class TlsVerifyTests : Tests<TlsVerifyContext>, IDisposable
     {
         private NatsClient _requester;
         private NatsClient _responder;
 
-        public TlsTests(TlsContext context)
+        public TlsVerifyTests(TlsVerifyContext context)
             : base(context)
         {
         }
@@ -37,6 +39,9 @@ namespace IntegrationTests
             var connectionInfo = Context
                 .GetConnectionInfo()
                 .AllowAllServerCertificates();
+
+            var clientCert = new X509Certificate2(Path.Combine("Resources", "client.pfx"));
+            connectionInfo.ClientCertificates.Add(clientCert);
 
             _responder = await Context.ConnectClientAsync(connectionInfo);
             _requester = await Context.ConnectClientAsync(connectionInfo);

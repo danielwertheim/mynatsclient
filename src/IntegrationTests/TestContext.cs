@@ -101,4 +101,13 @@ namespace IntegrationTests
             : base(TestSettings.GetHosts(Name))
         {}
     }
+
+    public sealed class TlsVerifyContext : TestContext
+    {
+        public const string Name = nameof(TlsVerifyContext);
+
+        public TlsVerifyContext()
+            : base(TestSettings.GetHosts(Name))
+        {}
+    }
 }
