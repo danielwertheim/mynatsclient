@@ -1,0 +1,70 @@
+stages:
+- stage: Build
+  jobs:
+  - job: BuildTestPack
+    displayName: 'Build, test & pack'
+    timeoutInMinutes: 5
+    cancelTimeoutInMinutes: 2
+    steps:
+    - task: DockerCompose@0
+      displayName: 'Start NATS Services'
+      inputs:
+        containerregistrytype: 'Container Registry'
+        dockerComposeFile: 'docker-compose.yml'
+        dockerComposeFileArgs: |
+          MyNats_credentials__user=$(MyNats_credentials__user)
+          MyNats_credentials__pass=$(MyNats_credentials__pass)
+        action: 'Run a Docker Compose command'
+        dockerComposeCommand: 'up -d'
+
+    - task: UseDotNet@2
+      displayName: 'Use .NET Core 3.1.x'
+      inputs:
+        version: '3.1.x'
+        packageType: sdk
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Build Solution'
+      inputs:
+        command: build
+        projects: 'src/*.sln'
+        arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(CommitId)'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'UnitTests'
+      inputs:
+        command: test
+        projects: 'src/**/UnitTests.csproj'
+        arguments: '-c $(BuildConfiguration) --no-build'
+        testRunTitle: 'UnitTests'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'IntegrationTests'
+      inputs:
+        command: test
+        projects: 'src/**/IntegrationTests.csproj'
+        arguments: '-c $(BuildConfiguration) --no-build'
+        testRunTitle: 'IntegrationTests'
+  
+    - task: DotNetCoreCLI@2
+      displayName: 'Pack Nupkg'
+      inputs:
+        command: custom
+        custom: pack
+        projects: 'src/*.sln'
+        arguments: '-c $(BuildConfiguration) --no-build -o $(Build.ArtifactStagingDirectory) -p:Version=$(SemVer) -p:InformationalVersion=$(CommitId)'
+  
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Artifacts'
+      inputs:
+        path: '$(Build.ArtifactStagingDirectory)'
+        artifact: Artifacts
+
+    - task: DockerCompose@0
+      displayName: 'Stop NATS Services'
+      condition: always()
+      inputs:
+        containerregistrytype: 'Container Registry'
+        dockerComposeFile: 'docker-compose.yml'
+        action: 'Run a Docker Compose command'
+        dockerComposeCommand: 'down'

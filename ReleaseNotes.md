@@ -1,5 +1,27 @@
 # Release notes
 
+## v0.14.0 - 2019-xx-xx
+- **Changed**: Going forward, only [.NET Standard](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) will be a target for the client.
+- **Changed**: Moved extension methods for `INatsObservable<T>` (`OfType`, `Cast`, `Select`, `Where`, `SubscribeSafe`) to namespace `MyNatsClient.Rx` instead of `MyNatsClient.Extensions` and it now acts on `INatsObservable<T>`. This is done to ease usage of optional `System.Reactive`.
+- **Changed**: `client.Connect()` is now asynchronous, hence `client.ConnectAsync()`.
+- **Changed**: Requests does not take a timeout parameter anymore, instead you pass a `CancellationToken`.
+- **Performance**:
+  - Inbox for single subsription request-response is now enabled by default. Controlled via `connectionInfo.UseInboxRequests`.
+  - Reconnect has been improved by setting up all subscriptions in "batch" instead of one-by-one.
+  - Redesign for reducing non-cachable closures.
+  - Fixes for continuations in requests.
+  - Parsing of incoming messages has been improved and now e.g uses `Span<>` and `Memory<>` to some extent.
+  - Producing (writing to socket) has been improved.
+  - Improved locking strategy.
+  - Improved reply subject matches in requests.
+- **New**: Added support so that you can define that the underlying Socket should use `IPv6`.
+- **New**: Support for TLS1.2
+- **Fix**: Max payload validation is now done on the payload not the whole message.
+- **Fix**: Support for parsing JSON from server that contains IPv6-addresses.
+- **Fix**: If exception occurred during reconnect attempt, no further reconnect attempts would be made, even if max reconnect limit wasn't execeeded.
+- **Fix**: Disposal of observables coming from `SubscribeSafe`, `Where`, `Select`, `Cast` and `OfType`.
+- **Fix**: Fixed observables: `Where`, `Select`, `Cast` and `OfType`; to use `SubscribeSafe` instead of `Safe`.
+
 ## v0.13.0 - 2018-06-29
 
 - **New**: Adds `MyNatsClient.Encodings.Protobuf` package which brings support for Protobuf serialization of messages.

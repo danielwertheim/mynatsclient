@@ -1,5 +1,7 @@
 # MyNatsClient
-A **.NETStandard2.0 and .NET 4.5.1+**, `async` and [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) (RX) friendly client for [NATS Server](https://nats.io). It's RX friendly cause it's based around `IObservable<T>`. It keeps as much of NATS domain language as possible but does not limit itself to follow the APIs of other NATS clients, but instead offer one that fits the .NET domain and one that first and foremost is a client written for .NET. Not GO or JAVA or Foo.
+[![Build Status](https://dev.azure.com/danielwertheim/mynatsclient/_apis/build/status/danielwertheim.mynatsclient-CI?branchName=master)](https://dev.azure.com/danielwertheim/mynatsclient/_build/latest?definitionId=27&branchName=master)
+
+A **.NET Standard** based, `async` and [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) (RX) friendly client for [NATS Server](https://nats.io). It's RX friendly cause it's based around `IObservable<T>`. It keeps as much of NATS domain language as possible but does not limit itself to follow the APIs of other NATS clients, but instead offer one that fits the .NET domain and one that first and foremost is a client written for .NET. Not GO or JAVA or Foo.
 
 It offers both simple and advanced usage. By default it's configured to auto reply on heartbeat pings and to reconnect on failures. You can seed it with multiple hosts in a cluster. So if one fails it will reconnect to another one.
 
@@ -7,45 +9,28 @@ Similar to RX you decide the behavior of your in-process observer subscriptions 
 
 It keeps track of when the last contact to a server was, so that it can send a `PING` to see if server is still alive.
 
-Instead of relying on background flushing like other clients do, it **auto flushes** for each `PUB`. You can also use the construct `client.PubMany` to publish many messages and get one flush for them all. Finally **you can also control the flushing manually**.
+Instead of relying on background flushing, it **auto flushes** for each `PUB`. You can also use the construct `client.PubMany` to publish many messages and get one flush for them all. Finally **you can also control the flushing manually**.
 
 It supports:
 
 - Pub-Sub
-- Request-Response
+- Request-Response (single or inbox per client)
 - Queue groups
 
 ## Samples
 Some simple samples will be kept in the same repo as the project, under [src\samples](https://github.com/danielwertheim/mynatsclient/tree/master/src/samples)
 
-There's also a separate repo (potentially outdated) [with samples](https://github.com/danielwertheim/mynatsclient-samples)
-
-## .NET and .NET Standard
-The project multi targets the following frameworks:
-
-- .NET4.5.1
-- .NETStandard2.0
-
 ## Metrics
-Fast? Yes it is. More info can be found here: [MyNatsClient - It flushes, but so can you](http://danielwertheim.se/mynatsclient-it-flushes-but-so-can-you/)
+Fast? Yes it is. More info can be found here: [MyNatsClient - It flushes, but so can you](http://danielwertheim.se/mynatsclient-it-flushes-but-so-can-you/) And things has been improved since then.
 
 ## License
 MyNatsClient is licensed under [MIT](https://github.com/danielwertheim/mynatsclient/blob/master/LICENSE.txt) so have fun using it.
 
-## Release notes
-They are kept separately [here](https://github.com/danielwertheim/mynatsclient/blob/master/ReleaseNotes.md).
-
-## Install NuGet Package
+## NuGet Packages
 If you just want the client and not the Reactive Extensions packages, use:
 
 ```
 install-package MyNatsClient
-```
-
-For convenience, if you want a consumer that makes use of Reactive Extensions, use:
-
-```
-install-package MyNatsClient.Rx
 ```
 
 ### Encodings
@@ -63,6 +48,16 @@ install-package MyNatsClient.Encodings.Protobuf
 
 This gives you a `ProtobufEncoding` and some pre-made extension methods under `MyNatsClient.Encodings.Protobuf`
 
+## Security
+Currently the client supports:
+- TLS1.2 (configured via `ConnectionInfo.ServerCertificateValidation` and `ConnectionInfo.ClientCertificates`)
+- Credentials authentication via `ConnectionInfo.Credentials` or `ConnectionInfo.Host[0..n].Credentials`
+
+## Inbox-requests
+There's a setting: `connectionInfo.UseInboxRequests = true`; (enabled by default) controlling if the client should subscribe to the NATS-server using a wildcard subscription `IB.unique-client-id.*` and then route the incoming-response to the requestor.
+
+The benefits are better performance. If you want the one-sub-unsub per request behavior, just disable it: `connectionInfo.UseInboxRequests = false`.
+
 ## Pub-Sub sample
 Simple pub-sub sample showing one client that publishes and one that subscribes. This can of course be the same client and you can also have more clients subscribing etc.
 
@@ -71,6 +66,8 @@ Simple pub-sub sample showing one client that publishes and one that subscribes.
 ```csharp
 var cnInfo = new ConnectionInfo("192.168.1.10");
 var client = new NatsClient(cnInfo);
+
+await client.ConnectAsync();
 
 await client.PubAsync("tick", GetNextTick());
 
@@ -83,6 +80,8 @@ await client.PubAsJsonAsync("tickItem", new Tick { Value = GetNextTick() });
 ```csharp
 var cnInfo = new ConnectionInfo("192.168.1.10");
 var client = new NatsClient(cnInfo);
+
+await _client.ConnectAsync();
 
 await client.SubAsync("tick", stream => stream.Subscribe(msg => {
     Console.WriteLine($"Clock ticked. Tick is {msg.GetPayloadAsString()}");
@@ -116,6 +115,8 @@ Simple request-response sample. This sample also makes use of two clients. It ca
 var cnInfo = new ConnectionInfo("192.168.1.10");
 var client = new NatsClient(cnInfo);
 
+await _client.ConnectAsync();
+
 var response = await client.RequestAsync("getTemp", "stockholm@sweden");
 Console.WriteLine($"Temp in Stockholm is {response.GetPayloadAsString()}");
 ```
@@ -125,6 +126,8 @@ Console.WriteLine($"Temp in Stockholm is {response.GetPayloadAsString()}");
 ```csharp
 var cnInfo = new ConnectionInfo("192.168.1.10");
 var client = new NatsClient(cnInfo);
+
+await _client.ConnectAsync();
 
 await client.SubAsync("getTemp", stream.Subscribe(msg => {
     client.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
@@ -140,22 +143,31 @@ var connectionInfo = new ConnectionInfo(
     //and try to connect. First successful will be used.
     new[]
     {
-        new Host("192.168.1.176", 4222)
+        new Host("192.168.1.176", 4222),
+        new Host("192.168.1.177", 4222)
+        {
+            Credentials = new Credentials("foo_user", "bar_pwd")
+        }
     })
 {
+    UseInboxRequests = true,
     AutoRespondToPing = true,
     AutoReconnectOnFailure = true,
     Verbose = false,
     Credentials = new Credentials("testuser", "p@ssword1234"),
     RequestTimeoutMs = 5000,
     PubFlushMode = PubFlushMode.Auto,
+    ClientCertificates = new X509Certificate2Collection(),
+    ServerCertificateValidation = (x509Cert, x509Chain, policyErrors) => { ... }
     SocketOptions = new SocketOptions
     {
+        AddressType = SocketAddressType.IpV4, //Set to null to auto detect (.NET & OS default)
         ReceiveTimeoutMs = 5000,
         SendTimeoutMs = 5000,
         ConnectTimeoutMs = 5000,
         ReceiveBufferSize = null, //.NET & OS default
-        SendBufferSize = null //.NET & OS default
+        SendBufferSize = null, //.NET & OS default
+        UseNagleAlgorithm = false
     }
 };
 
@@ -333,6 +345,11 @@ You can adjust the `SocketOptions` by configuring the following:
 public class SocketOptions
 {
     /// <summary>
+    /// Gets or sets the type of address to use for the Socket.
+    /// </summary>
+    public SocketAddressType? AddressType { get; set; } = SocketAddressType.IpV4;
+
+    /// <summary>
     /// Gets or sets the ReceiveBufferSize of the Socket.
     /// Will also adjust the buffer size of the underlying <see cref="System.IO.BufferedStream"/>
     /// that is used by the consumer.
@@ -357,7 +374,6 @@ public class SocketOptions
     /// Gets or sets the Send timeout in milliseconds for the Socket.
     /// </summary>
     public int? SendTimeoutMs { get; set; } = 5000;
-
 
     /// <summary>
     /// Gets or sets the Connect timeout in milliseconds for the Socket.
@@ -563,4 +579,72 @@ y
 Run? (y=yes;n=no)
 Observer OnNext got: test3
 n
+```
+
+## Developement
+
+### Certificates for tests
+This is **only done for testing purposes** and should not be used for production use or similar.
+
+More information: https://github.com/paulczar/omgwtfssl
+
+**1) Generate certs for CA and Server**
+
+```bash
+docker run --name servercerts -v //C/DockerData/certs/:/certs -e CA_EXPIRE=365 -e SSL_EXPIRE=365 -e SSL_KEY=server-key.pem -e SSL_CERT=server-cert.pem -e SSL_CSR=server.csr -e SSL_SUBJECT=localhost paulczar/omgwtfssl
+```
+
+**2) Generate certs for Client** *(CA files should be kept in mapped folder)*
+```bash
+docker run --name clientcerts -v //C/DockerData/certs/:/certs -e CA_EXPIRE=365 -e SSL_EXPIRE=365 -e SSL_KEY=client-key.pem -e SSL_CERT=client-cert.pem -e SSL_CSR=client.csr -e SSL_SUBJECT=localhost paulczar/omgwtfssl
+```
+
+**3) Generate PFX**
+```bash
+openssl pkcs12 -export -out client.pfx -inkey client-key.pem -in client-cert.pem
+```
+
+### Integration tests
+The `./.env` file and `./src/IntegrationTests/integrationtests.local.json` files are `.gitignored`. In order to create sample files of these, you can run:
+
+```
+. init-local-config.sh
+```
+
+### Docker-Compose
+There's a `docker-compose.yml` file, that defines usage of necessary NATS nodes. Credentials are configured via environment key `MYNATS_CREDENTIALS__USER` and `MYNATS_CREDENTIALS__PASS`; which can either be specified via:
+
+- Environment variable: `MYNATS_CREDENTIALS__USER` and `MYNATS_CREDENTIALS__PASS`, e.g.:
+```
+MYNATS_CREDENTIALS__USER=sample_user
+MYNATS_CREDENTIALS__PASS=sample_password
+```
+
+- Docker Environment file `./.env` (`.gitignored`), e.g.:
+```
+MYNATS_CREDENTIALS__USER=sample_user
+MYNATS_CREDENTIALS__PASS=sample_password
+```
+
+### Docker
+There's a `Dockerfile` that can be used to build and run the tests in a container. First spin up the necessary NATS-Server nodes via `docker-compose up` then you can run `docker build --rm -t mynats --network host .`
+
+### Test configuration
+Credentials need to be provided, either via:
+
+- Local-JSON-file (`.gitignored`): `./src/IntegrationTests/integrationtests.local.json`, e.g.:
+```
+{
+  "credentials": {
+    "user": "sample_user",
+    "pass": "sample_password"
+  }
+}
+```
+
+- Environment variables: `MYNATS_CREDENTIALS__USER` and `MYNATS_CREDENTIALS__PASS`, e.g.:
+
+```
+MYNATS_CREDENTIALS__USER=sample_user
+MYNATS_CREDENTIALS__PASS=sample_password
 ```
