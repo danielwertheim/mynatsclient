@@ -4,12 +4,16 @@ namespace MyNatsClient.Internals
 {
     internal static class UniqueId
     {
-        private static readonly char[] Chars = "0123456789ABCDEFGHIJKLMNOPQRSTUV".ToCharArray();
+        private static readonly char[] Chars =
+        {
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+            'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+            'U', 'V'
+        };
 
-        internal static string Generate() => Generate(DateTime.UtcNow.Ticks);
-
-        private static string Generate(long id) =>
-            string.Create(13, id, (buffer, val) =>
+        internal static string Generate()
+            => string.Create(13, DateTime.UtcNow.Ticks, (buffer, val) =>
             {
                 var chars = Chars;
 

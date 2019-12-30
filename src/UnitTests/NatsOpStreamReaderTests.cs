@@ -25,28 +25,28 @@ namespace UnitTests
             {
                 UnitUnderTest = new NatsOpStreamReader(stream);
 
-                var infoOp = UnitUnderTest.ReadOp().First();
+                var infoOp = UnitUnderTest.ReadOps().First();
                 infoOp.Should().BeOfType<InfoOp>();
 
-                var okOp = UnitUnderTest.ReadOp().First();
+                var okOp = UnitUnderTest.ReadOps().First();
                 okOp.Should().BeOfType<OkOp>();
 
-                var msgOp = UnitUnderTest.ReadOp().First();
+                var msgOp = UnitUnderTest.ReadOps().First();
                 msgOp.Should().BeOfType<MsgOp>();
 
-                var msgWithGroupOp = UnitUnderTest.ReadOp().First();
+                var msgWithGroupOp = UnitUnderTest.ReadOps().First();
                 msgWithGroupOp.Should().BeOfType<MsgOp>();
 
-                var pingOp = UnitUnderTest.ReadOp().First();
+                var pingOp = UnitUnderTest.ReadOps().First();
                 pingOp.Should().BeOfType<PingOp>();
 
-                var pongOp = UnitUnderTest.ReadOp().First();
+                var pongOp = UnitUnderTest.ReadOps().First();
                 pongOp.Should().BeOfType<PongOp>();
 
-                var errOp = UnitUnderTest.ReadOp().First();
+                var errOp = UnitUnderTest.ReadOps().First();
                 errOp.Should().BeOfType<ErrOp>();
 
-                UnitUnderTest.ReadOp().FirstOrDefault().Should().BeNull();
+                UnitUnderTest.ReadOps().FirstOrDefault().Should().BeNull();
             }
         }
 
@@ -58,7 +58,7 @@ namespace UnitTests
             {
                 UnitUnderTest = new NatsOpStreamReader(stream);
 
-                var op = UnitUnderTest.ReadOp().OfType<InfoOp>().First();
+                var op = UnitUnderTest.ReadOps().OfType<InfoOp>().First();
 
                 InfoOp.Name.Should().Be("INFO");
                 op.Message.ToString().Should().Be("{\"server_id\":\"H8RgvFtiq2zlQTA5dB0deh\"}");
@@ -74,7 +74,7 @@ namespace UnitTests
             {
                 UnitUnderTest = new NatsOpStreamReader(stream);
 
-                var op = UnitUnderTest.ReadOp().OfType<OkOp>().First();
+                var op = UnitUnderTest.ReadOps().OfType<OkOp>().First();
 
                 OkOp.Name.Should().Be("+OK");
                 op.GetAsString().Should().Be("+OK");
@@ -89,7 +89,7 @@ namespace UnitTests
             {
                 UnitUnderTest = new NatsOpStreamReader(stream);
 
-                var op = UnitUnderTest.ReadOp().OfType<MsgOp>().First();
+                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
 
                 MsgOp.Name.Should().Be("MSG");
                 op.Subject.Should().Be("foo");
@@ -109,7 +109,7 @@ namespace UnitTests
             {
                 UnitUnderTest = new NatsOpStreamReader(stream);
 
-                var op = UnitUnderTest.ReadOp().OfType<MsgOp>().First();
+                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
 
                 MsgOp.Name.Should().Be("MSG");
                 op.Subject.Should().Be("foo");
@@ -129,7 +129,7 @@ namespace UnitTests
             {
                 UnitUnderTest = new NatsOpStreamReader(stream);
 
-                var op = UnitUnderTest.ReadOp().OfType<MsgOp>().First();
+                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
 
                 MsgOp.Name.Should().Be("MSG");
                 op.Subject.Should().Be("foo");
@@ -149,7 +149,7 @@ namespace UnitTests
             {
                 UnitUnderTest = new NatsOpStreamReader(stream);
 
-                var op = UnitUnderTest.ReadOp().OfType<PingOp>().First();
+                var op = UnitUnderTest.ReadOps().OfType<PingOp>().First();
 
                 PingOp.Name.Should().Be("PING");
                 op.GetAsString().Should().Be("PING");
@@ -164,7 +164,7 @@ namespace UnitTests
             {
                 UnitUnderTest = new NatsOpStreamReader(stream);
 
-                var op = UnitUnderTest.ReadOp().OfType<PongOp>().First();
+                var op = UnitUnderTest.ReadOps().OfType<PongOp>().First();
 
                 PongOp.Name.Should().Be("PONG");
                 op.GetAsString().Should().Be("PONG");
@@ -179,7 +179,7 @@ namespace UnitTests
             {
                 UnitUnderTest = new NatsOpStreamReader(stream);
 
-                var op = UnitUnderTest.ReadOp().OfType<ErrOp>().First();
+                var op = UnitUnderTest.ReadOps().OfType<ErrOp>().First();
 
                 ErrOp.Name.Should().Be("-ERR");
                 op.GetAsString().Should().Be("-ERR 'Unknown Protocol Operation'");
@@ -195,7 +195,7 @@ namespace UnitTests
             {
                 UnitUnderTest = new NatsOpStreamReader(stream);
 
-                var ops = UnitUnderTest.ReadOp().ToArray();
+                var ops = UnitUnderTest.ReadOps().ToArray();
                 ops.Should().HaveCount(2);
                 ops[0].Should().BeOfType<OkOp>();
                 ops[1].Should().BeOfType<PingOp>();

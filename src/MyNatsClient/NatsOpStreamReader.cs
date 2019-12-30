@@ -192,7 +192,7 @@ namespace MyNatsClient
                 payload);
         }
 
-        public IEnumerable<IOp> ReadOp()
+        public IEnumerable<IOp> ReadOps()
         {
             IOp op = null;
             using var workspace = new MemoryStream();
