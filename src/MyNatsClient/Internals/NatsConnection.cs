@@ -103,7 +103,7 @@ namespace MyNatsClient.Internals
 
             ThrowIfNotConnected();
 
-            return _reader.ReadOp();
+            return _reader.ReadOps();
         }
 
         public void WithWriteLock(Action<INatsStreamWriter> a)
