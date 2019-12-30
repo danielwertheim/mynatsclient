@@ -9,7 +9,7 @@
     <RepositoryType>Git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/danielwertheim/mynatsclient</PackageProjectUrl>
-    <PackageReleaseNotes>https://github.com/danielwertheim/mynatsclient/blob/master/ReleaseNotes.md</PackageReleaseNotes>
+    <PackageReleaseNotes>https://github.com/danielwertheim/mynatsclient/releases</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 </Project>
