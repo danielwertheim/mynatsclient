@@ -5,7 +5,7 @@
     <Authors>danielwertheim</Authors>
     <Copyright>Copyright © danielwertheim</Copyright>
     <LangVersion>latest</LangVersion>
-    <RepositoryUrl>https://github.com/nats-io/nats.net</RepositoryUrl>
+    <RepositoryUrl>https://github.com/danielwertheim/mynatsclient</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/danielwertheim/mynatsclient</PackageProjectUrl>
