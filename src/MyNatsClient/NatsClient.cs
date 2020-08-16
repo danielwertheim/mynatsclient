@@ -608,7 +608,7 @@ namespace MyNatsClient
         {
             var subscription = Subscription.Create(
                 subscriptionInfo,
-                subscriptionFactory(MsgOpStream.Where(msg => subscriptionInfo.Matches(msg.Subject))),
+                subscriptionFactory(MsgOpStream.Where(msg => msg.SubscriptionId == subscriptionInfo.Id)),
                 DisposeSubscription);
 
             if (!_subscriptions.TryAdd(subscription.SubscriptionInfo.Id, subscription))

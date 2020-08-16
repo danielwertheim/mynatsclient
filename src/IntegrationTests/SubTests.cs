@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MyNatsClient;
@@ -424,6 +425,33 @@ namespace IntegrationTests
 
             _sync.InterceptedCount.Should().Be(3);
             _sync.Intercepted.Select(i => i.Subject).Should().OnlyContain(i => i.StartsWith(subjectNs));
+        }
+
+        [Fact]
+        public async Task Given_subscribed_with_overlapping_wildcards_async_using_handler_It_should_get_only_subcription_messages()
+        {
+            const string subjectNs = "foo.tests.";
+
+            _sync = Sync.MaxOne();
+            _client = await Context.ConnectClientAsync();
+
+            // First subscription
+            await _client.SubAsync(subjectNs + ">");
+
+            // Second, overlapping subscription
+            var subscription = await _client.SubAsync(subjectNs + "*", stream => stream.Subscribe(msg => _sync.Release(msg)));
+
+            await Context.DelayAsync();
+
+            await _client.PubAsync(subjectNs + "type1", "Test1");
+            _sync.WaitForAny();
+            await _client.PubAsync(subjectNs + "type2", "Test2");
+            _sync.WaitForAny();
+            await _client.PubAsync(subjectNs + "type3", "Test3");
+            _sync.WaitForAny();
+
+            _sync.InterceptedCount.Should().Be(3);
+            _sync.Intercepted.Select(i => i.SubscriptionId).Should().OnlyContain(i => i == subscription.SubscriptionInfo.Id);
         }
     }
 }
