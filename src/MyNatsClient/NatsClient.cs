@@ -44,7 +44,7 @@ namespace MyNatsClient
         public INatsObservable<IClientEvent> Events => _eventMediator;
         public INatsObservable<IOp> OpStream => _opMediator.AllOpsStream;
         public INatsObservable<MsgOp> MsgOpStream => _opMediator.MsgOpsStream;
-        public bool IsConnected => _connection != null && _connection.IsConnected && _connection.CanRead;
+        public bool IsConnected => _connection.IsConnected && _connection.CanRead;
 
         public NatsClient(ConnectionInfo connectionInfo, ISocketFactory socketFactory = null)
         {
@@ -56,6 +56,7 @@ namespace MyNatsClient
             _inboxAddress = $"IB.{Id}";
             _sync = new SemaphoreSlim(1, 1);
             _connectionInfo = connectionInfo.Clone();
+            _connection = DisconnectedConnection.Instance;
             _subscriptions = new ConcurrentDictionary<string, Subscription>(StringComparer.OrdinalIgnoreCase);
             _eventMediator = new NatsObservableOf<IClientEvent>();
             _opMediator = new NatsOpMediator();
@@ -303,8 +304,8 @@ namespace MyNatsClient
             },
             () =>
             {
-                _connection?.Dispose();
-                _connection = null;
+                _connection.Dispose();
+                _connection = DisconnectedConnection.Instance;
             });
 
         public void Flush()
