@@ -204,10 +204,9 @@ namespace MyNatsClient
         {
             bool ShouldDoWork() => !_isDisposed && IsConnected && _cancellation?.IsCancellationRequested == false;
 
+            var lastOpReceivedAt = DateTime.UtcNow;
             while (ShouldDoWork())
             {
-                var lastOpReceivedAt = DateTime.UtcNow;
-
                 try
                 {
                     foreach (var op in _connection.ReadOp())
