@@ -227,9 +227,6 @@ namespace MyNatsClient
                 }
                 catch (Exception ex)
                 {
-                    if (!ShouldDoWork())
-                        break;
-
                     _logger.Error("Worker got Exception.", ex);
 
                     if (ex.InnerException is SocketException socketEx)
@@ -242,6 +239,9 @@ namespace MyNatsClient
                         if (socketEx.SocketErrorCode != SocketError.TimedOut)
                             throw;
                     }
+
+                    if (!ShouldDoWork())
+                        break;
 
                     var silenceDeltaMs = DateTime.UtcNow.Subtract(lastOpReceivedAt).TotalMilliseconds;
                     if (silenceDeltaMs >= ConsumerMaxMsSilenceFromServer)
