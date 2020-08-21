@@ -174,6 +174,7 @@ namespace MyNatsClient
                 _consumer = Task.Factory
                     .StartNew(
                         Worker,
+                        Tuple.Create(_connection, _cancellation.Token),
                         _cancellation.Token,
                         TaskCreationOptions.LongRunning,
                         TaskScheduler.Default)
@@ -201,16 +202,24 @@ namespace MyNatsClient
             }
         }
 
-        private void Worker()
+        private void Worker(object rawState)
         {
-            bool ShouldDoWork() => !_isDisposed && IsConnected && _cancellation?.IsCancellationRequested == false;
+            var state = (Tuple<INatsConnection, CancellationToken>)rawState;
+
+            INatsConnection connection = state.Item1;
+            CancellationToken token = state.Item2;
+
+            bool ShouldDoWork() => !_isDisposed
+                                && connection.IsConnected 
+                                && connection.CanRead 
+                                && !token.IsCancellationRequested;
 
             var lastOpReceivedAt = DateTime.UtcNow;
             while (ShouldDoWork())
             {
                 try
                 {
-                    foreach (var op in _connection.ReadOp())
+                    foreach (var op in connection.ReadOp())
                     {
                         if (!ShouldDoWork())
                             break;
