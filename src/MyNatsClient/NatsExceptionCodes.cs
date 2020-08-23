@@ -15,5 +15,6 @@ namespace MyNatsClient
         public const string OpParserOpParsingError = "OpParser.Error";
         public const string OpParserUnsupportedOp = "OpParser.UnsupportedOp";
         public const string InitRequestError = "Client.InitRequestError";
+        public const string NotConnected = "NotConnected";
     }
 }

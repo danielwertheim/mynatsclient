@@ -14,7 +14,8 @@ namespace MyNatsClient
         }
 
         internal static NatsException MissingCredentials(Host host)
-            => new NatsException(NatsExceptionCodes.MissingCredentials, $"Error while connecting to {host}. Host requires credentials to be passed. None was specified. Pass credentials for specific host or for all hosts.");
+            => new NatsException(NatsExceptionCodes.MissingCredentials,
+                $"Error while connecting to {host}. Host requires credentials to be passed. None was specified. Pass credentials for specific host or for all hosts.");
 
         internal static NatsException MissingClientCertificates(Host host)
             => new NatsException(NatsExceptionCodes.MissingClientCertificates, $"Error while connecting to {host}. Host requires client certificates. None was specified.");
@@ -29,10 +30,12 @@ namespace MyNatsClient
             => new NatsException(NatsExceptionCodes.ExceededMaxPayload, $"Server indicated max payload of {maxPayload} bytes. Current dispatch is {bufferLength} bytes.");
 
         internal static NatsException CouldNotCreateSubscription(SubscriptionInfo subscriptionInfo)
-            => new NatsException(NatsExceptionCodes.CouldNotCreateSubscription, $"Could not create subscription. Id='{subscriptionInfo.Id}'. Subject='{subscriptionInfo.Subject}' QueueGroup='{subscriptionInfo.QueueGroup}'.");
+            => new NatsException(NatsExceptionCodes.CouldNotCreateSubscription,
+                $"Could not create subscription. Id='{subscriptionInfo.Id}'. Subject='{subscriptionInfo.Subject}' QueueGroup='{subscriptionInfo.QueueGroup}'.");
 
         internal static NatsException ConnectionFoundIdling(string host, int port)
-            => new NatsException(NatsExceptionCodes.ConnectionFoundIdling, $"The Connection against server {host}:{port.ToString()} has not received any data in a to long period.");
+            => new NatsException(NatsExceptionCodes.ConnectionFoundIdling,
+                $"The Connection against server {host}:{port.ToString()} has not received any data in a to long period.");
 
         internal static NatsException ClientReceivedErrOp(ErrOp errOp)
             => new NatsException(NatsExceptionCodes.ClientReceivedErrOp, $"Client received ErrOp with message='{errOp.Message}'.");
@@ -50,6 +53,9 @@ namespace MyNatsClient
             => new NatsException(NatsExceptionCodes.OpParserOpParsingError, $"Error while parsing {op}. {message}");
 
         internal static NatsException InitRequestError(string message)
-        => new NatsException(NatsExceptionCodes.InitRequestError, message);
+            => new NatsException(NatsExceptionCodes.InitRequestError, message);
+
+        internal static NatsException NotConnected()
+            => new NatsException(NatsExceptionCodes.NotConnected, "No connection exists.");
     }
 }
