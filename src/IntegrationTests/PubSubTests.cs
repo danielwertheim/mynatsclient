@@ -211,5 +211,54 @@ namespace IntegrationTests
 
             _sync.InterceptedCount.Should().Be(2);
         }
+        
+        [Fact]
+        public async Task Client_Should_throw_if_pub_when_never_connected()
+        {
+            var subject = Context.GenerateSubject();
+            var body = new byte[0];
+
+            _client1 = Context.CreateClient();
+
+            Should.ThrowNatsException(() => _client1.Pub(subject, "body"));
+            Should.ThrowNatsException(() => _client1.Pub(subject, "body", "reply.to.subject"));
+            Should.ThrowNatsException(() => _client1.Pub(subject, body.AsMemory()));
+            Should.ThrowNatsException(() => _client1.Pub(subject, body.AsMemory(), "reply.to.subject"));
+
+            await Should.ThrowNatsExceptionAsync(() => _client1.PubAsync(subject, "body"));
+            await Should.ThrowNatsExceptionAsync(() => _client1.PubAsync(subject, "body", "reply.to.subject"));
+            await Should.ThrowNatsExceptionAsync(() => _client1.PubAsync(subject, body.AsMemory()));
+            await Should.ThrowNatsExceptionAsync(() => _client1.PubAsync(subject, body.AsMemory(), "reply.to.subject"));
+        }
+
+        [Fact]
+        public async Task Client_Should_throw_if_pub_after_disconnected()
+        {
+            var subject = Context.GenerateSubject();
+            var body = new byte[0];
+
+            _client1 = await Context.ConnectClientAsync();
+
+            // Succeeds
+            _client1.Pub(subject, "body");
+            _client1.Pub(subject, "body", "repy.to.subject");
+            _client1.Pub(subject, body.AsMemory());
+            _client1.Pub(subject, body.AsMemory(), "repy.to.subject");
+
+            // Disconnect from NATS per user request
+            _client1.Disconnect();
+            Assert.False(_client1.IsConnected);
+
+            // Fails after being disconnected
+            Should.ThrowNatsException(() => _client1.Pub(subject, "body"));
+            Should.ThrowNatsException(() => _client1.Pub(subject, "body", "reply.to.subject"));
+            Should.ThrowNatsException(() => _client1.Pub(subject, body.AsMemory()));
+            Should.ThrowNatsException(() => _client1.Pub(subject, body.AsMemory(), "reply.to.subject"));
+
+            await Should.ThrowNatsExceptionAsync(() => _client1.PubAsync(subject, "body"));
+            await Should.ThrowNatsExceptionAsync(() => _client1.PubAsync(subject, "body", "reply.to.subject"));
+            await Should.ThrowNatsExceptionAsync(() => _client1.PubAsync(subject, body.AsMemory()));
+            await Should.ThrowNatsExceptionAsync(() => _client1.PubAsync(subject, body.AsMemory(), "reply.to.subject"));
+        }
     }
 }

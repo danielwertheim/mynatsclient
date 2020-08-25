@@ -187,7 +187,7 @@ namespace MyNatsClient.Internals
         private void ThrowIfNotConnected()
         {
             if (!IsConnected)
-                throw new InvalidOperationException("Connection has been disconnected.");
+                throw NatsException.NotConnected();
         }
     }
 }

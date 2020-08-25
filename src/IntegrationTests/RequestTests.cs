@@ -193,5 +193,46 @@ namespace IntegrationTests
 
             a.Should().Throw<TaskCanceledException>();
         }
+        
+        [Fact]
+        public async Task Client_Should_throw_if_request_when_never_connected()
+        {
+            var subject = Context.GenerateSubject();
+            var body = new byte[0];
+
+            _requester = Context.CreateClient();
+
+            await Should.ThrowNatsExceptionAsync(() => _requester.RequestAsync(subject, "body"));
+            await Should.ThrowNatsExceptionAsync(() => _requester.RequestAsync(subject, body.AsMemory()));
+        }
+
+        [Fact]
+        public async Task Client_Should_throw_if_request_after_disconnected()
+        {
+            var subject = Context.GenerateSubject();
+            var body = new byte[0];
+
+            _responder = await Context.ConnectClientAsync();
+            _requester = await Context.ConnectClientAsync();
+
+            _responder.Sub(subject, stream => stream.Subscribe(msg => _responder.Pub(msg.ReplyTo, msg.GetPayloadAsString())));
+
+            await Context.DelayAsync();
+
+            // Succeeds
+            var response = await _requester.RequestAsync(subject, "body");
+            Assert.NotNull(response);
+
+            response = await _requester.RequestAsync(subject, body.AsMemory());
+            Assert.NotNull(response);
+
+            // Disconnect from NATS per user request
+            _requester.Disconnect();
+            Assert.False(_requester.IsConnected);
+
+            // Fails after being disconnected
+            await Should.ThrowNatsExceptionAsync(() => _requester.RequestAsync(subject, "body"));
+            await Should.ThrowNatsExceptionAsync(() => _requester.RequestAsync(subject, body.AsMemory()));
+        }
     }
 }
