@@ -8,7 +8,7 @@ namespace MyNatsClient.Internals
     {
         private readonly INatsObservable<object> _src;
 
-        public OfTypeObservable(INatsObservable<object> src) 
+        public OfTypeObservable(INatsObservable<object> src)
             => _src = src ?? throw new ArgumentNullException(nameof(src));
 
         public void Dispose() => _src.Dispose();
@@ -41,7 +41,7 @@ namespace MyNatsClient.Internals
     {
         private readonly INatsObservable<TFrom> _src;
 
-        public CastObservable(INatsObservable<TFrom> src) 
+        public CastObservable(INatsObservable<TFrom> src)
             => _src = src ?? throw new ArgumentNullException(nameof(src));
 
         public void Dispose() => _src.Dispose();
@@ -53,7 +53,7 @@ namespace MyNatsClient.Internals
         {
             private readonly IObserver<TTo> _observer;
 
-            public CastObserver(IObserver<TTo> observer) 
+            public CastObserver(IObserver<TTo> observer)
                 => _observer = observer;
 
             public void OnNext(TFrom value)
@@ -98,6 +98,55 @@ namespace MyNatsClient.Internals
             {
                 if (_predicate(value))
                     _observer.OnNext(value);
+            }
+
+            public void OnError(Exception error)
+                => _observer.OnError(error);
+
+            public void OnCompleted()
+                => _observer.OnCompleted();
+        }
+    }
+
+    internal sealed class CatchObservable<T, TException> : INatsObservable<T>
+        where T : class
+        where TException : Exception
+    {
+        private readonly INatsObservable<T> _src;
+        private readonly Action<TException> _handler;
+
+        public CatchObservable(INatsObservable<T> src, Action<TException> handler)
+        {
+            _src = src ?? throw new ArgumentNullException(nameof(src));
+            _handler = handler ?? throw new ArgumentNullException(nameof(handler));
+        }
+
+        public void Dispose() => _src.Dispose();
+
+        public IDisposable Subscribe(IObserver<T> observer)
+            => _src.SubscribeSafe(new CatchObserver(observer, _handler));
+
+        private sealed class CatchObserver : IObserver<T>
+        {
+            private readonly IObserver<T> _observer;
+            private readonly Action<TException> _handler;
+
+            public CatchObserver(IObserver<T> observer, Action<TException> handler)
+            {
+                _observer = observer ?? throw new ArgumentNullException(nameof(observer));
+                _handler = handler;
+            }
+
+            public void OnNext(T value)
+            {
+                try
+                {
+                    _observer.OnNext(value);
+                }
+                catch (TException ex)
+                {
+                    _handler(ex);
+                }
             }
 
             public void OnError(Exception error)

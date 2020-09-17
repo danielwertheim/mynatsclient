@@ -165,7 +165,7 @@ namespace UnitTests
             {
                 Interlocked.Increment(ref s1CallCount);
             });
-            var s2 = UnitUnderTest.Subscribe(ev =>
+            var _ = UnitUnderTest.Subscribe(ev =>
             {
                 Interlocked.Increment(ref s2CallCount);
             });
@@ -234,6 +234,126 @@ namespace UnitTests
 
             observer2.Verify(f => f.OnNext(It.IsAny<ExtendedData>()), Times.Exactly(1));
             observer2.Verify(f => f.OnNext(It.Is<ExtendedData>(d => d.Value == 1 && d.OtherValue == 2)), Times.Once);
+        }
+
+        [Fact]
+        public void Emitting_Should_invoke_handler_of_failing_observer_When_using_catch_and_a_more_specific_exception_is_thrown()
+        {
+            var failingCatchWasInvoked = false;
+            var failingExHandlerWasInvoked = false;
+            var nonFailingCatchWasInvoked = false;
+            var nonFailingExHandlerWasInvoked = false;
+            
+            UnitUnderTest.Catch((NotSupportedException ex) => failingCatchWasInvoked = true).Subscribe(
+                ev => throw new NotSupportedException("I FAILED!"),
+                ex => failingExHandlerWasInvoked = true);
+
+            UnitUnderTest.Catch((NotSupportedException ex) => nonFailingCatchWasInvoked = true).Subscribe(
+                ev => { },
+                ex => nonFailingExHandlerWasInvoked = true);
+
+            UnitUnderTest.Emit(Mock.Of<Data>());
+
+            failingCatchWasInvoked.Should().BeTrue();
+            failingExHandlerWasInvoked.Should().BeFalse();
+            nonFailingCatchWasInvoked.Should().BeFalse();
+            nonFailingExHandlerWasInvoked.Should().BeFalse();
+        }
+        
+        [Fact]
+        public void Emitting_Should_invoke_handler_of_failing_observer_When_using_catch_and_an_exception_is_thrown()
+        {
+            var failingCatchWasInvoked = false;
+            var failingExHandlerWasInvoked = false;
+            var nonFailingCatchWasInvoked = false;
+            var nonFailingExHandlerWasInvoked = false;
+            
+            UnitUnderTest.Catch((Exception ex) => failingCatchWasInvoked = true).Subscribe(
+                ev => throw new Exception("I FAILED!"),
+                ex => failingExHandlerWasInvoked = true);
+
+            UnitUnderTest.Catch((Exception ex) => nonFailingCatchWasInvoked = true).Subscribe(
+                ev => { },
+                ex => nonFailingExHandlerWasInvoked = true);
+
+            UnitUnderTest.Emit(Mock.Of<Data>());
+
+            failingCatchWasInvoked.Should().BeTrue();
+            failingExHandlerWasInvoked.Should().BeFalse();
+            nonFailingCatchWasInvoked.Should().BeFalse();
+            nonFailingExHandlerWasInvoked.Should().BeFalse();
+        }
+        
+        [Fact]
+        public void Emitting_Should_not_invoke_handler_of_failing_observer_When_using_catch_and_a_more_generic_exception_is_thrown()
+        {
+            var failingCatchWasInvoked = false;
+            var failingExHandlerWasInvoked = false;
+            var nonFailingCatchWasInvoked = false;
+            var nonFailingExHandlerWasInvoked = false;
+            
+            UnitUnderTest.Catch((NotSupportedException ex) => failingCatchWasInvoked = true).Subscribe(
+                ev => throw new Exception("I FAILED!"),
+                ex => failingExHandlerWasInvoked = true);
+
+            UnitUnderTest.Catch((NotSupportedException ex) => nonFailingCatchWasInvoked = true).Subscribe(
+                ev => { },
+                ex => nonFailingExHandlerWasInvoked = true);
+
+            UnitUnderTest.Emit(Mock.Of<Data>());
+
+            failingCatchWasInvoked.Should().BeFalse();
+            failingExHandlerWasInvoked.Should().BeFalse();
+            nonFailingCatchWasInvoked.Should().BeFalse();
+            nonFailingExHandlerWasInvoked.Should().BeFalse();
+        }
+
+        [Fact]
+        public void Emitting_Should_invoke_handler_of_failing_observer_When_using_catchAny_and_an_exception_is_thrown()
+        {
+            var failingCatchWasInvoked = false;
+            var failingExHandlerWasInvoked = false;
+            var nonFailingCatchWasInvoked = false;
+            var nonFailingExHandlerWasInvoked = false;
+            
+            UnitUnderTest.CatchAny(ex => failingCatchWasInvoked = true).Subscribe(
+                ev => throw new Exception("I FAILED!"),
+                ex => failingExHandlerWasInvoked = true);
+
+            UnitUnderTest.CatchAny(ex => nonFailingCatchWasInvoked = true).Subscribe(
+                ev => { },
+                ex => nonFailingExHandlerWasInvoked = true);
+
+            UnitUnderTest.Emit(Mock.Of<Data>());
+
+            failingCatchWasInvoked.Should().BeTrue();
+            failingExHandlerWasInvoked.Should().BeFalse();
+            nonFailingCatchWasInvoked.Should().BeFalse();
+            nonFailingExHandlerWasInvoked.Should().BeFalse();
+        }
+
+        [Fact]
+        public void Emitting_Should_invoke_handler_of_failing_observer_When_using_catchAny_and_a_more_specific_exception_is_thrown()
+        {
+            var failingCatchWasInvoked = false;
+            var failingExHandlerWasInvoked = false;
+            var nonFailingCatchWasInvoked = false;
+            var nonFailingExHandlerWasInvoked = false;
+            
+            UnitUnderTest.CatchAny(ex => failingCatchWasInvoked = true).Subscribe(
+                ev => throw new NotSupportedException("I FAILED!"),
+                ex => failingExHandlerWasInvoked = true);
+
+            UnitUnderTest.CatchAny(ex => nonFailingCatchWasInvoked = true).Subscribe(
+                ev => { },
+                ex => nonFailingExHandlerWasInvoked = true);
+
+            UnitUnderTest.Emit(Mock.Of<Data>());
+
+            failingCatchWasInvoked.Should().BeTrue();
+            failingExHandlerWasInvoked.Should().BeFalse();
+            nonFailingCatchWasInvoked.Should().BeFalse();
+            nonFailingExHandlerWasInvoked.Should().BeFalse();
         }
     }
 }
