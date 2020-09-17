@@ -131,7 +131,7 @@ var client = new NatsClient(cnInfo);
 
 await _client.ConnectAsync();
 
-await client.SubAsync("getTemp", stream.Subscribe(msg => {
+await client.SubAsync("getTemp", stream => stream.Subscribe(msg => {
     client.Pub(msg.ReplyTo, getTemp(msg.GetPayloadAsString()));
 }));
 ```
