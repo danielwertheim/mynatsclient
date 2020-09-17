@@ -1,9 +1,5 @@
-# node
-node_modules/
-
 # vs
 .vs/
-[Aa]pp_[Dd]ata/
 [Bb]in/
 [D]ebug/
 [Aa]rtifacts/
@@ -15,12 +11,11 @@ node_modules/
 *.vssscc
 *.suo
 *.cache
-project.lock.json
 
-# deploy
-build/
-tools/
-!tools/packages.config
+.env
+*.local
+*.local.json
+*.local.ini
 
 # misc
 *~
@@ -28,9 +23,13 @@ tools/
 *.sdf
 *.orig
 *.pfx
+!client.pfx
 
-# nuget
-[Pp]ackages/
+# rider
+.idea
+
+# vs-code
+.vscode
 
 # resharper
 _ReSharper.*

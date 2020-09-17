@@ -4,5 +4,12 @@
     <Company>danielwertheim</Company>
     <Authors>danielwertheim</Authors>
     <Copyright>Copyright © danielwertheim</Copyright>
+    <LangVersion>latest</LangVersion>
+    <RepositoryUrl>https://github.com/danielwertheim/mynatsclient</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/danielwertheim/mynatsclient</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/danielwertheim/mynatsclient/releases</PackageReleaseNotes>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 </Project>

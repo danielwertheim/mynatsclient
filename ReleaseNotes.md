@@ -1,5 +1,8 @@
 # Release notes
 
+## v0.14.0
+From this version release notes are kept in [each release](https://github.com/danielwertheim/mynatsclient/releases) on GitHub.
+
 ## v0.13.0 - 2018-06-29
 
 - **New**: Adds `MyNatsClient.Encodings.Protobuf` package which brings support for Protobuf serialization of messages.
