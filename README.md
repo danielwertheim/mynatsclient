@@ -414,6 +414,9 @@ If you like to tweak socket options, you inject your custom implementation of `I
 var client = new NatsClient(cnInfo, new MyMonoOptimizedSocketFactory());
 ```
 
+## ConsumerFactory
+If you like to tweak the scheduling of the consumer task, you can inject a custom implementation of `IConsumerFactory`. The Consumer is responsible for consuming the incoming socket and to construct `Ops` which it passes on to the `NatsOpMediator` which in turn emits the `Op` to the `AllOpsStream` and `MsgOpsStream` (if it's a `MsgOp`).
+
 ## Logging
 Some information is passed to a logger, e.g. Errors while trying to connect to a host. By default there's a `NullLogger` hooked in. To add a logger of choice, you would implement `ILogger` and assign a new resolver to `LoggerManager.Resolve`.
 
