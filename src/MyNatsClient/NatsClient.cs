@@ -25,6 +25,7 @@ namespace MyNatsClient
         private readonly ConnectionInfo _connectionInfo;
         private readonly ConcurrentDictionary<string, Subscription> _subscriptions;
         private readonly INatsConnectionManager _connectionManager;
+        private readonly IConsumerFactory _consumerFactory;
 
         private SemaphoreSlim _sync;
         private CancellationTokenSource _cancellation;
@@ -46,7 +47,10 @@ namespace MyNatsClient
         public INatsObservable<MsgOp> MsgOpStream => _opMediator.MsgOpsStream;
         public bool IsConnected => _connection != null && _connection.IsConnected && _connection.CanRead;
 
-        public NatsClient(ConnectionInfo connectionInfo, ISocketFactory socketFactory = null)
+        public NatsClient(
+            ConnectionInfo connectionInfo,
+            ISocketFactory socketFactory = null,
+            IConsumerFactory consumerFactory = null)
         {
             if (connectionInfo == null)
                 throw new ArgumentNullException(nameof(connectionInfo));
@@ -60,6 +64,7 @@ namespace MyNatsClient
             _eventMediator = new NatsObservableOf<IClientEvent>();
             _opMediator = new NatsOpMediator();
             _connectionManager = new NatsConnectionManager(socketFactory ?? new SocketFactory());
+            _consumerFactory = consumerFactory ?? new DefaultTaskSchedulerConsumerFactory();
 
             Events.SubscribeSafe(async ev =>
             {
@@ -153,8 +158,6 @@ namespace MyNatsClient
 
             await _sync.WaitAsync().ConfigureAwait(false);
 
-            IList<IOp> opsReceivedWhileConnecting;
-
             try
             {
                 if (IsConnected)
@@ -164,15 +167,13 @@ namespace MyNatsClient
 
                 _cancellation = new CancellationTokenSource();
 
+                IList<IOp> opsReceivedWhileConnecting;
+
                 (_connection, opsReceivedWhileConnecting) =
                     await _connectionManager.OpenConnectionAsync(_connectionInfo, _cancellation.Token).ConfigureAwait(false);
 
-                _consumer = Task.Factory
-                    .StartNew(
-                        Worker,
-                        _cancellation.Token,
-                        TaskCreationOptions.LongRunning,
-                        TaskScheduler.Default)
+                _consumer = _consumerFactory
+                    .Run(ConsumerWork, _cancellation.Token)
                     .ContinueWith(async t =>
                     {
                         if (_isDisposed)
@@ -223,7 +224,7 @@ namespace MyNatsClient
             }
         }
 
-        private void Worker()
+        private void ConsumerWork()
         {
             bool ShouldDoWork() => !_isDisposed && IsConnected && _cancellation?.IsCancellationRequested == false;
 
@@ -304,7 +305,7 @@ namespace MyNatsClient
             {
                 _sync?.Release();
             }
-            
+
             _eventMediator.Emit(new ClientDisconnected(this, DisconnectReason.ByUser));
         }
 
