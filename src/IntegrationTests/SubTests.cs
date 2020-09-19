@@ -32,6 +32,28 @@ namespace IntegrationTests
         }
 
         [Fact]
+        public void Given_not_connected_Should_be_able_to_subscribe()
+        {
+            _client = Context.CreateClient();
+
+            var sub = _client.Sub(Context.GenerateSubject());
+
+            sub.Should().NotBeNull();
+            _client.IsConnected.Should().BeFalse();
+        }
+        
+        [Fact]
+        public async Task Given_not_connected_Should_be_able_to_subscribe_async()
+        {
+            _client = Context.CreateClient();
+
+            var sub = await _client.SubAsync(Context.GenerateSubject());
+
+            sub.Should().NotBeNull();
+            _client.IsConnected.Should().BeFalse();
+        }
+
+        [Fact]
         public async Task Given_subscribed_sync_using_observer_and_subscribed_to_other_subject_as_well_It_should_only_get_subject_specific_messages()
         {
             var subject = Context.GenerateSubject();

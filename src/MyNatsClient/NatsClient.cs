@@ -586,8 +586,6 @@ namespace MyNatsClient
         {
             ThrowIfDisposed();
 
-            ThrowIfNotConnected();
-
             var subscription = CreateSubscription(subscriptionInfo, subscriptionFactory);
 
             if (!IsConnected)
@@ -622,8 +620,6 @@ namespace MyNatsClient
         public async Task<ISubscription> SubAsync(SubscriptionInfo subscriptionInfo, Func<INatsObservable<MsgOp>, IDisposable> subscriptionFactory)
         {
             ThrowIfDisposed();
-
-            ThrowIfNotConnected();
 
             var subscription = CreateSubscription(subscriptionInfo, subscriptionFactory);
 
@@ -715,8 +711,6 @@ namespace MyNatsClient
 
             ThrowIfDisposed();
 
-            ThrowIfNotConnected();
-
             _connection.WithWriteLock((writer, arg) =>
             {
                 UnsubCmd.Write(writer, arg.Id, arg.MaxMessages);
@@ -744,8 +738,6 @@ namespace MyNatsClient
                 return;
 
             ThrowIfDisposed();
-
-            ThrowIfNotConnected();
 
             await _connection.WithWriteLockAsync(async (writer, arg) =>
             {
