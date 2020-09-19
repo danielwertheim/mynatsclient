@@ -96,16 +96,33 @@ await client.SubAsync("tickItem", stream => stream.Subscribe(msg => {
 ```
 
 ### Stream.Subscribe vs Stream.SubscribeSafe
-If you subscribe to e.g. the `MessageOpStream` using `Stream.Subscribe` and your handler is throwing an exception. That handler will get `OnError` invoked and then removed.
+The initial behavior was to call `OnError` when a handler was throwing an exception and had specified a `OnError` handler. **This has changed**. The motivation around this is, that it's not the producer side that is causing the exception [(read more)](https://docs.microsoft.com/en-us/dotnet/api/system.iobserver-1.onerror?view=netcore-3.1).
+
+If you subscribe to e.g. the `MessageOpStream` using `Stream.Subscribe` and your handler is throwing an exception. That in-process handler **will be removed**.
 
 ```csharp
 await client.SubAsync("mySubject", stream => stream.Subscribe(msg => DoSomething(msg)));
 ```
 
-If you instead subscribe using `Stream.SubscribeSafe` any unhandled exception will get swallowed.
+If you instead subscribe using `Stream.SubscribeSafe` any unhandled exception will get swallowed and the in-process handler will still be around.
 
 ```csharp
 await client.SubAsync("mySubject", stream => stream.SubscribeSafe(msg => DoSomething(msg)));
+```
+
+### Catch & CatchAny
+If you want a generic way to handle exceptions in your handlers, you can use a `CatchObserver` e.g via the aliases `stream.Catch` or `stream.CatchAny`.
+
+```csharp
+await client.SubAsync("mySubject", stream => stream
+    .Catch((FooException ex) => {})
+    .Subscribe(msg => DoSomething(msg)));
+```
+
+```csharp
+await client.SubAsync("mySubject", stream => stream
+    .CatchAny(ex => {})
+    .Subscribe(msg => DoSomething(msg)));
 ```
 
 ## Request-Response sample

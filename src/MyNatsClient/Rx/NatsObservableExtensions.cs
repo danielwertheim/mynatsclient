@@ -6,6 +6,15 @@ namespace MyNatsClient.Rx
 {
     public static class NatsObservableExtensions
     {
+        public static INatsObservable<T> Catch<TException, T>(this INatsObservable<T> ob, Action<TException> handler)
+            where TException : Exception
+            where T : class
+            => new CatchObservable<T, TException>(ob, handler);
+
+        public static INatsObservable<T> CatchAny<T>(this INatsObservable<T> ob, Action<Exception> handler)
+            where T : class
+            => ob.Catch(handler);
+
         public static INatsObservable<TResult> OfType<TResult>(this INatsObservable<object> ob) where TResult : class
             => new OfTypeObservable<TResult>(ob);
 
