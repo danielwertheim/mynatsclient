@@ -13,6 +13,12 @@ namespace MyNatsClient
         public Host[] Hosts { get; }
 
         /// <summary>
+        /// Gets the connection name which is used when a connection
+        /// is established against the NATS server.
+        /// </summary>
+        public string Name { get; set; } = "mynatsclient";
+
+        /// <summary>
         /// When enabled (default), one single global Inbox-subsription is
         /// initiated against the NATS-Server upon first request. After that,
         /// all responses are reported back to that inbox.
@@ -105,6 +111,7 @@ namespace MyNatsClient
 
             return new ConnectionInfo(hosts)
             {
+                Name = Name,
                 UseInboxRequests = UseInboxRequests,
                 AutoRespondToPing = AutoRespondToPing,
                 AutoReconnectOnFailure = AutoReconnectOnFailure,

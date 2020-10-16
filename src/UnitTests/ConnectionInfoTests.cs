@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System;
+using FluentAssertions;
 using MyNatsClient;
 using Xunit;
 
@@ -10,6 +11,10 @@ namespace UnitTests
         {
             UnitUnderTest = new ConnectionInfo(new Host("localhost"));
         }
+
+        [Fact]
+        public void Defaults_Should_have_name_assigned()
+            => UnitUnderTest.Name.Should().Be("mynatsclient");
 
         [Fact]
         public void Defaults_Should_use_inbox_requests()
@@ -82,6 +87,7 @@ namespace UnitTests
         {
             var other = new ConnectionInfo(new[] { new Host("192.168.1.20", 4223) })
             {
+                Name = Guid.NewGuid().ToString("N"),
                 UseInboxRequests = false,
                 Credentials = new Credentials("tester", "p@ssword"),
                 Verbose = !UnitUnderTest.Verbose,

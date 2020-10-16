@@ -25,7 +25,9 @@ namespace MyNatsClient.Internals
             _socketFactory = socketFactory ?? throw new ArgumentNullException(nameof(socketFactory));
         }
 
-        public async Task<(INatsConnection connection, IList<IOp> consumedOps)> OpenConnectionAsync(ConnectionInfo connectionInfo, CancellationToken cancellationToken)
+        public async Task<(INatsConnection connection, IList<IOp> consumedOps)> OpenConnectionAsync(
+            ConnectionInfo connectionInfo,
+            CancellationToken cancellationToken)
         {
             if (connectionInfo == null)
                 throw new ArgumentNullException(nameof(connectionInfo));
@@ -62,9 +64,13 @@ namespace MyNatsClient.Internals
         private static bool DefaultServerCertificateValidation(X509Certificate certificate, X509Chain chain, SslPolicyErrors sslpolicyerrors)
             => sslpolicyerrors == SslPolicyErrors.None;
 
-        private async Task<(INatsConnection connection, IList<IOp> consumedOps)> EstablishConnectionAsync(Host host, ConnectionInfo connectionInfo, CancellationToken cancellationToken)
+        private async Task<(INatsConnection connection, IList<IOp> consumedOps)> EstablishConnectionAsync(
+            Host host,
+            ConnectionInfo connectionInfo,
+            CancellationToken cancellationToken)
         {
             var serverCertificateValidation = connectionInfo.ServerCertificateValidation ?? DefaultServerCertificateValidation;
+
             bool RemoteCertificateValidationCallback(object _, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors)
                 => serverCertificateValidation(certificate, chain, errors);
 
@@ -104,9 +110,9 @@ namespace MyNatsClient.Internals
 
                 if (serverInfo.TlsRequired)
                 {
-                    stream.Dispose();
+                    await stream.DisposeAsync();
                     stream = new SslStream(socket.CreateReadWriteStream(), false, RemoteCertificateValidationCallback, null, EncryptionPolicy.RequireEncryption);
-                    var ssl = (SslStream)stream;
+                    var ssl = (SslStream) stream;
 
                     var clientAuthOptions = new SslClientAuthenticationOptions
                     {
@@ -124,7 +130,7 @@ namespace MyNatsClient.Internals
                     reader = new NatsOpStreamReader(ssl);
                 }
 
-                stream.Write(ConnectCmd.Generate(connectionInfo.Verbose, credentials));
+                stream.Write(ConnectCmd.Generate(connectionInfo.Verbose, credentials, connectionInfo.Name));
                 stream.Write(PingCmd.Bytes.Span);
                 await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
 
