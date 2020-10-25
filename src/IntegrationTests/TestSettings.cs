@@ -17,7 +17,7 @@ namespace IntegrationTests
             builder
                 .AddJsonFile("integrationtests.json", false, false)
                 .AddJsonFile("integrationtests.local.json", true, false)
-                .AddEnvironmentVariables("MYNATS_");
+                .AddEnvironmentVariables("mynats_");
 
             Config = builder.Build();
         }
