@@ -8,6 +8,8 @@ stages:
     steps:
     - task: DockerCompose@0
       displayName: 'Start NATS Services'
+      env:
+        mynats_credentials__pass: $(mynats_credentials__pass)
       inputs:
         containerregistrytype: 'Container Registry'
         dockerComposeFile: 'docker-compose.yml'
@@ -40,6 +42,8 @@ stages:
 
     - task: DotNetCoreCLI@2
       displayName: 'IntegrationTests'
+      env:
+        mynats_credentials__pass: $(mynats_credentials__pass)
       inputs:
         command: test
         projects: 'src/**/IntegrationTests.csproj'
