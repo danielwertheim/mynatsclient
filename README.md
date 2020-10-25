@@ -1,7 +1,7 @@
 # MyNatsClient
 [![NuGet](https://img.shields.io/nuget/v/MyNatsClient.svg?cacheSeconds=3600)](https://www.nuget.org/packages/MyNatsClient)
 [![License MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://choosealicense.com/licenses/mit/)
-[![Build Status](https://dev.azure.com/danielwertheim/mynatsclient/_apis/build/status/danielwertheim.mynatsclient-CI?branchName=master)](https://dev.azure.com/danielwertheim/mynatsclient/_build/latest?definitionId=27&branchName=master)
+[![Build Status](https://dev.azure.com/daniel-wertheim/os/_apis/build/status/mynatsclient-CI?branchName=master)](https://dev.azure.com/daniel-wertheim/os/_build/latest?definitionId=3&branchName=master)
 
 A **.NET Standard** based, `async` and [ReactiveExtensions](https://github.com/Reactive-Extensions/Rx.NET) (RX) friendly client for [NATS Server](https://nats.io). It's RX friendly cause it's based around `IObservable<T>`. It keeps as much of NATS domain language as possible but does not limit itself to follow the APIs of other NATS clients, but instead offer one that fits the .NET domain and one that first and foremost is a client written for .NET. Not GO or JAVA or Foo.
 
