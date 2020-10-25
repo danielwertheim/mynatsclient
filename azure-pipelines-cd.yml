@@ -1,6 +1,7 @@
 name: $(SemVer)
 
 variables:
+  BuildConfiguration: Release
   SemVer: $[ variables['Build.SourceBranchName'] ]
   CommitId: $(Build.SourceVersion)
 
