@@ -9,8 +9,8 @@ services:
     ports:
       - "4223:4222"
     environment:
-      - MYNATS_CREDENTIALS__USER
-      - MYNATS_CREDENTIALS__PASS
+      - mynats_credentials__user
+      - mynats_credentials__pass
     command: "-c /nats_config/auth.config"
     volumes:
       - ./nats_config:/nats_config

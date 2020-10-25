@@ -12,8 +12,8 @@ stages:
         containerregistrytype: 'Container Registry'
         dockerComposeFile: 'docker-compose.yml'
         dockerComposeFileArgs: |
-          MyNats_credentials__user=$(MyNats_credentials__user)
-          MyNats_credentials__pass=$(MyNats_credentials__pass)
+          mynats_credentials__user=$(mynats_credentials__user)
+          mynats_credentials__pass=$(mynats_credentials__pass)
         action: 'Run a Docker Compose command'
         dockerComposeCommand: 'up -d'
 
