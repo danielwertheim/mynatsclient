@@ -123,6 +123,25 @@ namespace MyNatsClient
             }));
         }
 
+        private static Memory<byte> ReadPayload(Stream source, int payloadSize)
+        {
+            var payload = new Memory<byte>(new byte[payloadSize]);
+            
+            for (var pc = source.Read(payload.Span); pc < payloadSize; pc++)
+            {
+                var read = source.Read(payload.Slice(pc).Span);
+                if(read == -1 || pc == pc + read)
+                    throw NatsException.OpParserOpParsingError(MsgOp.Name, "Could not read payload from stream.");
+                
+                if(pc + read > payloadSize)
+                    throw NatsException.OpParserOpParsingError(MsgOp.Name, "Read to many bytes for the payload.");
+                
+                pc += read;
+            }
+
+            return payload;
+        }
+
         private static MsgOp ParseMsgOp(Stream source, Stream workspace)
         {
             var sub = ReadOnlySpan<char>.Empty;
@@ -173,9 +192,7 @@ namespace MyNatsClient
                 }
             }
 
-            var payload = new Memory<byte>(new byte[payloadSize]);
-            if (source.Read(payload.Span) == -1)
-                throw NatsException.OpParserOpParsingError(MsgOp.Name, "Could not read payload from stream.");
+            var payload = ReadPayload(source, payloadSize);
 
             b = (byte)source.ReadByte();
             if (b != Cr)
