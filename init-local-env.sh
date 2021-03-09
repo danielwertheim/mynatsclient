@@ -1,2 +1,2 @@
 cp ./resources/.env.sample .env
-cp ./resources/integrationtests.local.json.sample ./src/IntegrationTests/integrationtests.local.json
+cp ./resources/integrationtests.local.json.sample ./src/testing/IntegrationTests/integrationtests.local.json
