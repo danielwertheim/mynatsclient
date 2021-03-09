@@ -14,7 +14,7 @@ trigger:
 pr: none
 
 pool:
-  vmImage: ubuntu-18.04
+  vmImage: ubuntu-latest
 
 stages:
 - template: azure-templates/stage-build.yml

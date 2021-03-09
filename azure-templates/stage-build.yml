@@ -6,23 +6,11 @@ stages:
     timeoutInMinutes: 5
     cancelTimeoutInMinutes: 2
     steps:
-    - task: DockerCompose@0
-      displayName: 'Start NATS Services'
-      env:
-        mynats_credentials__pass: $(mynats_credentials__pass)
-      inputs:
-        containerregistrytype: 'Container Registry'
-        dockerComposeFile: 'docker-compose.yml'
-        dockerComposeFileArgs: |
-          mynats_credentials__user=$(mynats_credentials__user)
-          mynats_credentials__pass=$(mynats_credentials__pass)
-        action: 'Run a Docker Compose command'
-        dockerComposeCommand: 'up -d'
 
     - task: UseDotNet@2
-      displayName: 'Use .NET Core 3.1.x'
+      displayName: 'Use .NET Core 5.x'
       inputs:
-        version: '3.1.x'
+        version: '5.x'
         packageType: sdk
 
     - task: DotNetCoreCLI@2
@@ -39,6 +27,24 @@ stages:
         projects: 'src/**/UnitTests.csproj'
         arguments: '-c $(BuildConfiguration) --no-build'
         testRunTitle: 'UnitTests'
+
+    - task: DockerCompose@0
+      displayName: 'Start test dependencies'
+      env:
+        mynats_credentials__pass: $(mynats_credentials__pass)
+      inputs:
+        containerregistrytype: 'Container Registry'
+        dockerComposeFile: 'docker-compose.yml'
+        dockerComposeFileArgs: |
+          mynats_credentials__user=$(mynats_credentials__user)
+          mynats_credentials__pass=$(mynats_credentials__pass)
+        action: 'Run a Docker Compose command'
+        dockerComposeCommand: 'up -d'
+
+    - task: CmdLine@2
+      displayName: 'Wait for test dependencies'
+      inputs:
+        script: 'sleep 10'
 
     - task: DotNetCoreCLI@2
       displayName: 'IntegrationTests'
@@ -65,7 +71,7 @@ stages:
         artifact: Artifacts
 
     - task: DockerCompose@0
-      displayName: 'Stop NATS Services'
+      displayName: 'Stop test dependencies'
       condition: always()
       inputs:
         containerregistrytype: 'Container Registry'

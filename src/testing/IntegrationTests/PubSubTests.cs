@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MyNatsClient;
+using MyNatsClient.Events;
 using MyNatsClient.Ops;
 using MyNatsClient.Rx;
 using Xunit;
@@ -259,6 +261,41 @@ namespace IntegrationTests
             await Should.ThrowNatsExceptionAsync(() => _client1.PubAsync(subject, "body", "reply.to.subject"));
             await Should.ThrowNatsExceptionAsync(() => _client1.PubAsync(subject, body.AsMemory()));
             await Should.ThrowNatsExceptionAsync(() => _client1.PubAsync(subject, body.AsMemory(), "reply.to.subject"));
+        }
+        
+        [Theory]
+        [InlineData(2)]
+        [InlineData(4)]
+        [InlineData(8)]
+        public async Task Client_Should_be_able_to_handle_large_message_When_using_explicit_flush_although_auto_flush(int messageCount)
+        {
+            var message = new string('b', 16384);
+            var exceptions = new List<Exception>();
+            var subject = Context.GenerateSubject();
+            var cnInfo = Context.GetConnectionInfo();
+            cnInfo.PubFlushMode = PubFlushMode.Auto;
+
+            _sync = Sync.Max(messageCount);
+            _client1 = await Context.ConnectClientAsync(cnInfo);
+            _client1.Events.OfType<ClientWorkerFailed>().Subscribe(ev => exceptions.Add(ev.Exception));
+            _client1.OpStream.OfType<MsgOp>().SubscribeSafe(msg => _sync.Release(msg), ex => exceptions.Add(ex));
+            await _client1.SubAsync(subject);
+
+            await Context.DelayAsync();
+
+            for (var i = 0; i < messageCount; i++)
+            {
+                await _client1.PubAsync(subject, message);
+                await _client1.FlushAsync();   
+            }
+            
+            _sync.WaitForAll();
+
+            exceptions.Should().BeEmpty();
+            _sync.InterceptedCount.Should().Be(messageCount);
+            _sync.Intercepted
+                .Select(m => m.GetPayloadAsString())
+                .Should().OnlyContain(m => m == message);
         }
     }
 }

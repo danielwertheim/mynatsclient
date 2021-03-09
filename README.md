@@ -613,12 +613,12 @@ More information: https://github.com/paulczar/omgwtfssl
 **1) Generate certs for CA and Server**
 
 ```bash
-docker run --name servercerts -v //C/DockerData/certs/:/certs -e CA_EXPIRE=365 -e SSL_EXPIRE=365 -e SSL_KEY=server-key.pem -e SSL_CERT=server-cert.pem -e SSL_CSR=server.csr -e SSL_SUBJECT=localhost paulczar/omgwtfssl
+docker run --name servercerts -v //c/docker-data/certs/:/certs -e CA_EXPIRE=365 -e SSL_EXPIRE=365 -e SSL_KEY=server-key.pem -e SSL_CERT=server-cert.pem -e SSL_CSR=server.csr -e SSL_SUBJECT=localhost paulczar/omgwtfssl
 ```
 
 **2) Generate certs for Client** *(CA files should be kept in mapped folder)*
 ```bash
-docker run --name clientcerts -v //C/DockerData/certs/:/certs -e CA_EXPIRE=365 -e SSL_EXPIRE=365 -e SSL_KEY=client-key.pem -e SSL_CERT=client-cert.pem -e SSL_CSR=client.csr -e SSL_SUBJECT=localhost paulczar/omgwtfssl
+docker run --name clientcerts -v //c/docker-data/certs/:/certs -e CA_EXPIRE=365 -e SSL_EXPIRE=365 -e SSL_KEY=client-key.pem -e SSL_CERT=client-cert.pem -e SSL_CSR=client.csr -e SSL_SUBJECT=localhost paulczar/omgwtfssl
 ```
 
 **3) Generate PFX**
@@ -630,7 +630,7 @@ openssl pkcs12 -export -out client.pfx -inkey client-key.pem -in client-cert.pem
 The `./.env` file and `./src/IntegrationTests/integrationtests.local.json` files are `.gitignored`. In order to create sample files of these, you can run:
 
 ```
-. init-local-config.sh
+. init-local-env.sh
 ```
 
 ### Docker-Compose
