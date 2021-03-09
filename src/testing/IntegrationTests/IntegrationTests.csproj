@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
@@ -24,9 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MyNatsClient.Encodings.Json\MyNatsClient.Encodings.Json.csproj" />
-    <ProjectReference Include="..\MyNatsClient.Encodings.Protobuf\MyNatsClient.Encodings.Protobuf.csproj" />
-    <ProjectReference Include="..\MyNatsClient\MyNatsClient.csproj" />
+    <ProjectReference Include="..\..\main\MyNatsClient.Encodings.Json\MyNatsClient.Encodings.Json.csproj" />
+    <ProjectReference Include="..\..\main\MyNatsClient.Encodings.Protobuf\MyNatsClient.Encodings.Protobuf.csproj" />
+    <ProjectReference Include="..\..\main\MyNatsClient\MyNatsClient.csproj" />
   </ItemGroup>
 
   <ItemGroup>

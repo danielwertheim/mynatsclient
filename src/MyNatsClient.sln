@@ -3,28 +3,28 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29418.71
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyNatsClient", "MyNatsClient\MyNatsClient.csproj", "{509E85D1-89DC-4682-B375-32A6C77E4BEF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyNatsClient", "main\MyNatsClient\MyNatsClient.csproj", "{509E85D1-89DC-4682-B375-32A6C77E4BEF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "UnitTests\UnitTests.csproj", "{BDB39882-DB23-418E-9074-2EA0BD743691}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "testing\UnitTests\UnitTests.csproj", "{BDB39882-DB23-418E-9074-2EA0BD743691}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyNatsClient.Encodings.Protobuf", "MyNatsClient.Encodings.Protobuf\MyNatsClient.Encodings.Protobuf.csproj", "{3862761E-12EC-4087-817F-ED3D765C3693}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyNatsClient.Encodings.Protobuf", "main\MyNatsClient.Encodings.Protobuf\MyNatsClient.Encodings.Protobuf.csproj", "{3862761E-12EC-4087-817F-ED3D765C3693}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8537E787-3FC8-462D-8D49-6A8AB590336A}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyNatsClient.Encodings.Json", "MyNatsClient.Encodings.Json\MyNatsClient.Encodings.Json.csproj", "{331262C9-913C-47EA-A265-8F7EA9A83850}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyNatsClient.Encodings.Json", "main\MyNatsClient.Encodings.Json\MyNatsClient.Encodings.Json.csproj", "{331262C9-913C-47EA-A265-8F7EA9A83850}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationTests", "IntegrationTests\IntegrationTests.csproj", "{DB63AC57-292E-494F-90B4-734E6D2DAA85}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationTests", "testing\IntegrationTests\IntegrationTests.csproj", "{DB63AC57-292E-494F-90B4-734E6D2DAA85}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{BDD5D742-B315-4003-93E3-623CF365FAA5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{67EF08EB-6EBF-4BD7-A100-407EDF47C24E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RequestResponseSample", "Samples\RequestResponseSample\RequestResponseSample.csproj", "{AEC8AC0D-03A8-452F-BC49-A5999F18320C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RequestResponseSample", "samples\RequestResponseSample\RequestResponseSample.csproj", "{AEC8AC0D-03A8-452F-BC49-A5999F18320C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarks", "Samples\Benchmarks\Benchmarks.csproj", "{1AA4BBBA-21F9-4D33-8224-45EE41B82369}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarks", "samples\Benchmarks\Benchmarks.csproj", "{1AA4BBBA-21F9-4D33-8224-45EE41B82369}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
