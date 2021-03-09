@@ -1,1 +1,1 @@
-git clean -dfx -e clean.sh -e src/IntegrationTests/integrationtests.local.json -e .env
+git clean -dfx -e clean.sh -e src/testing/IntegrationTests/integrationtests.local.json -e .env
