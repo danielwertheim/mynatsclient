@@ -143,7 +143,7 @@ namespace MyNatsClient
         /// is done.
         /// </summary>
         /// <param name="p"></param>
-        Task PubManyAsync(Func<IPublisher, Task> p);
+        Task PubManyAsync(Func<IAsyncPublisher, Task> p);
 
         /// <summary>
         /// Async request response.

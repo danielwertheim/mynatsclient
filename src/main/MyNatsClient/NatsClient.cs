@@ -467,7 +467,7 @@ namespace MyNatsClient
             });
         }
 
-        public async Task PubManyAsync(Func<IPublisher, Task> p)
+        public async Task PubManyAsync(Func<IAsyncPublisher, Task> p)
         {
             ThrowIfDisposed();
 
@@ -475,7 +475,7 @@ namespace MyNatsClient
 
             await _connection.WithWriteLockAsync(async writer =>
             {
-                await p(new Publisher(writer, _connection.ServerInfo.MaxPayload)).ConfigureAwait(false);
+                await p(new AsyncPublisher(writer, _connection.ServerInfo.MaxPayload)).ConfigureAwait(false);
                 if (ShouldAutoFlush)
                     await writer.FlushAsync().ConfigureAwait(false);
             }).ConfigureAwait(false);
