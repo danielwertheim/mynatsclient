@@ -99,10 +99,14 @@ namespace IntegrationTests
 
             await Context.DelayAsync();
 
-            _client1.PubMany(async p =>
+            _client1.PubMany(p =>
             {
                 p.Pub(subject, messages[0]);
                 p.Pub(subject, Encoding.UTF8.GetBytes(messages[1]));
+            });
+
+            await _client1.PubManyAsync(async p =>
+            {
                 await p.PubAsync(subject, messages[2]);
                 await p.PubAsync(subject, Encoding.UTF8.GetBytes(messages[3]));
             });

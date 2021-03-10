@@ -467,6 +467,20 @@ namespace MyNatsClient
             });
         }
 
+        public async Task PubManyAsync(Func<IPublisher, Task> p)
+        {
+            ThrowIfDisposed();
+
+            ThrowIfNotConnected();
+
+            await _connection.WithWriteLockAsync(async writer =>
+            {
+                await p(new Publisher(writer, _connection.ServerInfo.MaxPayload)).ConfigureAwait(false);
+                if (ShouldAutoFlush)
+                    await writer.FlushAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
+        }
+
         public Task<MsgOp> RequestAsync(string subject, string body, CancellationToken cancellationToken = default)
             => RequestAsync(subject, NatsEncoder.GetBytes(body), cancellationToken);
 
