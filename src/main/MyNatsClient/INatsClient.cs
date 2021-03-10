@@ -138,6 +138,14 @@ namespace MyNatsClient
         void PubMany(Action<IPublisher> p);
 
         /// <summary>
+        /// Gives access to a publisher that will be running in
+        /// an async locked scope until your injected delegate
+        /// is done.
+        /// </summary>
+        /// <param name="p"></param>
+        Task PubManyAsync(Func<IPublisher, Task> p);
+
+        /// <summary>
         /// Async request response.
         /// </summary>
         /// <param name="subject"></param>
