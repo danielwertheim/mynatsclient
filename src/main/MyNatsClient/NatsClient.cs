@@ -563,7 +563,7 @@ namespace MyNatsClient
                     ts.TrySetCanceled();
             }).ConfigureAwait(false);
 
-            cancellationToken.ThrowIfCancellationRequested();
+            cts.Token.ThrowIfCancellationRequested();
 
             await _connection.WithWriteLockAsync(async (writer, arg) =>
             {
