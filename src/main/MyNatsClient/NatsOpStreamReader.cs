@@ -123,8 +123,11 @@ namespace MyNatsClient
             }));
         }
 
-        private static Memory<byte> ReadPayload(Stream source, int payloadSize)
+        private static ReadOnlyMemory<byte> ReadPayload(Stream source, int payloadSize)
         {
+            if (payloadSize == 0)
+                return ReadOnlyMemory<byte>.Empty;
+            
             var payload = new Memory<byte>(new byte[payloadSize]);
             
             var consumed = 0;
