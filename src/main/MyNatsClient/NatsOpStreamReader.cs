@@ -127,18 +127,22 @@ namespace MyNatsClient
         {
             var payload = new Memory<byte>(new byte[payloadSize]);
             
-            for (var pc = source.Read(payload.Span); pc < payloadSize; pc++)
+            var consumed = 0;
+            while(true)
             {
-                var read = source.Read(payload.Slice(pc).Span);
-                if(read == -1 || pc == pc + read)
+                var read = source.Read(payload.Slice(consumed).Span);
+                if(read < 1)
                     throw NatsException.OpParserOpParsingError(MsgOp.Name, "Could not read payload from stream.");
+            
+                consumed += read;
                 
-                if(pc + read > payloadSize)
+                if(consumed == payloadSize)
+                    break;
+                
+                if(consumed > payloadSize)
                     throw NatsException.OpParserOpParsingError(MsgOp.Name, "Read to many bytes for the payload.");
-                
-                pc += read;
             }
-
+            
             return payload;
         }
 
