@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace MyNatsClient.Internals
 {
@@ -11,9 +12,10 @@ namespace MyNatsClient.Internals
             'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
             'U', 'V'
         };
+        private static long _idBase = DateTime.UtcNow.Ticks;
 
         internal static string Generate()
-            => string.Create(13, DateTime.UtcNow.Ticks, (buffer, val) =>
+            => string.Create(13, Interlocked.Increment(ref _idBase), (buffer, val) =>
             {
                 var chars = Chars;
 
