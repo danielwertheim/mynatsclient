@@ -31,6 +31,7 @@ stages:
     - task: DockerCompose@0
       displayName: 'Start test dependencies'
       env:
+        mynats_credentials__user: $(mynats_credentials__user)
         mynats_credentials__pass: $(mynats_credentials__pass)
       inputs:
         containerregistrytype: 'Container Registry'
@@ -44,11 +45,12 @@ stages:
     - task: CmdLine@2
       displayName: 'Wait for test dependencies'
       inputs:
-        script: 'sleep 10'
+        script: 'sleep 15'
 
     - task: DotNetCoreCLI@2
       displayName: 'IntegrationTests'
       env:
+        mynats_credentials__user: $(mynats_credentials__user)
         mynats_credentials__pass: $(mynats_credentials__pass)
       inputs:
         command: test

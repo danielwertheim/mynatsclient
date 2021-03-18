@@ -36,7 +36,7 @@ namespace IntegrationTests
                 Verbose = false,
                 SocketOptions = new SocketOptions
                 {
-                    ConnectTimeoutMs = 7500
+                    ConnectTimeoutMs = 8000
                 }
             };
 
