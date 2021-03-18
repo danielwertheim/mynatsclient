@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MyNatsClient;
@@ -64,29 +65,22 @@ namespace UnitTests
         }
 
         [Theory]
-        [InlineData(1, 1000)]
-        [InlineData(2, 500)]
+        [InlineData(2, 1000)]
         [InlineData(4, 250)]
-        [InlineData(10, 100)]
-        public async Task Should_have_unique_id(int threadCount, int subscriptionCount)
+        public async Task Should_have_unique_id(int taskCount, int subscriptionCount)
         {
             var ids = new ConcurrentBag<string>();
-            var generationTasks = new List<Task>(threadCount);
-            for (var taskNumber = 0; taskNumber < threadCount; taskNumber++)
+            var generationTasks = Enumerable.Range(0, taskCount).Select(_ => Task.Run(() =>
             {
-                generationTasks.Add(Task.Run(() =>
+                for (var idNumber = 0; idNumber < subscriptionCount; idNumber++)
                 {
-                    for (var idNumber = 0; idNumber < subscriptionCount; idNumber++)
-                    {
-                        ids.Add(new SubscriptionInfo("tests.id").Id);
-                    }
-                }));
-            }
+                    ids.Add(new SubscriptionInfo("tests.id").Id);
+                }
+            })).ToList();
 
             await Task.WhenAll(generationTasks);
 
-            var uniqueIds = new HashSet<string>(ids);
-            uniqueIds.Count.Should().Be(ids.Count);
+            ids.Distinct().Should().BeEquivalentTo(ids);
         }
     }
 }
