@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using FluentAssertions;
 using MyNatsClient;
 using Xunit;
@@ -58,6 +61,32 @@ namespace UnitTests
         public void Matches_Should_match_When_subject_wildcard_makes_it_match(string subject, string testSubject, bool expect)
         {
             new SubscriptionInfo(subject).Matches(testSubject).Should().Be(expect);
+        }
+
+        [Theory]
+        [InlineData(1, 1000)]
+        [InlineData(2, 500)]
+        [InlineData(4, 250)]
+        [InlineData(10, 100)]
+        public async Task Should_have_unique_id(int threadCount, int subscriptionCount)
+        {
+            var ids = new ConcurrentBag<string>();
+            var generationTasks = new List<Task>(threadCount);
+            for (var taskNumber = 0; taskNumber < threadCount; taskNumber++)
+            {
+                generationTasks.Add(Task.Run(() =>
+                {
+                    for (var idNumber = 0; idNumber < subscriptionCount; idNumber++)
+                    {
+                        ids.Add(new SubscriptionInfo("tests.id").Id);
+                    }
+                }));
+            }
+
+            await Task.WhenAll(generationTasks);
+
+            var uniqueIds = new HashSet<string>(ids);
+            uniqueIds.Count.Should().Be(ids.Count);
         }
     }
 }
