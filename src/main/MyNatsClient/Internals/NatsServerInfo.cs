@@ -16,6 +16,7 @@ namespace MyNatsClient.Internals
         public bool TlsRequired { get; private set; }
         public bool TlsVerify { get; private set; }
         public int MaxPayload { get; private set; }
+        public bool Headers { get; set; }
         public List<string> ConnectUrls { get; } = new List<string>();
         public string Ip { get; set; }
 
@@ -52,6 +53,9 @@ namespace MyNatsClient.Internals
 
             if (root.TryGetProperty("tls_verify", out el))
                 result.TlsVerify = el.GetBoolean();
+            
+            if (root.TryGetProperty("headers", out el))
+                result.Headers = el.GetBoolean();
 
             if (root.TryGetProperty("max_payload", out el))
                 result.MaxPayload = el.GetInt32();

@@ -141,7 +141,7 @@ namespace MyNatsClient.Internals
 
                 if (op is ErrOp)
                     throw NatsException.FailedToConnectToHost(host,
-                        $"Expected to get PONG after sending CONNECT and PING. Got {op.GetAsString()}.");
+                        $"Expected to get PONG after sending CONNECT and PING. Got {op.Marker}.");
 
                 if (!socket.Connected)
                     throw NatsException.FailedToConnectToHost(host, "No connection could be established.");

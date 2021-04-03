@@ -2,6 +2,6 @@ namespace MyNatsClient
 {
     public interface IOp
     {
-        string GetAsString();
+        string Marker { get; }
     }
 }

@@ -2,12 +2,15 @@ namespace MyNatsClient.Ops
 {
     public sealed class PingOp : IOp
     {
-        public const string Name = "PING";
+        internal const string OpMarker = "PING";
 
-        public static readonly PingOp Instance = new PingOp();
+        public string Marker => OpMarker;
+
+        public static readonly PingOp Instance = new();
 
         private PingOp() { }
 
-        public string GetAsString() => Name;
+        public override string ToString()
+            => OpMarker;
     }
 }
