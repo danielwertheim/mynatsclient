@@ -24,8 +24,8 @@ namespace MyNatsClient
 
         public static ReadOnlyMsgHeaders Create(ReadOnlySpan<char> protocol, IReadOnlyDictionary<string, IReadOnlyList<string>> keyValues)
         {
-            if (protocol.IsEmpty)
-                throw new ArgumentException("A non empty Protocol need to be defined.", nameof(protocol));
+            if (!protocol.StartsWith("NATS/"))
+                throw new ArgumentException("Protocol must start with 'NATS/'.", nameof(protocol));
 
             return new ReadOnlyMsgHeaders(protocol.ToString(), keyValues);
         }
