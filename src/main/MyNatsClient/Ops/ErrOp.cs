@@ -2,14 +2,16 @@ namespace MyNatsClient.Ops
 {
     public sealed class ErrOp : IOp
     {
-        public const string Name = "-ERR";
+        internal const string OpMarker = "-ERR";
+
+        public string Marker => OpMarker;
 
         public readonly string Message;
 
         public ErrOp(string message)
             => Message = message;
 
-        public string GetAsString()
-            => $"{Name} {Message}";
+        public override string ToString()
+            => OpMarker;
     }
 }

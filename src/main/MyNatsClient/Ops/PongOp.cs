@@ -2,12 +2,15 @@ namespace MyNatsClient.Ops
 {
     public sealed class PongOp : IOp
     {
-        public const string Name = "PONG";
+        internal const string OpMarker = "PONG";
 
-        public static readonly PongOp Instance = new PongOp();
+        public string Marker => OpMarker;
+
+        public static readonly PongOp Instance = new();
 
         private PongOp() { }
 
-        public string GetAsString() => Name;
+        public override string ToString()
+            => OpMarker;
     }
 }

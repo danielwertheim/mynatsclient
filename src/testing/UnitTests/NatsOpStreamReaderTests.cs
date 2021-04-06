@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Text;
 using FluentAssertions;
@@ -60,9 +59,8 @@ namespace UnitTests
 
                 var op = UnitUnderTest.ReadOps().OfType<InfoOp>().First();
 
-                InfoOp.Name.Should().Be("INFO");
+                op.Marker.Should().Be("INFO");
                 op.Message.ToString().Should().Be("{\"server_id\":\"H8RgvFtiq2zlQTA5dB0deh\"}");
-                op.GetAsString().Should().Be("INFO {\"server_id\":\"H8RgvFtiq2zlQTA5dB0deh\"}");
             }
         }
 
@@ -76,68 +74,166 @@ namespace UnitTests
 
                 var op = UnitUnderTest.ReadOps().OfType<OkOp>().First();
 
-                OkOp.Name.Should().Be("+OK");
-                op.GetAsString().Should().Be("+OK");
+                op.Marker.Should().Be("+OK");
             }
         }
 
         [Fact]
-        public void Should_be_able_to_parse_MsgOp_with_new_line_in_them()
+        public void Should_be_able_to_parse_MsgOp()
         {
             using (var stream = CreateStream(
-                "MSG foo siddw1 6\r\nte\r\nst\r\n"))
+                "MSG Foo Siddw1 ReplyTo1 4\r\nTEST\r\n"))
             {
                 UnitUnderTest = new NatsOpStreamReader(stream);
 
                 var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
 
-                MsgOp.Name.Should().Be("MSG");
-                op.Subject.Should().Be("foo");
-                op.SubscriptionId.Should().Be("siddw1");
-                op.ReplyTo.Should().BeEmpty();
-                op.Payload.ToArray().Should().HaveCount(6);
-                op.GetAsString().Should().Be($"MSG foo siddw1 6{Environment.NewLine}te\r\nst");
-                op.GetPayloadAsString().Should().Be($"te\r\nst");
-            }
-        }
-
-        [Fact]
-        public void Should_be_able_to_parse_MsgOp_with_tab_in_them()
-        {
-            using (var stream = CreateStream(
-                "MSG foo siddw1 5\r\nte\tst\r\n"))
-            {
-                UnitUnderTest = new NatsOpStreamReader(stream);
-
-                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
-
-                MsgOp.Name.Should().Be("MSG");
-                op.Subject.Should().Be("foo");
-                op.SubscriptionId.Should().Be("siddw1");
-                op.ReplyTo.Should().BeEmpty();
-                op.Payload.ToArray().Should().HaveCount(5);
-                op.GetAsString().Should().Be($"MSG foo siddw1 5{Environment.NewLine}te\tst");
-                op.GetPayloadAsString().Should().Be("te\tst");
-            }
-        }
-
-        [Fact]
-        public void Should_be_able_to_parse_tab_delimitted_MsgOp()
-        {
-            using (var stream = CreateStream(
-                "MSG\tfoo\tsiddw1\t4\r\ntest\r\n"))
-            {
-                UnitUnderTest = new NatsOpStreamReader(stream);
-
-                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
-
-                MsgOp.Name.Should().Be("MSG");
-                op.Subject.Should().Be("foo");
-                op.SubscriptionId.Should().Be("siddw1");
-                op.ReplyTo.Should().BeEmpty();
+                op.Marker.Should().Be("MSG");
+                op.Subject.Should().Be("Foo");
+                op.SubscriptionId.Should().Be("Siddw1");
+                op.ReplyTo.Should().Be("ReplyTo1");
                 op.Payload.ToArray().Should().HaveCount(4);
-                op.GetAsString().Should().Be($"MSG foo siddw1 4{Environment.NewLine}test");
-                op.GetPayloadAsString().Should().Be("test");
+                op.GetPayloadAsString().Should().Be("TEST");
+            }
+        }
+
+        [Fact]
+        public void Should_be_able_to_parse_MsgOp_When_optionals_are_missing()
+        {
+            using (var stream = CreateStream(
+                "MSG Foo Siddw1 0\r\n\r\n"))
+            {
+                UnitUnderTest = new NatsOpStreamReader(stream);
+
+                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+
+                op.Marker.Should().Be("MSG");
+                op.Subject.Should().Be("Foo");
+                op.SubscriptionId.Should().Be("Siddw1");
+                op.ReplyTo.Should().BeEmpty();
+                op.Payload.ToArray().Should().BeEmpty();
+                op.GetPayloadAsString().Should().BeEmpty();
+            }
+        }
+
+        [Fact]
+        public void Should_be_able_to_parse_MsgOp_When_message_has_new_line()
+        {
+            using (var stream = CreateStream(
+                "MSG Foo Siddw1 ReplyTo1 6\r\nTE\r\nST\r\n"))
+            {
+                UnitUnderTest = new NatsOpStreamReader(stream);
+
+                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+
+                op.Marker.Should().Be("MSG");
+                op.Subject.Should().Be("Foo");
+                op.SubscriptionId.Should().Be("Siddw1");
+                op.ReplyTo.Should().Be("ReplyTo1");
+                op.Payload.ToArray().Should().HaveCount(6);
+                op.GetPayloadAsString().Should().Be("TE\r\nST");
+            }
+        }
+
+        [Fact]
+        public void Should_be_able_to_parse_MsgOp_When_message_has_tab()
+        {
+            using (var stream = CreateStream(
+                "MSG Foo Siddw1 ReplyTo1 5\r\nTE\tST\r\n"))
+            {
+                UnitUnderTest = new NatsOpStreamReader(stream);
+
+                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+
+                op.Marker.Should().Be("MSG");
+                op.Subject.Should().Be("Foo");
+                op.SubscriptionId.Should().Be("Siddw1");
+                op.ReplyTo.Should().Be("ReplyTo1");
+                op.Payload.ToArray().Should().HaveCount(5);
+                op.GetPayloadAsString().Should().Be("TE\tST");
+            }
+        }
+
+        [Fact]
+        public void Should_be_able_to_parse_MsgOp_When_message_has_new_line_and_tab()
+        {
+            using (var stream = CreateStream(
+                "MSG Foo Siddw1 ReplyTo1 7\r\nTE\tS\r\nT\r\n"))
+            {
+                UnitUnderTest = new NatsOpStreamReader(stream);
+
+                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+
+                op.Marker.Should().Be("MSG");
+                op.Subject.Should().Be("Foo");
+                op.SubscriptionId.Should().Be("Siddw1");
+                op.ReplyTo.Should().Be("ReplyTo1");
+                op.Payload.ToArray().Should().HaveCount(7);
+                op.GetPayloadAsString().Should().Be("TE\tS\r\nT");
+            }
+        }
+
+        [Fact]
+        public void Should_be_able_to_parse_MsgOp_When_it_is_tab_delimited_instead_of_space()
+        {
+            using (var stream = CreateStream(
+                "MSG\tFoo\tSiddw1\tReplyTo1\t4\r\nTEST\r\n"))
+            {
+                UnitUnderTest = new NatsOpStreamReader(stream);
+
+                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+
+                op.Marker.Should().Be("MSG");
+                op.Subject.Should().Be("Foo");
+                op.SubscriptionId.Should().Be("Siddw1");
+                op.ReplyTo.Should().Be("ReplyTo1");
+                op.Payload.ToArray().Should().HaveCount(4);
+                op.GetPayloadAsString().Should().Be("TEST");
+            }
+        }
+
+        [Fact]
+        public void Should_be_able_to_parse_MsgOp_When_headers_are_defined()
+        {
+            using (var stream = CreateStream(
+                "HMSG Foo Siddw1 ReplyTo1 66 72 NATS/1.0\r\nHeader1:Value1.1\r\nHeader2:Value2.1\r\nHeader2:Value2.2\r\n\r\nTE\r\nST\r\n"))
+            {
+                UnitUnderTest = new NatsOpStreamReader(stream);
+
+                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+
+                op.Marker.Should().Be("HMSG");
+                op.Subject.Should().Be("Foo");
+                op.SubscriptionId.Should().Be("Siddw1");
+                op.ReplyTo.Should().Be("ReplyTo1");
+                op.Headers.Protocol.Should().Be("NATS/1.0");
+                op.Headers.Count.Should().Be(2);
+                op.Headers["Header1"].Should().BeEquivalentTo("Value1.1");
+                op.Headers["Header2"].Should().BeEquivalentTo("Value2.1", "Value2.2");
+                op.Payload.ToArray().Should().HaveCount(6);
+                op.GetPayloadAsString().Should().Be("TE\r\nST");
+            }
+        }
+
+        [Fact]
+        public void Should_be_able_to_parse_MsgOp_When_headers_are_defined_but_optionals_are_missing()
+        {
+            using (var stream = CreateStream(
+                "HMSG Foo Siddw1 66 66 NATS/1.0\r\nHeader1:Value1.1\r\nHeader2:Value2.1\r\nHeader2:Value2.2\r\n\r\n\r\n"))
+            {
+                UnitUnderTest = new NatsOpStreamReader(stream);
+
+                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+
+                op.Marker.Should().Be("HMSG");
+                op.Subject.Should().Be("Foo");
+                op.SubscriptionId.Should().Be("Siddw1");
+                op.ReplyTo.Should().BeEmpty();
+                op.Headers.Count.Should().Be(2);
+                op.Headers["Header1"].Should().BeEquivalentTo("Value1.1");
+                op.Headers["Header2"].Should().BeEquivalentTo("Value2.1", "Value2.2");
+                op.Payload.ToArray().Should().BeEmpty();
+                op.GetPayloadAsString().Should().BeEmpty();
             }
         }
 
@@ -151,8 +247,7 @@ namespace UnitTests
 
                 var op = UnitUnderTest.ReadOps().OfType<PingOp>().First();
 
-                PingOp.Name.Should().Be("PING");
-                op.GetAsString().Should().Be("PING");
+                op.Marker.Should().Be("PING");
             }
         }
 
@@ -166,8 +261,7 @@ namespace UnitTests
 
                 var op = UnitUnderTest.ReadOps().OfType<PongOp>().First();
 
-                PongOp.Name.Should().Be("PONG");
-                op.GetAsString().Should().Be("PONG");
+                op.Marker.Should().Be("PONG");
             }
         }
 
@@ -181,8 +275,8 @@ namespace UnitTests
 
                 var op = UnitUnderTest.ReadOps().OfType<ErrOp>().First();
 
-                ErrOp.Name.Should().Be("-ERR");
-                op.GetAsString().Should().Be("-ERR 'Unknown Protocol Operation'");
+                op.Marker.Should().Be("-ERR");
+                op.Message.Should().Be("'Unknown Protocol Operation'");
             }
         }
 

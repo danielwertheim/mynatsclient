@@ -4,14 +4,16 @@ namespace MyNatsClient.Ops
 {
     public sealed class InfoOp : IOp
     {
-        public const string Name = "INFO";
+        internal const string OpMarker = "INFO";
+
+        public string Marker => OpMarker;
 
         public readonly ReadOnlyMemory<char> Message;
 
-        public InfoOp(ReadOnlyMemory<char> message)
-            => Message = message;
+        public InfoOp(ReadOnlySpan<char> message)
+            => Message = message.ToArray();
 
-        public string GetAsString()
-            => $"{Name} {Message.Span.ToString()}";
+        public override string ToString()
+            => OpMarker;
     }
 }

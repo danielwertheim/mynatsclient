@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFrameworks>net5.0;netcoreapp3.1</TargetFrameworks>
     <PackageTags>NATS NATS.io messaging JSON JSONEncoding PubSub pub-sub request-response rx reactivex reactiveextensions</PackageTags>
-    <Description>JSON Encoding for assisting with sending and consuming JSON messages using MyNatsClient which provides a simple, effective sync and async library for interacting with NATS Server using .NET and .NET Core. It uses IObservable so it is ReactiveX (RX) friendly.</Description>
+    <Description>JSON Encoding for assisting with sending and consuming JSON messages using MyNatsClient which provides a simple, effective sync and async library for interacting with NATS Server. It uses IObservable so it is ReactiveX (RX) friendly.</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
