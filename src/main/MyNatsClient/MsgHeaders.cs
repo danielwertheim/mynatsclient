@@ -6,17 +6,30 @@ using System.Collections.Immutable;
 
 namespace MyNatsClient
 {
-    public class MsgHeaders : IReadOnlyDictionary<string, IImmutableList<string>>
+    public interface IMsgHeaders : IReadOnlyDictionary<string, IReadOnlyList<string>>
     {
-        private readonly ConcurrentDictionary<string, IImmutableList<string>> _state = new();
+        string Protocol { get; }
+        bool IsEmpty { get; }
 
-        public IImmutableList<string> this[string key] => _state[key];
+        void Add(string key, string value);
 
+        void Set(string key, string[] values);
+    }
+
+    public sealed class MsgHeaders : IMsgHeaders
+    {
+        private readonly ConcurrentDictionary<string, IReadOnlyList<string>> _state;
+
+        public string Protocol => "NATS/1.0";
+        public IReadOnlyList<string> this[string key] => _state[key];
         public IEnumerable<string> Keys => _state.Keys;
-
-        public IEnumerable<IImmutableList<string>> Values => _state.Values;
-
+        public IEnumerable<IReadOnlyList<string>> Values => _state.Values;
         public int Count => _state.Count;
+        public bool IsEmpty => _state.IsEmpty;
+
+        private MsgHeaders() => _state = new ConcurrentDictionary<string, IReadOnlyList<string>>();
+
+        public static IMsgHeaders Create() => new MsgHeaders();
 
         private static void EnsureKeyIsValid(string key)
         {
@@ -50,7 +63,7 @@ namespace MyNatsClient
             _state.AddOrUpdate(
                 key,
                 _ => ImmutableList.Create(value),
-                (_, existingValues) => existingValues.Add(value));
+                (_, existingValues) => ((ImmutableList<string>)existingValues).Add(value));
         }
 
         public void Set(string key, string[] values)
@@ -66,10 +79,10 @@ namespace MyNatsClient
         public bool ContainsKey(string key)
             => _state.ContainsKey(key);
 
-        public bool TryGetValue(string key, out IImmutableList<string> values)
+        public bool TryGetValue(string key, out IReadOnlyList<string> values)
             => _state.TryGetValue(key, out values);
 
-        public IEnumerator<KeyValuePair<string, IImmutableList<string>>> GetEnumerator()
+        public IEnumerator<KeyValuePair<string, IReadOnlyList<string>>> GetEnumerator()
             => _state.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator()
