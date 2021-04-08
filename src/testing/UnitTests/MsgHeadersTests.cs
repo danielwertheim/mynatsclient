@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using FluentAssertions;
 using MyNatsClient;
@@ -6,13 +8,14 @@ using Xunit;
 
 namespace UnitTests
 {
-    public class MsgHeadersTests : UnitTestsOf<MsgHeaders>
+    public class MsgHeadersTests : UnitTestsOf<IMsgHeaders>
     {
-        private string NewValidKey() => Guid.NewGuid().ToString("N");
-        private string NewValidValue() => Guid.NewGuid().ToString("N");
+        private static string NewValidKey() => Guid.NewGuid().ToString("N");
+        private static string NewInvalidKey() => "\" ?'";
+        private static string NewValidValue() => Guid.NewGuid().ToString("N");
 
         public MsgHeadersTests()
-            => UnitUnderTest = new MsgHeaders();
+            => UnitUnderTest = MsgHeaders.Create();
 
         [Fact]
         public void Can_manage_key_values()
@@ -56,6 +59,16 @@ namespace UnitTests
                 .Should().BeEquivalentTo(kv1.Values.Union(kv2.Values).Union(kv3.Values).OrderBy(v => v));
         }
 
+        [Fact]
+        public void Provides_info_if_empty_or_not()
+        {
+            UnitUnderTest.IsEmpty.Should().BeTrue();
+
+            UnitUnderTest.Add(NewValidKey(), NewValidValue());
+
+            UnitUnderTest.IsEmpty.Should().BeFalse();
+        }
+
         [Theory]
         [InlineData("")]
         public void Accepts_missing_value_defined_by(string value)
@@ -66,6 +79,16 @@ namespace UnitTests
 
             UnitUnderTest.TryGetValue(key, out var actualValues).Should().BeTrue();
             actualValues.Should().Contain(value);
+        }
+
+        [Fact]
+        public void Can_handle_missing_keys()
+        {
+            Action missingValidKey = () => UnitUnderTest[NewValidKey()].Should().BeEquivalentTo(ImmutableList<string>.Empty);
+            Action missingInvalidKey = () => UnitUnderTest[NewInvalidKey()].Should().BeEquivalentTo(ImmutableList<string>.Empty);
+
+            missingValidKey.Should().Throw<KeyNotFoundException>();
+            missingInvalidKey.Should().Throw<KeyNotFoundException>();
         }
 
         [Theory]
