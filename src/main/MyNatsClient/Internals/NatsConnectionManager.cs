@@ -22,9 +22,7 @@ namespace MyNatsClient.Internals
         private readonly ISocketFactory _socketFactory;
 
         internal NatsConnectionManager(ISocketFactory socketFactory)
-        {
-            _socketFactory = socketFactory ?? throw new ArgumentNullException(nameof(socketFactory));
-        }
+            => _socketFactory = socketFactory ?? throw new ArgumentNullException(nameof(socketFactory));
 
         public async Task<(INatsConnection connection, IList<IOp> consumedOps)> OpenConnectionAsync(
             ConnectionInfo connectionInfo,
@@ -35,7 +33,7 @@ namespace MyNatsClient.Internals
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            var hosts = new Queue<Host>(connectionInfo.Hosts.GetRandomized()); //TODO: Rank
+            var hosts = new Queue<Host>(connectionInfo.Hosts.GetRandomized());
 
             bool ShouldTryAndConnect() => !cancellationToken.IsCancellationRequested && hosts.Any();
 
@@ -62,8 +60,8 @@ namespace MyNatsClient.Internals
             throw NatsException.CouldNotEstablishAnyConnection();
         }
 
-        private static bool DefaultServerCertificateValidation(X509Certificate certificate, X509Chain chain, SslPolicyErrors sslpolicyerrors)
-            => sslpolicyerrors == SslPolicyErrors.None;
+        private static bool DefaultServerCertificateValidation(X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+            => sslPolicyErrors == SslPolicyErrors.None;
 
         private async Task<(INatsConnection connection, IList<IOp> consumedOps)> EstablishConnectionAsync(
             Host host,
@@ -95,7 +93,7 @@ namespace MyNatsClient.Internals
                     throw NatsException.FailedToConnectToHost(host,
                         "Expected to get INFO after establishing connection. Got nothing.");
 
-                if (!(op is InfoOp infoOp))
+                if (op is not InfoOp infoOp)
                     throw NatsException.FailedToConnectToHost(host,
                         $"Expected to get INFO after establishing connection. Got {op.GetType().Name}.");
 
