@@ -17,5 +17,5 @@ pool:
   vmImage: ubuntu-latest
 
 stages:
-- template: azure-templates/stage-build.yml
-- template: azure-templates/stage-deploy.yml
+- template: stage-build.yml
+- template: stage-deploy.yml
