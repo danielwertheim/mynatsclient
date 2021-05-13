@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using MyNatsClient;
 using MyNatsClient.Rx;
@@ -152,7 +153,7 @@ namespace UnitTests
 
             UnitUnderTest.Emit(Mock.Of<Data>());
 
-            FakeLogger.Verify(f => f.Error(It.Is<string>(m => m.Contains("Error in observer while emitting value.")), thrown), Times.Once);
+            FakeLogger.WasCalledWith(LogLevel.Error, m => m.Contains("Error in observer while emitting value. Observer subscription will be removed."), thrown);
         }
 
         [Fact]
@@ -243,7 +244,7 @@ namespace UnitTests
             var failingExHandlerWasInvoked = false;
             var nonFailingCatchWasInvoked = false;
             var nonFailingExHandlerWasInvoked = false;
-            
+
             UnitUnderTest.Catch((NotSupportedException ex) => failingCatchWasInvoked = true).Subscribe(
                 ev => throw new NotSupportedException("I FAILED!"),
                 ex => failingExHandlerWasInvoked = true);
@@ -259,7 +260,7 @@ namespace UnitTests
             nonFailingCatchWasInvoked.Should().BeFalse();
             nonFailingExHandlerWasInvoked.Should().BeFalse();
         }
-        
+
         [Fact]
         public void Emitting_Should_invoke_handler_of_failing_observer_When_using_catch_and_an_exception_is_thrown()
         {
@@ -267,7 +268,7 @@ namespace UnitTests
             var failingExHandlerWasInvoked = false;
             var nonFailingCatchWasInvoked = false;
             var nonFailingExHandlerWasInvoked = false;
-            
+
             UnitUnderTest.Catch((Exception ex) => failingCatchWasInvoked = true).Subscribe(
                 ev => throw new Exception("I FAILED!"),
                 ex => failingExHandlerWasInvoked = true);
@@ -283,7 +284,7 @@ namespace UnitTests
             nonFailingCatchWasInvoked.Should().BeFalse();
             nonFailingExHandlerWasInvoked.Should().BeFalse();
         }
-        
+
         [Fact]
         public void Emitting_Should_not_invoke_handler_of_failing_observer_When_using_catch_and_a_more_generic_exception_is_thrown()
         {
@@ -291,7 +292,7 @@ namespace UnitTests
             var failingExHandlerWasInvoked = false;
             var nonFailingCatchWasInvoked = false;
             var nonFailingExHandlerWasInvoked = false;
-            
+
             UnitUnderTest.Catch((NotSupportedException ex) => failingCatchWasInvoked = true).Subscribe(
                 ev => throw new Exception("I FAILED!"),
                 ex => failingExHandlerWasInvoked = true);
@@ -315,7 +316,7 @@ namespace UnitTests
             var failingExHandlerWasInvoked = false;
             var nonFailingCatchWasInvoked = false;
             var nonFailingExHandlerWasInvoked = false;
-            
+
             UnitUnderTest.CatchAny(ex => failingCatchWasInvoked = true).Subscribe(
                 ev => throw new Exception("I FAILED!"),
                 ex => failingExHandlerWasInvoked = true);
@@ -339,7 +340,7 @@ namespace UnitTests
             var failingExHandlerWasInvoked = false;
             var nonFailingCatchWasInvoked = false;
             var nonFailingExHandlerWasInvoked = false;
-            
+
             UnitUnderTest.CatchAny(ex => failingCatchWasInvoked = true).Subscribe(
                 ev => throw new NotSupportedException("I FAILED!"),
                 ex => failingExHandlerWasInvoked = true);

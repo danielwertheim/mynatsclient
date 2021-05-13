@@ -418,23 +418,7 @@ var client = new NatsClient(cnInfo, new MyMonoOptimizedSocketFactory());
 If you like to tweak the scheduling of the consumer task, you can inject a custom implementation of `IConsumerFactory`. The Consumer is responsible for consuming the incoming socket and to construct `Ops` which it passes on to the `NatsOpMediator` which in turn emits the `Op` to the `AllOpsStream` and `MsgOpsStream` (if it's a `MsgOp`).
 
 ## Logging
-Some information is passed to a logger, e.g. Errors while trying to connect to a host. By default there's a `NullLogger` hooked in. To add a logger of choice, you would implement `ILogger` and assign a new resolver to `LoggerManager.Resolve`.
-
-```csharp
-public class MyLogger : ILogger {
-    public void void Trace(string message) {}
-    public void Debug(string message) {}
-    public void Info(string message) {}
-    public void Error(string message) {}
-    public void Error(string message, Exception ex) {}
-}
-```
-
-```csharp
-LoggerManager.Resolve = loggerForType => new MyLogger();
-```
-
-The `loggerForType` being passed could be used for passing to NLog to get Logger per class etc.
+All logging is using the `ILogger|ILogger<T>` in `Microsoft.Extensions.Logging`. By default, the `Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory` is hooked in. This can be replaced by calling `MyNatsClient.LoggerManager.UseFactory(yourFactory)` during initial startup configuration.
 
 ## Reads and Writes
 The client uses one `Socket` but two `NetworkStreams`. One stream for writes and one for reads. The client only locks on writes.

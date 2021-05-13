@@ -8,6 +8,7 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using MyNatsClient.Internals.Commands;
 using MyNatsClient.Internals.Extensions;
 using MyNatsClient.Ops;
@@ -16,7 +17,7 @@ namespace MyNatsClient.Internals
 {
     internal class NatsConnectionManager : INatsConnectionManager
     {
-        private static readonly ILogger Logger = LoggerManager.Resolve(typeof(NatsConnectionManager));
+        private static readonly ILogger<NatsConnectionManager> Logger = LoggerManager.CreateLogger<NatsConnectionManager>();
 
         private readonly ISocketFactory _socketFactory;
 
@@ -51,7 +52,7 @@ namespace MyNatsClient.Internals
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"Error while connecting to {host}. Trying with next host (if any).", ex);
+                    Logger.LogError(ex, "Error while connecting to {Host}. Trying with next host (if any).", host);
 
                     if (!ShouldTryAndConnect())
                         throw;

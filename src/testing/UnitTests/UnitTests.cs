@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 using Moq;
 using MyNatsClient;
 
@@ -14,16 +15,19 @@ namespace UnitTests
 
     public abstract class UnitTests : IDisposable
     {
-        protected Mock<ILogger> FakeLogger { get; }
+        private readonly FakeLoggerFactory _fakeLoggerFactory = new();
+
+        protected Mock<ILogger> FakeLogger => _fakeLoggerFactory.Logger;
 
         protected UnitTests()
         {
-            FakeLogger = new Mock<ILogger>();
-            LoggerManager.Resolve = _ => FakeLogger.Object;
+            LoggerManager.UseFactory(_fakeLoggerFactory);
         }
 
         public void Dispose()
         {
+            LoggerManager.ResetToDefaults();
+            _fakeLoggerFactory.Dispose();
             OnAfterEachTest();
             OnDisposing();
         }

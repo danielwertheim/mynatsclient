@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using MyNatsClient.Internals;
 
 namespace MyNatsClient
@@ -12,7 +13,7 @@ namespace MyNatsClient
 
         protected NatsObservable()
         {
-            Logger = LoggerManager.Resolve(GetType());
+            Logger = LoggerManager.CreateLogger(GetType());
         }
     }
 
@@ -67,7 +68,7 @@ namespace MyNatsClient
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Error in observer while emitting value. Observer subscription will be removed.", ex);
+                    Logger.LogError(ex, "Error in observer while emitting value. Observer subscription will be removed.");
 
                     //No invoke of OnError as it's not the producer that is failing.
                     _subscriptions.TryRemove(subscription.Id, out _);
