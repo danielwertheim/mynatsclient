@@ -423,10 +423,10 @@ namespace MyNatsClient
             await _connection.WithWriteLockAsync(PongCmd.WriteAsync).ConfigureAwait(false);
         }
 
-        public void Pub(string subject, string body, string replyTo = null)
-            => Pub(subject, NatsEncoder.GetBytes(body), replyTo);
+        public void Pub(string subject, string body, string replyTo = null, IMsgHeaders headers = null)
+            => Pub(subject, NatsEncoder.GetBytes(body), replyTo, headers);
 
-        public void Pub(string subject, ReadOnlyMemory<byte> body, string replyTo = null)
+        public void Pub(string subject, ReadOnlyMemory<byte> body, string replyTo = null, IMsgHeaders headers = null)
         {
             ThrowIfDisposed();
 
@@ -437,12 +437,16 @@ namespace MyNatsClient
 
             _connection.WithWriteLock((writer, arg) =>
             {
-                var (subjectIn, bodyIn, replyToIn) = arg;
+                var (subjectIn, bodyIn, replyToIn, headersIn) = arg;
 
-                PubCmd.Write(writer, subjectIn.Span, replyToIn.Span, bodyIn);
+                if(headersIn.IsEmpty)
+                    PubCmd.Write(writer, subjectIn.Span, replyToIn.Span, bodyIn);
+                else
+                    HPubCmd.Write(writer, subjectIn.Span, replyToIn.Span, headersIn.AsSpan(), bodyIn);
+
                 if (ShouldAutoFlush)
                     writer.Flush();
-            }, Tuple.Create(subject.AsMemory(), body, replyTo.AsMemory()));
+            }, Tuple.Create(subject.AsMemory(), body, replyTo.AsMemory(), headers));
         }
 
         public Task PubAsync(string subject, string body, string replyTo = null)

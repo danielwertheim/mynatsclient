@@ -7,11 +7,11 @@ namespace MyNatsClient
 {
     public interface INatsClient
     {
-        /// <summary>	
-        /// ClientId. Currently not used more than for user convenience,	
-        /// like if you have multiple clients running and want to keep	
-        /// them apart.	
-        /// </summary>	
+        /// <summary>
+        /// ClientId. Currently not used more than for user convenience,
+        /// like if you have multiple clients running and want to keep
+        /// them apart.
+        /// </summary>
         string Id { get; }
 
         /// <summary>
@@ -101,7 +101,8 @@ namespace MyNatsClient
         /// <param name="subject"></param>
         /// <param name="body"></param>
         /// <param name="replyTo"></param>
-        void Pub(string subject, string body, string replyTo = null);
+        /// <param name="headers"></param>
+        void Pub(string subject, string body, string replyTo = null, IMsgHeaders headers = null);
 
         /// <summary>
         /// Sync Publish of a message.
@@ -109,7 +110,8 @@ namespace MyNatsClient
         /// <param name="subject"></param>
         /// <param name="body"></param>
         /// <param name="replyTo"></param>
-        void Pub(string subject, ReadOnlyMemory<byte> body, string replyTo = null);
+        /// <param name="headers"></param>
+        void Pub(string subject, ReadOnlyMemory<byte> body, string replyTo = null, IMsgHeaders headers = null);
 
         /// <summary>
         /// Async Publish of a message.
