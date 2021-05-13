@@ -111,8 +111,7 @@ namespace MyNatsClient.Internals
 
                 if (serverInfo.TlsRequired)
                 {
-                    await stream.DisposeAsync();
-                    stream = new SslStream(socket.CreateReadWriteStream(), false, RemoteCertificateValidationCallback, null, EncryptionPolicy.RequireEncryption);
+                    stream = new SslStream(stream, false, RemoteCertificateValidationCallback, null, EncryptionPolicy.RequireEncryption);
                     var ssl = (SslStream) stream;
 
                     var clientAuthOptions = new SslClientAuthenticationOptions
