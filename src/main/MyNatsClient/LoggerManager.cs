@@ -1,14 +1,23 @@
 ﻿using System;
-using MyNatsClient.Logging;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MyNatsClient
 {
     public static class LoggerManager
     {
-        public static Func<Type, ILogger> Resolve { get; set; } = _ => NullLogger.Instance;
+        private static ILoggerFactory Factory { get; set; } = NullLoggerFactory.Instance;
 
-        public static void ResetToDefaults() => UseNullLogger();
+        public static ILogger CreateLogger(Type type)
+            => Factory.CreateLogger(type);
 
-        public static void UseNullLogger() => Resolve = _ => NullLogger.Instance;
+        public static ILogger<T> CreateLogger<T>()
+            => Factory.CreateLogger<T>();
+
+        public static void UseFactory(ILoggerFactory factory)
+            => Factory = factory;
+
+        public static void ResetToDefaults()
+            => UseFactory(NullLoggerFactory.Instance);
     }
 }

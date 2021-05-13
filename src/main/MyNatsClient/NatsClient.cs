@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using MyNatsClient.Events;
 using MyNatsClient.Internals;
 using MyNatsClient.Internals.Commands;
@@ -15,7 +16,7 @@ namespace MyNatsClient
 {
     public sealed class NatsClient : INatsClient, IDisposable
     {
-        private readonly ILogger _logger = LoggerManager.Resolve(typeof(NatsClient));
+        private readonly ILogger<NatsClient> _logger = LoggerManager.CreateLogger<NatsClient>();
 
         private const int ConsumerPingAfterMsSilenceFromServer = 20000;
         private const int ConsumerMaxMsSilenceFromServer = 40000;
@@ -88,7 +89,7 @@ namespace MyNatsClient
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error("Failed while trying to reconnect client.", ex);
+                    _logger.LogError(ex, "Failed while trying to reconnect client.");
                 }
             }
 
@@ -197,13 +198,13 @@ namespace MyNatsClient
                             if (ex == null)
                                 return;
 
-                            _logger.Error("Internal client worker exception.", ex);
+                            _logger.LogError(ex, "Internal client worker exception.");
 
                             _eventMediator.Emit(new ClientWorkerFailed(this, ex));
                         }
                         catch (Exception ex)
                         {
-                            _logger.Error("Unhandled exception while ending worker.", ex);
+                            _logger.LogError(ex, "Unhandled exception while ending worker.");
                         }
                         finally
                         {
@@ -238,7 +239,7 @@ namespace MyNatsClient
                     if (ping)
                     {
                         ping = false;
-                        _logger.Debug("Pinging due to silent server.");
+                        _logger.LogDebug("Pinging due to silent server.");
                         Ping();
                     }
 
@@ -267,12 +268,11 @@ namespace MyNatsClient
                     if (!ShouldDoWork())
                         break;
 
-                    _logger.Error("Worker got Exception.", ex);
+                    _logger.LogError(ex, "Worker got Exception.");
 
                     if (ex.InnerException is SocketException socketEx)
                     {
-                        // ReSharper disable once HeapView.BoxingAllocation
-                        _logger.Error($"Worker task got SocketException with SocketErrorCode='{socketEx.SocketErrorCode}'");
+                        _logger.LogError("Worker task got SocketException with SocketErrorCode={SocketErrorCode}", socketEx.SocketErrorCode);
 
                         if (socketEx.SocketErrorCode == SocketError.Interrupted)
                             break;

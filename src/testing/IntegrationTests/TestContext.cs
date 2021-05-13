@@ -21,7 +21,7 @@ namespace IntegrationTests
 
         protected TestContext(Host[] hosts)
         {
-            LoggerManager.UseNullLogger();
+            LoggerManager.ResetToDefaults();
 
             _hosts = hosts;
         }

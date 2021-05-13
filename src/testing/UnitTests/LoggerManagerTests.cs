@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using MyNatsClient;
-using MyNatsClient.Logging;
 using Xunit;
 
 namespace UnitTests
@@ -11,10 +11,7 @@ namespace UnitTests
         public void Should_return_NullLogger_by_default()
         {
             LoggerManager.ResetToDefaults();
-            LoggerManager.Resolve(typeof(Fake1)).Should().BeOfType<NullLogger>();
+            LoggerManager.CreateLogger(typeof(LoggerManagerTests)).Should().BeOfType<NullLogger>();
         }
-
-        private class Fake1 { }
-        private class Fake2 { }
     }
 }
