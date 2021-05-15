@@ -5,13 +5,13 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace MyNatsClient.Internals
 {
     internal sealed class NatsConnection : INatsConnection
     {
-        private readonly Func<bool> _socketIsConnected;
-        private readonly Func<bool> _canRead;
+        private readonly ILogger<NatsConnection> _logger = LoggerManager.CreateLogger<NatsConnection>();
         private readonly CancellationToken _cancellationToken;
 
         private Socket _socket;
@@ -24,8 +24,12 @@ namespace MyNatsClient.Internals
         private bool _isDisposed;
 
         public INatsServerInfo ServerInfo { get; }
-        public bool IsConnected => _socketIsConnected();
-        public bool CanRead => _canRead();
+        public bool IsConnected => _socket.Connected;
+
+        private bool CanRead =>
+            _socket.Connected &&
+            _stream.CanRead &&
+            !_cancellationToken.IsCancellationRequested;
 
         internal NatsConnection(
             NatsServerInfo serverInfo,
@@ -45,10 +49,7 @@ namespace MyNatsClient.Internals
             _cancellationToken = cancellationToken;
             _writeStreamSync = new SemaphoreSlim(1, 1);
             _writer = new NatsStreamWriter(_writeStream, _cancellationToken);
-            _reader = new NatsOpStreamReader(_readStream);
-
-            _socketIsConnected = () => _socket?.Connected == true;
-            _canRead = () => _socket?.Connected == true && _stream != null && _stream.CanRead && !_cancellationToken.IsCancellationRequested;
+            _reader = NatsOpStreamReader.Use(_readStream);
         }
 
         public void Dispose()
@@ -71,9 +72,11 @@ namespace MyNatsClient.Internals
                 }
             }
 
+            TryDispose(_reader);
             TryDispose(_writeStream);
             TryDispose(_readStream);
             TryDispose(_stream);
+
             try
             {
                 _socket.Shutdown(SocketShutdown.Both);
@@ -82,9 +85,11 @@ namespace MyNatsClient.Internals
             {
                 exs.Add(ex);
             }
+
             TryDispose(_socket);
             TryDispose(_writeStreamSync);
 
+            _reader = null;
             _writeStream = null;
             _readStream = null;
             _stream = null;
@@ -97,13 +102,33 @@ namespace MyNatsClient.Internals
                 throw new AggregateException("Failed while disposing connection. See inner exception(s) for more details.", exs);
         }
 
-        public IEnumerable<IOp> ReadOp()
+        private void ThrowIfDisposed()
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(GetType().Name);
+        }
+
+        private void ThrowIfNotConnected()
+        {
+            if (!IsConnected)
+                throw NatsException.NotConnected();
+        }
+
+        public IEnumerable<IOp> ReadOps()
         {
             ThrowIfDisposed();
 
             ThrowIfNotConnected();
 
-            return _reader.ReadOps();
+            _logger.LogDebug("Starting OPs read loop");
+
+            while (CanRead)
+            {
+#if Debug
+                _logger.LogDebug("Reading OP");
+#endif
+                yield return _reader.ReadOp();
+            }
         }
 
         public void WithWriteLock(Action<INatsStreamWriter> a)
@@ -176,18 +201,6 @@ namespace MyNatsClient.Internals
             {
                 _writeStreamSync.Release();
             }
-        }
-
-        private void ThrowIfDisposed()
-        {
-            if (_isDisposed)
-                throw new ObjectDisposedException(GetType().Name);
-        }
-
-        private void ThrowIfNotConnected()
-        {
-            if (!IsConnected)
-                throw NatsException.NotConnected();
         }
     }
 }

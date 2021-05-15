@@ -17,7 +17,7 @@ namespace MyNatsClient.Internals
 {
     internal class NatsConnectionManager : INatsConnectionManager
     {
-        private static readonly ILogger<NatsConnectionManager> Logger = LoggerManager.CreateLogger<NatsConnectionManager>();
+        private readonly ILogger<NatsConnectionManager> _logger = LoggerManager.CreateLogger<NatsConnectionManager>();
 
         private readonly ISocketFactory _socketFactory;
 
@@ -50,7 +50,7 @@ namespace MyNatsClient.Internals
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, "Error while connecting to {Host}. Trying with next host (if any).", host);
+                    _logger.LogError(ex, "Error while connecting to {Host}. Trying with next host (if any).", host);
 
                     if (!ShouldTryAndConnect())
                         throw;
@@ -68,6 +68,7 @@ namespace MyNatsClient.Internals
             ConnectionInfo connectionInfo,
             CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Establishing connection to {Host}", host);
             var serverCertificateValidation = connectionInfo.ServerCertificateValidation ?? DefaultServerCertificateValidation;
 
             bool RemoteCertificateValidationCallback(object _, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors)
@@ -76,19 +77,23 @@ namespace MyNatsClient.Internals
             var consumedOps = new List<IOp>();
             Socket socket = null;
             Stream stream = null;
+            NatsOpStreamReader reader = null;
 
             try
             {
+                _logger.LogDebug("Creating socket.");
                 socket = _socketFactory.Create(connectionInfo.SocketOptions);
                 await socket.ConnectAsync(
                     host,
                     connectionInfo.SocketOptions.ConnectTimeoutMs,
                     cancellationToken).ConfigureAwait(false);
 
+                _logger.LogDebug("Creating read write stream.");
                 stream = socket.CreateReadWriteStream();
-                var reader = new NatsOpStreamReader(stream);
+                reader = NatsOpStreamReader.Use(stream);
 
-                var op = reader.ReadOneOp();
+                _logger.LogDebug("Trying to read InfoOp.");
+                var op = reader.ReadOp();
                 if (op == null)
                     throw NatsException.FailedToConnectToHost(host,
                         "Expected to get INFO after establishing connection. Got nothing.");
@@ -97,6 +102,7 @@ namespace MyNatsClient.Internals
                     throw NatsException.FailedToConnectToHost(host,
                         $"Expected to get INFO after establishing connection. Got {op.GetType().Name}.");
 
+                _logger.LogDebug("Parsing server info.");
                 var serverInfo = NatsServerInfo.Parse(infoOp.Message);
                 var credentials = host.HasNonEmptyCredentials() ? host.Credentials : connectionInfo.Credentials;
                 if (serverInfo.AuthRequired && (credentials == null || credentials == Credentials.Empty))
@@ -109,6 +115,7 @@ namespace MyNatsClient.Internals
 
                 if (serverInfo.TlsRequired)
                 {
+                    _logger.LogDebug("Creating SSL Stream.");
                     stream = new SslStream(stream, false, RemoteCertificateValidationCallback, null, EncryptionPolicy.RequireEncryption);
                     var ssl = (SslStream) stream;
 
@@ -123,28 +130,36 @@ namespace MyNatsClient.Internals
                         TargetHost = host.Address
                     };
 
+                    _logger.LogDebug("Performing SSL client authentication.");
                     await ssl.AuthenticateAsClientAsync(clientAuthOptions, cancellationToken).ConfigureAwait(false);
 
-                    reader = new NatsOpStreamReader(ssl);
+                    reader.SetNewSource(ssl);
                 }
 
+                _logger.LogDebug("Sending Connect.");
                 stream.Write(ConnectCmd.Generate(connectionInfo.Verbose, credentials, connectionInfo.Name));
+                _logger.LogDebug("Sending Ping.");
                 stream.Write(PingCmd.Bytes.Span);
                 await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-                op = reader.ReadOneOp();
-                if (op == null)
-                    throw NatsException.FailedToConnectToHost(host,
-                        "Expected to read something after CONNECT and PING. Got nothing.");
-
-                if (op is ErrOp)
-                    throw NatsException.FailedToConnectToHost(host,
-                        $"Expected to get PONG after sending CONNECT and PING. Got {op.Marker}.");
+                _logger.LogDebug("Trying to read OP to see if connection was established.");
+                op = reader.ReadOp();
+                switch (op)
+                {
+                    case NullOp:
+                        throw NatsException.FailedToConnectToHost(host,
+                            "Expected to read something after CONNECT and PING. Got nothing.");
+                    case ErrOp:
+                        throw NatsException.FailedToConnectToHost(host,
+                            $"Expected to get PONG after sending CONNECT and PING. Got {op.Marker}.");
+                }
 
                 if (!socket.Connected)
                     throw NatsException.FailedToConnectToHost(host, "No connection could be established.");
 
                 consumedOps.Add(op);
+
+                _logger.LogInformation("Connection successfully established to {Host}", host);
 
                 return (
                     new NatsConnection(
@@ -157,6 +172,11 @@ namespace MyNatsClient.Internals
             catch
             {
                 Swallow.Everything(
+                    () =>
+                    {
+                        reader?.Dispose();
+                        reader = null;
+                    },
                     () =>
                     {
                         stream?.Dispose();

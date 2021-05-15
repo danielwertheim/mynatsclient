@@ -8,9 +8,8 @@ namespace MyNatsClient
     {
         INatsServerInfo ServerInfo { get; }
         bool IsConnected { get; }
-        bool CanRead { get; }
 
-        IEnumerable<IOp> ReadOp();
+        IEnumerable<IOp> ReadOps();
         void WithWriteLock(Action<INatsStreamWriter> a);
         void WithWriteLock<TArg>(Action<INatsStreamWriter, TArg> a, TArg arg);
         Task WithWriteLockAsync(Func<INatsStreamWriter, Task> a);

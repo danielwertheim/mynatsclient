@@ -7,7 +7,7 @@ namespace MyNatsClient
     {
         public string ExceptionCode { get; private set; }
 
-        protected NatsException(string exceptionCode, string message)
+        private NatsException(string exceptionCode, string message)
             : base(message)
         {
             ExceptionCode = exceptionCode ?? NatsExceptionCodes.Unknown;
@@ -39,6 +39,9 @@ namespace MyNatsClient
 
         internal static NatsException ClientReceivedErrOp(ErrOp errOp)
             => new NatsException(NatsExceptionCodes.ClientReceivedErrOp, $"Client received ErrOp with message='{errOp.Message}'.");
+
+        internal static NatsException ClientCouldNotConsumeStream()
+            => new(NatsExceptionCodes.ClientCouldNotConsumeStream, "Client could not consume stream.");
 
         internal static NatsException OpParserError(string message)
             => new NatsException(NatsExceptionCodes.OpParserError, message);
