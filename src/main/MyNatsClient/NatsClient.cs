@@ -40,13 +40,15 @@ namespace MyNatsClient
 
         private readonly string _inboxAddress;
         private ISubscription _inboxSubscription;
-        private readonly ConcurrentDictionary<string, TaskCompletionSource<MsgOp>> _outstandingRequests = new ConcurrentDictionary<string, TaskCompletionSource<MsgOp>>();
+
+        private readonly ConcurrentDictionary<string, TaskCompletionSource<MsgOp>> _outstandingRequests =
+            new ConcurrentDictionary<string, TaskCompletionSource<MsgOp>>();
 
         public string Id { get; }
         public INatsObservable<IClientEvent> Events => _eventMediator;
         public INatsObservable<IOp> OpStream => _opMediator.AllOpsStream;
         public INatsObservable<MsgOp> MsgOpStream => _opMediator.MsgOpsStream;
-        public bool IsConnected => _connection != null && _connection.IsConnected && _connection.CanRead;
+        public bool IsConnected => _connection?.IsConnected == true;
 
         public NatsClient(
             ConnectionInfo connectionInfo,
@@ -192,6 +194,8 @@ namespace MyNatsClient
 
                             DoSafeRelease();
 
+                            _logger.LogDebug("Emitting ClientDisconnected due to failure");
+
                             _eventMediator.Emit(new ClientDisconnected(this, DisconnectReason.DueToFailure));
 
                             var ex = t.Exception?.GetBaseException() ?? t.Exception;
@@ -229,11 +233,15 @@ namespace MyNatsClient
         {
             bool ShouldDoWork() => !_isDisposed && IsConnected && _cancellation?.IsCancellationRequested == false;
 
+            _logger.LogDebug("Starting consumer worker {IsConnected}", IsConnected);
+
             var lastOpReceivedAt = DateTime.UtcNow;
             var ping = false;
 
             while (ShouldDoWork())
             {
+                _logger.LogDebug("Consumer tick.");
+
                 try
                 {
                     if (ping)
@@ -243,8 +251,11 @@ namespace MyNatsClient
                         Ping();
                     }
 
-                    foreach (var op in _connection.ReadOp())
+                    foreach (var op in _connection.ReadOps())
                     {
+                        if (op == NullOp.Instance)
+                            throw NatsException.ClientCouldNotConsumeStream();
+
                         lastOpReceivedAt = DateTime.UtcNow;
 
                         _opMediator.Emit(op);
@@ -259,7 +270,7 @@ namespace MyNatsClient
                         }
                     }
                 }
-                catch (NatsException nex) when (nex.ExceptionCode == NatsExceptionCodes.OpParserError)
+                catch (NatsException nex) when (nex.ExceptionCode is NatsExceptionCodes.OpParserError or NatsExceptionCodes.ClientCouldNotConsumeStream)
                 {
                     throw;
                 }
@@ -268,11 +279,11 @@ namespace MyNatsClient
                     if (!ShouldDoWork())
                         break;
 
-                    _logger.LogError(ex, "Worker got Exception.");
-
                     if (ex.InnerException is SocketException socketEx)
                     {
-                        _logger.LogError("Worker task got SocketException with SocketErrorCode={SocketErrorCode}", socketEx.SocketErrorCode);
+                        _logger.LogWarning(
+                            "Consumer task got SocketException with error code {SocketErrorCode} Frequency of Timeouts is controlled via ReceiveTimeout.",
+                            socketEx.SocketErrorCode);
 
                         if (socketEx.SocketErrorCode == SocketError.Interrupted)
                             break;
@@ -280,14 +291,16 @@ namespace MyNatsClient
                         if (socketEx.SocketErrorCode != SocketError.TimedOut)
                             throw;
                     }
-
-                    var silenceDeltaMs = DateTime.UtcNow.Subtract(lastOpReceivedAt).TotalMilliseconds;
-                    if (silenceDeltaMs >= ConsumerMaxMsSilenceFromServer)
-                        throw NatsException.ConnectionFoundIdling(_connection.ServerInfo.Host, _connection.ServerInfo.Port);
-
-                    if (silenceDeltaMs >= ConsumerPingAfterMsSilenceFromServer)
-                        ping = true;
+                    else
+                        _logger.LogError(ex, "Consumer task failed");
                 }
+
+                var silenceDeltaMs = DateTime.UtcNow.Subtract(lastOpReceivedAt).TotalMilliseconds;
+                if (silenceDeltaMs >= ConsumerMaxMsSilenceFromServer)
+                    throw NatsException.ConnectionFoundIdling(_connection.ServerInfo.Host, _connection.ServerInfo.Port);
+
+                if (silenceDeltaMs >= ConsumerPingAfterMsSilenceFromServer)
+                    ping = true;
             }
         }
 

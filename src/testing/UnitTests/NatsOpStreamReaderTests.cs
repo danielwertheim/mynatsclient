@@ -22,30 +22,30 @@ namespace UnitTests
                 "PONG\r\n",
                 "-ERR 'Unknown Protocol Operation'\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var infoOp = UnitUnderTest.ReadOps().First();
+                var infoOp = UnitUnderTest.ReadOp();
                 infoOp.Should().BeOfType<InfoOp>();
 
-                var okOp = UnitUnderTest.ReadOps().First();
+                var okOp = UnitUnderTest.ReadOp();
                 okOp.Should().BeOfType<OkOp>();
 
-                var msgOp = UnitUnderTest.ReadOps().First();
+                var msgOp = UnitUnderTest.ReadOp();
                 msgOp.Should().BeOfType<MsgOp>();
 
-                var msgWithGroupOp = UnitUnderTest.ReadOps().First();
+                var msgWithGroupOp = UnitUnderTest.ReadOp();
                 msgWithGroupOp.Should().BeOfType<MsgOp>();
 
-                var pingOp = UnitUnderTest.ReadOps().First();
+                var pingOp = UnitUnderTest.ReadOp();
                 pingOp.Should().BeOfType<PingOp>();
 
-                var pongOp = UnitUnderTest.ReadOps().First();
+                var pongOp = UnitUnderTest.ReadOp();
                 pongOp.Should().BeOfType<PongOp>();
 
-                var errOp = UnitUnderTest.ReadOps().First();
+                var errOp = UnitUnderTest.ReadOp();
                 errOp.Should().BeOfType<ErrOp>();
 
-                UnitUnderTest.ReadOps().FirstOrDefault().Should().BeNull();
+                UnitUnderTest.ReadOp().Should().Be(NullOp.Instance);
             }
         }
 
@@ -55,9 +55,9 @@ namespace UnitTests
             using (var stream = CreateStream(
                 "INFO {\"server_id\":\"H8RgvFtiq2zlQTA5dB0deh\"}\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var op = UnitUnderTest.ReadOps().OfType<InfoOp>().First();
+                var op = UnitUnderTest.ReadOp().Should().BeOfType<InfoOp>().Subject;
 
                 op.Marker.Should().Be("INFO");
                 op.Message.ToString().Should().Be("{\"server_id\":\"H8RgvFtiq2zlQTA5dB0deh\"}");
@@ -70,9 +70,9 @@ namespace UnitTests
             using (var stream = CreateStream(
                 "+OK\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var op = UnitUnderTest.ReadOps().OfType<OkOp>().First();
+                var op = UnitUnderTest.ReadOp().Should().BeOfType<OkOp>().Subject;
 
                 op.Marker.Should().Be("+OK");
             }
@@ -84,9 +84,9 @@ namespace UnitTests
             using (var stream = CreateStream(
                 "MSG Foo Siddw1 ReplyTo1 4\r\nTEST\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+                var op = UnitUnderTest.ReadOp().Should().BeOfType<MsgOp>().Subject;
 
                 op.Marker.Should().Be("MSG");
                 op.Subject.Should().Be("Foo");
@@ -103,9 +103,9 @@ namespace UnitTests
             using (var stream = CreateStream(
                 "MSG Foo Siddw1 0\r\n\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+                var op = UnitUnderTest.ReadOp().Should().BeOfType<MsgOp>().Subject;
 
                 op.Marker.Should().Be("MSG");
                 op.Subject.Should().Be("Foo");
@@ -122,9 +122,9 @@ namespace UnitTests
             using (var stream = CreateStream(
                 "MSG Foo Siddw1 ReplyTo1 6\r\nTE\r\nST\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+                var op = UnitUnderTest.ReadOp().Should().BeOfType<MsgOp>().Subject;
 
                 op.Marker.Should().Be("MSG");
                 op.Subject.Should().Be("Foo");
@@ -141,9 +141,9 @@ namespace UnitTests
             using (var stream = CreateStream(
                 "MSG Foo Siddw1 ReplyTo1 5\r\nTE\tST\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+                var op = UnitUnderTest.ReadOp().Should().BeOfType<MsgOp>().Subject;
 
                 op.Marker.Should().Be("MSG");
                 op.Subject.Should().Be("Foo");
@@ -160,9 +160,9 @@ namespace UnitTests
             using (var stream = CreateStream(
                 "MSG Foo Siddw1 ReplyTo1 7\r\nTE\tS\r\nT\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+                var op = UnitUnderTest.ReadOp().Should().BeOfType<MsgOp>().Subject;
 
                 op.Marker.Should().Be("MSG");
                 op.Subject.Should().Be("Foo");
@@ -179,9 +179,9 @@ namespace UnitTests
             using (var stream = CreateStream(
                 "MSG\tFoo\tSiddw1\tReplyTo1\t4\r\nTEST\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+                var op = UnitUnderTest.ReadOp().Should().BeOfType<MsgOp>().Subject;
 
                 op.Marker.Should().Be("MSG");
                 op.Subject.Should().Be("Foo");
@@ -198,9 +198,9 @@ namespace UnitTests
             using (var stream = CreateStream(
                 "HMSG Foo Siddw1 ReplyTo1 66 72 NATS/1.0\r\nHeader1:Value1.1\r\nHeader2:Value2.1\r\nHeader2:Value2.2\r\n\r\nTE\r\nST\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+                var op = UnitUnderTest.ReadOp().Should().BeOfType<MsgOp>().Subject;
 
                 op.Marker.Should().Be("HMSG");
                 op.Subject.Should().Be("Foo");
@@ -221,9 +221,9 @@ namespace UnitTests
             using (var stream = CreateStream(
                 "HMSG Foo Siddw1 66 66 NATS/1.0\r\nHeader1:Value1.1\r\nHeader2:Value2.1\r\nHeader2:Value2.2\r\n\r\n\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var op = UnitUnderTest.ReadOps().OfType<MsgOp>().First();
+                var op = UnitUnderTest.ReadOp().Should().BeOfType<MsgOp>().Subject;
 
                 op.Marker.Should().Be("HMSG");
                 op.Subject.Should().Be("Foo");
@@ -243,9 +243,9 @@ namespace UnitTests
             using (var stream = CreateStream(
                 "PING\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var op = UnitUnderTest.ReadOps().OfType<PingOp>().First();
+                var op = UnitUnderTest.ReadOp().Should().BeOfType<PingOp>().Subject;
 
                 op.Marker.Should().Be("PING");
             }
@@ -257,9 +257,9 @@ namespace UnitTests
             using (var stream = CreateStream(
                 "PONG\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var op = UnitUnderTest.ReadOps().OfType<PongOp>().First();
+                var op = UnitUnderTest.ReadOp().Should().BeOfType<PongOp>().Subject;
 
                 op.Marker.Should().Be("PONG");
             }
@@ -271,9 +271,9 @@ namespace UnitTests
             using (var stream = CreateStream(
                 "-ERR 'Unknown Protocol Operation'\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var op = UnitUnderTest.ReadOps().OfType<ErrOp>().First();
+                var op = UnitUnderTest.ReadOp().Should().BeOfType<ErrOp>().Subject;
 
                 op.Marker.Should().Be("-ERR");
                 op.Message.Should().Be("'Unknown Protocol Operation'");
@@ -281,15 +281,15 @@ namespace UnitTests
         }
 
         [Fact]
-        public void Should_be_able_to_handle_blank_ops()
+        public void Should_be_able_to_handle_blank_lines()
         {
             using (var stream = CreateStream(
                 "+OK\r\n\r\n",
                 "PING\r\n"))
             {
-                UnitUnderTest = new NatsOpStreamReader(stream);
+                UnitUnderTest = NatsOpStreamReader.Use(stream);
 
-                var ops = UnitUnderTest.ReadOps().ToArray();
+                var ops = new[] {UnitUnderTest.ReadOp(), UnitUnderTest.ReadOp()};
                 ops.Should().HaveCount(2);
                 ops[0].Should().BeOfType<OkOp>();
                 ops[1].Should().BeOfType<PingOp>();

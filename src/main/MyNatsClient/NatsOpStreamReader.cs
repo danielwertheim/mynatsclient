@@ -2,12 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
-using System.Linq;
 using MyNatsClient.Ops;
 
 namespace MyNatsClient
 {
-    public class NatsOpStreamReader
+    /// <summary>
+    /// Reads <see cref="IOp"/> from a Stream.
+    /// </summary>
+    /// <remarks>
+    /// Intentionally not locking so currently not safe for parallel use.
+    /// </remarks>
+    public class NatsOpStreamReader : IDisposable
     {
         private const byte Empty = (byte) '\0';
         private const byte SpaceDelimiter = (byte) ' ';
@@ -22,13 +27,43 @@ namespace MyNatsClient
         private const byte Plus = (byte) '+';
         private const byte Minus = (byte) '-';
 
-        private readonly Stream _stream;
+        private Stream _source;
+        private readonly MemoryStream _workspace;
+        private readonly byte[] _opMarkerChars = new byte[4];
+        private readonly byte[] _readSingleByteBuff = new byte[1];
 
-        public NatsOpStreamReader(Stream stream)
-            => _stream = stream ?? throw new ArgumentNullException(nameof(stream));
+        private NatsOpStreamReader(Stream source)
+        {
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _workspace = new MemoryStream();
+        }
+
+        public static NatsOpStreamReader Use(Stream stream)
+            => new(stream);
+
+        public void Dispose()
+        {
+            _workspace.Dispose();
+        }
+
+        private void Reset()
+        {
+            _opMarkerChars[0] = Empty;
+            _opMarkerChars[1] = Empty;
+            _opMarkerChars[2] = Empty;
+            _opMarkerChars[3] = Empty;
+            _workspace.Position = 0;
+            _readSingleByteBuff[0] = Empty;
+        }
+
+        public void SetNewSource(Stream source)
+        {
+            _source = source;
+            Reset();
+        }
 
         private static bool IsDelimiter(byte c)
-            => c == SpaceDelimiter || c == TabDelimiter;
+            => c is SpaceDelimiter or TabDelimiter;
 
         private static ReadOnlySpan<char> ToChars(ReadOnlySpan<byte> source)
         {
@@ -346,75 +381,59 @@ namespace MyNatsClient
                 payload);
         }
 
-        public IEnumerable<IOp> ReadOps()
+        public IOp ReadOp()
         {
-            IOp op = null;
-            using var workspace = new MemoryStream();
-            var opMarkerChars = new byte[4];
+            Reset();
+
             var i = -1;
 
             while (true)
             {
-                var curr = _stream.ReadByte();
-                if (curr == -1)
-                    yield break;
+                var curr = _source.CanRead ? _source.Read(_readSingleByteBuff, 0, 1) : 0;
+                if (curr == 0)
+                    return NullOp.Instance;
 
-                var c = (byte) curr;
+                var c = _readSingleByteBuff[0];
                 if (!IsDelimiter(c) && c != Cr && c != Lf)
                 {
-                    opMarkerChars[++i] = c;
+                    _opMarkerChars[++i] = c;
                     continue;
                 }
 
                 if (i == -1)
                     continue;
 
-                if (opMarkerChars[0] == M)
-                    op = ParseMsgOp(_stream, workspace);
-                else if (opMarkerChars[0] == H)
-                    op = ParseHMsgOp(_stream, workspace);
-                else if (opMarkerChars[0] == P)
+                if (_opMarkerChars[0] == M)
+                    return ParseMsgOp(_source, _workspace);
+                if (_opMarkerChars[0] == H)
+                    return ParseHMsgOp(_source, _workspace);
+                if (_opMarkerChars[0] == P)
                 {
-                    if (opMarkerChars[1] == I)
-                        op = ParsePingOp(_stream);
-                    else if (opMarkerChars[1] == O)
-                        op = ParsePongOp(_stream);
-                }
-                else if (opMarkerChars[0] == I)
-                    op = ParseInfoOp(_stream, workspace);
-                else if (opMarkerChars[0] == Plus)
-                    op = ParseOkOp(_stream);
-                else if (opMarkerChars[0] == Minus)
-                    op = ParseErrorOp(_stream, workspace);
-
-                if (op == null)
-                {
-                    var opMarker = string.Create(i + 1, opMarkerChars, (t, v) =>
-                    {
-                        if (t.Length == 4)
-                            t[3] = (char) v[3];
-
-                        t[2] = (char) v[2];
-                        t[1] = (char) v[1];
-                        t[0] = (char) v[0];
-                    });
-
-                    throw NatsException.OpParserUnsupportedOp(opMarker);
+                    if (_opMarkerChars[1] == I)
+                        return ParsePingOp(_source);
+                    if (_opMarkerChars[1] == O)
+                        return ParsePongOp(_source);
                 }
 
-                i = -1;
-                opMarkerChars[0] = Empty;
-                opMarkerChars[1] = Empty;
-                opMarkerChars[2] = Empty;
-                opMarkerChars[3] = Empty;
-                workspace.Position = 0;
+                if (_opMarkerChars[0] == I)
+                    return ParseInfoOp(_source, _workspace);
+                if (_opMarkerChars[0] == Plus)
+                    return ParseOkOp(_source);
+                if (_opMarkerChars[0] == Minus)
+                    return ParseErrorOp(_source, _workspace);
 
-                yield return op;
+                var opMarker = string.Create(i + 1, _opMarkerChars, (t, v) =>
+                {
+                    if (t.Length == 4)
+                        t[3] = (char) v[3];
 
-                op = null;
+                    t[2] = (char) v[2];
+                    t[1] = (char) v[1];
+                    t[0] = (char) v[0];
+                });
+
+                throw NatsException.OpParserUnsupportedOp(opMarker);
             }
         }
-
-        public IOp ReadOneOp() => ReadOps().First();
     }
 }
