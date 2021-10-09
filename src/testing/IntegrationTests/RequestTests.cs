@@ -22,7 +22,7 @@ namespace IntegrationTests
             : base(context)
         {
         }
-        
+
         public void Dispose()
         {
             _sync?.Dispose();
@@ -72,7 +72,8 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public async Task Given_multiple_responders_exists_and_inbox_requests_are_used_When_requesting_It_should_call_requester_twice_but_dispatch_one_response()
+        public async Task
+            Given_multiple_responders_exists_and_inbox_requests_are_used_When_requesting_It_should_call_requester_twice_but_dispatch_one_response()
         {
             _sync = Sync.MaxTwo();
 
@@ -121,7 +122,8 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public async Task Given_multiple_responders_exists_and_non_inbox_requests_are_used_When_requesting_It_should_call_requester_once_and_dispatch_one_response()
+        public async Task
+            Given_multiple_responders_exists_and_non_inbox_requests_are_used_When_requesting_It_should_call_requester_once_and_dispatch_one_response()
         {
             _sync = Sync.MaxTwo();
 
@@ -175,9 +177,9 @@ namespace IntegrationTests
         {
             _requester = await Context.ConnectClientAsync();
 
-            Func<Task> a = async () => await _requester.RequestAsync("getValue", "foo value");
-
-            a.Should().Throw<TaskCanceledException>();
+            await FluentActions
+                .Invoking(async () => await _requester.RequestAsync("getValue", "foo value"))
+                .Should().ThrowAsync<TaskCanceledException>();
         }
 
         [Fact]
@@ -185,15 +187,14 @@ namespace IntegrationTests
         {
             _requester = await Context.ConnectClientAsync();
 
-            Func<Task> a = async () =>
-            {
-                var cts = new CancellationTokenSource(100);
-                await _requester.RequestAsync("getValue", "foo value", cts.Token);
-            };
-
-            a.Should().Throw<TaskCanceledException>();
+            await FluentActions
+                .Invoking(async () =>
+                {
+                    var cts = new CancellationTokenSource(100);
+                    await _requester.RequestAsync("getValue", "foo value", cts.Token);
+                }).Should().ThrowAsync<TaskCanceledException>();
         }
-        
+
         [Fact]
         public async Task Client_Should_throw_if_request_when_never_connected()
         {

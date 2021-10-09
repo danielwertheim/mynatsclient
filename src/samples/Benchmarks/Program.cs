@@ -143,7 +143,7 @@ namespace Benchmarks
                 cn.SubscribeAsync(subject, (_, args) =>
                 {
                     args.Message.Respond(args.Message.Data);
-                    args.Message.ArrivalSubcription.Connection.Flush();
+                    args.Message.ArrivalSubscription.Connection.Flush();
                 });
 
                 cn.FlushBuffer();

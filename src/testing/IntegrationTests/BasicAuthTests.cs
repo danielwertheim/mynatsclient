@@ -23,7 +23,7 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void Client_Should_not_be_able_to_connect_When_empty_credentials_are_used()
+        public async Task Client_Should_not_be_able_to_connect_When_empty_credentials_are_used()
         {
             var cnInfo = Context.GetConnectionInfo();
             cnInfo.Credentials = Credentials.Empty;
@@ -35,24 +35,26 @@ namespace IntegrationTests
                 await client.ConnectAsync();
             };
 
-            a.Should().Throw<NatsException>().And.ExceptionCode.Should().Be(NatsExceptionCodes.MissingCredentials);
+            (await FluentActions.Invoking(async () =>
+            {
+                using var client = Context.CreateClient(cnInfo);
+                await client.ConnectAsync();
+            }).Should().ThrowAsync<NatsException>()).And.ExceptionCode.Should().Be(NatsExceptionCodes.MissingCredentials);
         }
 
         [Fact]
-        public void Client_Should_not_be_able_to_connect_When_invalid_credentials_are_used()
+        public async Task Client_Should_not_be_able_to_connect_When_invalid_credentials_are_used()
         {
             var invalidCredentials = new Credentials("wrong", "credentials");
             var cnInfo = Context.GetConnectionInfo();
             cnInfo.Credentials = invalidCredentials;
             cnInfo.Hosts[0].Credentials = invalidCredentials;
-            
-            Func<Task> a = async () =>
+
+            (await FluentActions.Invoking(async () =>
             {
                 using var client = Context.CreateClient(cnInfo);
                 await client.ConnectAsync();
-            };
-
-            a.Should().Throw<NatsException>().And.ExceptionCode.Should().Be(NatsExceptionCodes.FailedToConnectToHost);
+            }).Should().ThrowAsync<NatsException>()).And.ExceptionCode.Should().Be(NatsExceptionCodes.FailedToConnectToHost);
         }
     }
 }
